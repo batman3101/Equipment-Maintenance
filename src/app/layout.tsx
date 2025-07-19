@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 
 import { APP_DESCRIPTION, APP_NAME } from '@/lib/constants';
+import { AuthProvider } from '@/domains/auth/hooks/use-auth';
 
 import './globals.css';
 
@@ -46,9 +47,11 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className="bg-background min-h-screen font-sans antialiased">
-        <div className="relative flex min-h-screen flex-col">
-          <main className="flex-1">{children}</main>
-        </div>
+        <AuthProvider>
+          <div className="relative flex min-h-screen flex-col">
+            <main className="flex-1">{children}</main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

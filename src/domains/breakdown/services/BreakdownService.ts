@@ -1,0 +1,284 @@
+import { BreakdownRepository } from './BreakdownRepository';
+import { FileUploadService } from './FileUploadService';
+import { supabase } from '@/lib/supabase';
+import type { 
+  Breakdown, 
+  CreateBreakdownRequest, 
+  UpdateBreakdownRequest, 
+  BreakdownFilter,
+  BreakdownListResponse,
+  BreakdownAttachment 
+} from '../types';
+
+/**
+ * 고장 관련 비즈니스 로직을 담당하는 서비스 클래스
+ * Single Responsibility Principle: 고장 관련 비즈니스 로직만 담당
+ * Dependency Inversion Principle: Repository 추상화에 의존
+ */
+export class BreakdownService {
+  constructor(
+    private readonly breakdownRepository: BreakdownRepository,
+    private readonly fileUploadService: FileUploadService
+  ) {}
+
+  /**
+   * 고장 목록 조회
+   */
+  async getBreakdowns(
+    filter: BreakdownFilter = {},
+    page: number = 1,
+    limit: number = 20
+  ): Promise<BreakdownListResponse> {
+    return this.breakdownRepository.findAll(filter, page, limit);
+  }
+
+  /**
+   * 고장 상세 조회
+   */
+  async getBreakdown(id: string): Promise<Breakdown | null> {
+    return this.breakdownRepository.findById(id);
+  }
+
+  /**
+   * 고장 등록
+   */
+  async createBreakdown(request: CreateBreakdownRequest): Promise<Breakdown> {
+    try {
+      // 현재 사용자 정보 가져오기
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('인증되지 않은 사용자입니다.');
+      }
+
+      // 사용자 정보 조회
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('plant_id')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error('사용자 정보를 찾을 수 없습니다.');
+      }
+
+      // 설비 정보 확인
+      const { data: equipment, error: equipmentError } = await supabase
+        .from('equipment')
+        .select('id')
+        .eq('equipment_number', request.equipment_number)
+        .eq('equipment_type', request.equipment_type)
+        .eq('plant_id', userData.plant_id)
+        .single();
+
+      if (equipmentError || !equipment) {
+        throw new Error('해당 설비를 찾을 수 없습니다.');
+      }
+
+      // 고장 데이터 생성
+      const breakdownData: Omit<Breakdown, 'id' | 'created_at' | 'updated_at'> = {
+        equipment_id: equipment.id,
+        equipment_type: request.equipment_type,
+        equipment_number: request.equipment_number,
+        occurred_at: request.occurred_at,
+        symptoms: request.symptoms,
+        cause: request.cause,
+        status: 'in_progress',
+        reporter_id: user.id,
+        plant_id: userData.plant_id
+      };
+
+      // 고장 등록
+      const breakdown = await this.breakdownRepository.create(breakdownData);
+
+      // 파일 업로드 처리
+      if (request.attachments && request.attachments.length > 0) {
+        await this.uploadAttachments(breakdown.id, request.attachments);
+      }
+
+      // 실시간 알림 발송
+      await this.sendRealtimeNotification(breakdown);
+
+      return breakdown;
+    } catch (error) {
+      throw new Error(`고장 등록 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * 고장 정보 수정
+   */
+  async updateBreakdown(request: UpdateBreakdownRequest): Promise<Breakdown> {
+    try {
+      // 권한 확인
+      await this.checkUpdatePermission(request.id);
+
+      // 고장 정보 수정
+      const breakdown = await this.breakdownRepository.update(request.id, {
+        symptoms: request.symptoms,
+        cause: request.cause,
+        status: request.status
+      });
+
+      return breakdown;
+    } catch (error) {
+      throw new Error(`고장 정보 수정 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * 고장 삭제
+   */
+  async deleteBreakdown(id: string): Promise<void> {
+    try {
+      // 권한 확인
+      await this.checkUpdatePermission(id);
+
+      // 첨부 파일 삭제
+      const breakdown = await this.breakdownRepository.findById(id);
+      if (breakdown?.attachments) {
+        for (const attachment of breakdown.attachments) {
+          await this.fileUploadService.deleteFile(attachment.file_path);
+        }
+      }
+
+      // 고장 삭제
+      await this.breakdownRepository.delete(id);
+    } catch (error) {
+      throw new Error(`고장 삭제 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * 설비별 고장 이력 조회
+   */
+  async getBreakdownsByEquipment(equipmentId: string): Promise<Breakdown[]> {
+    return this.breakdownRepository.findByEquipment(equipmentId);
+  }
+
+  /**
+   * 고장 상태 업데이트
+   */
+  async updateBreakdownStatus(id: string, status: Breakdown['status']): Promise<void> {
+    try {
+      await this.breakdownRepository.updateStatus(id, status);
+      
+      // 상태 변경 알림 발송
+      const breakdown = await this.breakdownRepository.findById(id);
+      if (breakdown) {
+        await this.sendStatusChangeNotification(breakdown, status);
+      }
+    } catch (error) {
+      throw new Error(`고장 상태 업데이트 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * 첨부 파일 업로드
+   */
+  private async uploadAttachments(breakdownId: string, files: File[]): Promise<void> {
+    try {
+      const uploadedFiles = await this.fileUploadService.uploadFiles(files, breakdownId);
+      
+      // 첨부 파일 정보를 데이터베이스에 저장
+      const attachmentData = uploadedFiles.map(file => ({
+        breakdown_id: breakdownId,
+        file_name: file.file_name,
+        file_path: file.file_path,
+        file_type: file.file_type,
+        file_size: file.file_size
+      }));
+
+      const { error } = await supabase
+        .from('breakdown_attachments')
+        .insert(attachmentData);
+
+      if (error) {
+        throw new Error(`첨부 파일 정보 저장 실패: ${error.message}`);
+      }
+    } catch (error) {
+      throw new Error(`첨부 파일 업로드 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * 실시간 알림 발송
+   */
+  private async sendRealtimeNotification(breakdown: Breakdown): Promise<void> {
+    try {
+      const channel = supabase.channel('breakdown-notifications');
+      
+      await channel.send({
+        type: 'broadcast',
+        event: 'breakdown-created',
+        payload: {
+          breakdown_id: breakdown.id,
+          equipment_type: breakdown.equipment_type,
+          equipment_number: breakdown.equipment_number,
+          symptoms: breakdown.symptoms,
+          occurred_at: breakdown.occurred_at,
+          reporter_id: breakdown.reporter_id
+        }
+      });
+    } catch (error) {
+      // 알림 발송 실패는 전체 프로세스를 중단시키지 않음
+      console.error('실시간 알림 발송 실패:', error);
+    }
+  }
+
+  /**
+   * 상태 변경 알림 발송
+   */
+  private async sendStatusChangeNotification(breakdown: Breakdown, newStatus: Breakdown['status']): Promise<void> {
+    try {
+      const channel = supabase.channel('breakdown-notifications');
+      
+      await channel.send({
+        type: 'broadcast',
+        event: 'breakdown-status-changed',
+        payload: {
+          breakdown_id: breakdown.id,
+          equipment_number: breakdown.equipment_number,
+          old_status: breakdown.status,
+          new_status: newStatus
+        }
+      });
+    } catch (error) {
+      console.error('상태 변경 알림 발송 실패:', error);
+    }
+  }
+
+  /**
+   * 수정 권한 확인
+   */
+  private async checkUpdatePermission(breakdownId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('인증되지 않은 사용자입니다.');
+    }
+
+    const breakdown = await this.breakdownRepository.findById(breakdownId);
+    if (!breakdown) {
+      throw new Error('고장 정보를 찾을 수 없습니다.');
+    }
+
+    // 본인이 등록한 고장이거나 관리자 권한이 있는 경우에만 수정 가능
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const isOwner = breakdown.reporter_id === user.id;
+    const isManager = userData?.role === 'manager' || userData?.role === 'admin';
+
+    if (!isOwner && !isManager) {
+      throw new Error('수정 권한이 없습니다.');
+    }
+  }
+}
+
+// 싱글톤 인스턴스 생성
+export const breakdownService = new BreakdownService(
+  new BreakdownRepository(),
+  new FileUploadService()
+);
