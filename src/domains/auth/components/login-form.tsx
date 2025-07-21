@@ -15,6 +15,7 @@ export function LoginForm() {
     email?: string;
     password?: string;
   }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form validation (SRP - separated validation logic)
   const validateForm = (): boolean => {
@@ -43,11 +44,13 @@ export function LoginForm() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       await signIn(credentials);
     } catch (error) {
       // Error is handled by the auth context
       console.error('Login failed:', error);
+      setIsSubmitting(false);
     }
   };
 
@@ -130,11 +133,11 @@ export function LoginForm() {
           <div>
             <button
               type="submit"
-              disabled={authState.loading}
+              disabled={isSubmitting}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ minHeight: '44px' }} // Mobile touch target
             >
-              {authState.loading ? (
+              {isSubmitting ? (
                 <span className="flex items-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

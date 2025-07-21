@@ -165,9 +165,45 @@ export async function registerBackgroundSync(tag: string = 'background-sync'): P
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
+    // Service Worker가 활성화될 때까지 대기
+    const waitForActiveServiceWorker = async (): Promise<ServiceWorkerRegistration> => {
+      const registration = await navigator.serviceWorker.ready;
+      
+      if (registration.active) {
+        return registration;
+      }
+      
+      return new Promise((resolve) => {
+        // 활성화 이벤트 리스너 등록
+        if (registration.installing) {
+          registration.installing.addEventListener('statechange', (e) => {
+            const sw = e.target as ServiceWorker;
+            if (sw.state === 'activated') {
+              resolve(registration);
+            }
+          });
+        } else if (registration.waiting) {
+          registration.waiting.addEventListener('statechange', (e) => {
+            const sw = e.target as ServiceWorker;
+            if (sw.state === 'activated') {
+              resolve(registration);
+            }
+          });
+        } else {
+          // 이미 활성화된 경우
+          resolve(registration);
+        }
+      });
+    };
+    
+    // 활성화된 Service Worker 가져오기
+    const registration = await waitForActiveServiceWorker();
+    
     // sync API가 있는지 확인
     if ('sync' in registration) {
+      // 약간의 지연을 추가하여 Service Worker가 완전히 활성화되도록 함
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       await (registration as any).sync.register(tag);
       console.log('백그라운드 동기화 등록 완료:', tag);
       return true;

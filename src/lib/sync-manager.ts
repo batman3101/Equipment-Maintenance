@@ -18,6 +18,16 @@ export interface SyncStatus {
   progress?: number; // 동기화 진행률 (0-100)
 }
 
+// Background Sync API를 위한 타입 정의
+export type SyncManagerType = {
+  register(tag: string): Promise<void>;
+  getTags(): Promise<string[]>;
+};
+
+export interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
+  sync: SyncManagerType;
+}
+
 class SyncManager {
   private isRunning = false;
   private lastSyncTime: number | null = null;
@@ -324,15 +334,7 @@ class SyncManager {
     }
   }
   
-  // Background Sync API를 위한 타입 정의
-  interface SyncManager {
-    register(tag: string): Promise<void>;
-    getTags(): Promise<string[]>;
-  }
-
-  interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
-    sync: SyncManager;
-  }
+  // 타입은 클래스 외부로 이동했습니다
 
   // 백그라운드 동기화 등록
   async registerBackgroundSync(): Promise<boolean> {
@@ -342,11 +344,48 @@ class SyncManager {
         return false;
       }
       
+      // Service Worker가 활성화될 때까지 대기
+      const waitForActivation = async (registration: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> => {
+        if (registration.active) {
+          return registration;
+        }
+        
+        return new Promise((resolve) => {
+          // 활성화 이벤트 리스너 등록
+          if (registration.installing) {
+            registration.installing.addEventListener('statechange', (e) => {
+              const sw = e.target as ServiceWorker;
+              if (sw.state === 'activated') {
+                resolve(registration);
+              }
+            });
+          } else if (registration.waiting) {
+            registration.waiting.addEventListener('statechange', (e) => {
+              const sw = e.target as ServiceWorker;
+              if (sw.state === 'activated') {
+                resolve(registration);
+              }
+            });
+          } else {
+            // 이미 활성화된 경우
+            resolve(registration);
+          }
+        });
+      };
+      
+      // Service Worker 등록 및 활성화 대기
       const registration = await navigator.serviceWorker.ready;
-      // 명시적인 타입 정의를 사용하여 타입 안전성 향상
-      await (registration as ServiceWorkerRegistrationWithSync).sync.register('background-sync');
-      console.log('백그라운드 동기화 등록 완료');
-      return true;
+      const activeRegistration = await waitForActivation(registration);
+      
+      // Service Worker가 활성화된 후 Background Sync 등록
+      if (activeRegistration.active) {
+        await (activeRegistration as ServiceWorkerRegistrationWithSync).sync.register('background-sync');
+        console.log('백그라운드 동기화 등록 완료');
+        return true;
+      } else {
+        console.log('활성화된 Service Worker가 없어 백그라운드 동기화를 등록할 수 없습니다.');
+        return false;
+      }
     } catch (error) {
       console.error('백그라운드 동기화 등록 실패:', error);
       return false;
