@@ -7,6 +7,7 @@ import { PWAUpdateNotification, PWAInstallPrompt } from '@/components/PWAUpdateN
 import { NetworkStatus } from '@/components/NetworkStatus';
 import { OfflineNotification, OfflineBanner } from '@/components/OfflineNotification';
 import { SyncNotificationContainer } from '@/components/SyncNotification';
+import { SyncStatusNotification } from '@/components/SyncStatusNotification';
 import { ClientOnly } from '@/components/ClientOnly';
 
 import './globals.css';
@@ -80,6 +81,7 @@ export default function RootLayout({
                 <PWAUpdateNotification />
                 <PWAInstallPrompt />
                 <SyncNotificationContainer />
+                <SyncStatusNotification />
               </div>
             </PWAProvider>
           </ClientOnly>

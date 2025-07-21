@@ -1,6 +1,7 @@
 // 오프라인 데이터 동기화 매니저
 
 import { offlineStorage, type SyncQueueItem, type OfflineData } from './offline-storage';
+import { sendMessageToServiceWorker } from './service-worker';
 
 export interface SyncResult {
   success: boolean;
@@ -14,6 +15,7 @@ export interface SyncStatus {
   lastSyncTime: number | null;
   pendingCount: number;
   failedCount: number;
+  progress?: number; // 동기화 진행률 (0-100)
 }
 
 class SyncManager {
@@ -72,9 +74,15 @@ class SyncManager {
     try {
       console.log('데이터 동기화 시작...');
 
+      // Service Worker에 동기화 시작 알림
+      this.notifyServiceWorker('SYNC_START', { timestamp: Date.now() });
+
       // 동기화 대기열 처리
       const syncQueue = await offlineStorage.getSyncQueue();
       console.log('동기화 대기열 항목 수:', syncQueue.length);
+      
+      const totalItems = syncQueue.length;
+      let processedItems = 0;
 
       for (const item of syncQueue) {
         try {
@@ -82,6 +90,11 @@ class SyncManager {
           await offlineStorage.removeFromSyncQueue(item.id);
           result.syncedCount++;
           console.log('동기화 성공:', item.id);
+          
+          // 진행률 업데이트 및 알림
+          processedItems++;
+          const progress = Math.round((processedItems / totalItems) * 100);
+          this.notifyServiceWorker('SYNC_PROGRESS', { progress, itemId: item.id });
         } catch (error) {
           console.error('동기화 실패:', item.id, error);
           result.failedCount++;
@@ -94,6 +107,12 @@ class SyncManager {
           if (item.retryCount >= item.maxRetries) {
             await offlineStorage.removeFromSyncQueue(item.id);
             console.log('최대 재시도 횟수 초과로 대기열에서 제거:', item.id);
+            
+            // 실패 알림
+            this.notifyServiceWorker('SYNC_ITEM_FAILED', { 
+              itemId: item.id, 
+              error: `최대 재시도 횟수(${item.maxRetries}) 초과` 
+            });
           }
         }
       }
@@ -101,6 +120,9 @@ class SyncManager {
       // 오프라인 데이터 동기화
       const unsyncedData = await offlineStorage.getUnsyncedData();
       console.log('동기화되지 않은 데이터 수:', unsyncedData.length);
+      
+      const totalUnsyncedItems = unsyncedData.length;
+      let processedUnsyncedItems = 0;
 
       for (const data of unsyncedData) {
         try {
@@ -108,14 +130,40 @@ class SyncManager {
           await offlineStorage.markAsSynced(data.id);
           result.syncedCount++;
           console.log('오프라인 데이터 동기화 성공:', data.id);
+          
+          // 진행률 업데이트 및 알림
+          processedUnsyncedItems++;
+          const progress = Math.round((processedUnsyncedItems / totalUnsyncedItems) * 100);
+          this.notifyServiceWorker('SYNC_PROGRESS', { 
+            progress, 
+            itemId: data.id,
+            type: data.type,
+            action: data.action
+          });
         } catch (error) {
           console.error('오프라인 데이터 동기화 실패:', data.id, error);
           result.failedCount++;
           result.errors.push(`${data.id}: ${error}`);
+          
+          // 실패 알림
+          this.notifyServiceWorker('SYNC_ITEM_FAILED', { 
+            itemId: data.id, 
+            type: data.type,
+            action: data.action,
+            error: error instanceof Error ? error.message : String(error)
+          });
         }
       }
 
       this.lastSyncTime = Date.now();
+      
+      // 동기화 완료 알림
+      this.notifyServiceWorker('SYNC_COMPLETE', {
+        success: result.failedCount === 0,
+        syncedCount: result.syncedCount,
+        failedCount: result.failedCount,
+        timestamp: this.lastSyncTime
+      });
       
       if (result.failedCount > 0) {
         result.success = false;
@@ -251,6 +299,50 @@ class SyncManager {
     }
   }
 
+  // Service Worker에 알림 전송
+  private async notifyServiceWorker(type: string, data: any): Promise<void> {
+    try {
+      // 브라우저 환경 확인
+      if (typeof window === 'undefined') return;
+      
+      // Service Worker 컨트롤러 확인
+      if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+        console.log('Service Worker 컨트롤러가 없어 알림을 전송할 수 없습니다.');
+        return;
+      }
+      
+      // 메시지 전송
+      await sendMessageToServiceWorker({ type, data });
+      
+      // 클라이언트에도 동일한 메시지 전송 (UI 업데이트용)
+      window.dispatchEvent(new CustomEvent('sync-status-update', { 
+        detail: { type, data }
+      }));
+      
+    } catch (error) {
+      console.error('Service Worker 알림 전송 실패:', error);
+    }
+  }
+  
+  // 백그라운드 동기화 등록
+  async registerBackgroundSync(): Promise<boolean> {
+    try {
+      if (!('serviceWorker' in navigator) || !('SyncManager' in window)) {
+        console.log('백그라운드 동기화가 지원되지 않는 브라우저입니다.');
+        return false;
+      }
+      
+      const registration = await navigator.serviceWorker.ready;
+      // TypeScript에서 sync 속성을 인식하지 못하므로 타입 단언(type assertion) 사용
+      await (registration as any).sync.register('background-sync');
+      console.log('백그라운드 동기화 등록 완료');
+      return true;
+    } catch (error) {
+      console.error('백그라운드 동기화 등록 실패:', error);
+      return false;
+    }
+  }
+
   // 정리
   cleanup(): void {
     this.stopAutoSync();
@@ -271,9 +363,29 @@ if (typeof window !== 'undefined') {
     syncManager.syncNow().catch(error => {
       console.error('온라인 복구 시 동기화 실패:', error);
     });
+    
+    // 백그라운드 동기화 등록
+    syncManager.registerBackgroundSync().catch(error => {
+      console.error('백그라운드 동기화 등록 실패:', error);
+    });
   });
 
   window.addEventListener('offline', () => {
     console.log('오프라인 상태로 변경됨');
   });
+  
+  // Service Worker 메시지 리스너
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      const { type, data } = event.data || {};
+      
+      if (type === 'SYNC_REQUEST') {
+        // Service Worker에서 동기화 요청이 오면 실행
+        console.log('Service Worker에서 동기화 요청 수신');
+        syncManager.syncNow().catch(error => {
+          console.error('Service Worker 요청 동기화 실패:', error);
+        });
+      }
+    });
+  }
 }

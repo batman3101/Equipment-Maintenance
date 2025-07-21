@@ -2,13 +2,13 @@ import { BreakdownRepository } from './BreakdownRepository';
 import { FileUploadService } from './FileUploadService';
 import { supabase } from '@/lib/supabase';
 import { offlineStorage } from '@/lib/offline-storage';
-import type { 
-  Breakdown, 
-  CreateBreakdownRequest, 
-  UpdateBreakdownRequest, 
+import type {
+  Breakdown,
+  CreateBreakdownRequest,
+  UpdateBreakdownRequest,
   BreakdownFilter,
   BreakdownListResponse,
-  BreakdownAttachment 
+  BreakdownAttachment
 } from '../types';
 
 /**
@@ -20,7 +20,7 @@ export class BreakdownService {
   constructor(
     private readonly breakdownRepository: BreakdownRepository,
     private readonly fileUploadService: FileUploadService
-  ) {}
+  ) { }
 
   /**
    * 고장 목록 조회
@@ -74,7 +74,7 @@ export class BreakdownService {
           console.error('오프라인 저장도 실패:', offlineError);
         }
       }
-      
+
       throw new Error(`고장 등록 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     }
   }
@@ -140,23 +140,41 @@ export class BreakdownService {
   private async createBreakdownOffline(request: CreateBreakdownRequest, user: any): Promise<Breakdown> {
     // 임시 ID 생성
     const tempId = `temp-breakdown-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // 오프라인 고장 데이터 생성
-    const offlineBreakdownData = {
+
+    // 사용자 정보에서 plant_id 가져오기 (오프라인 상태에서는 캐시된 정보 사용)
+    let plantId = '';
+    try {
+      // 로컬 스토리지나 IndexedDB에서 사용자 정보 조회 시도
+      const cachedUserData = localStorage.getItem(`user_${user.id}`);
+      if (cachedUserData) {
+        const userData = JSON.parse(cachedUserData);
+        plantId = userData.plant_id || '';
+      }
+    } catch (error) {
+      console.warn('오프라인 상태에서 사용자 정보 조회 실패:', error);
+    }
+
+    // 임시 equipment_id 생성 (실제 동기화 시 서버에서 올바른 ID로 대체됨)
+    const tempEquipmentId = `temp-equipment-${request.equipment_type}-${request.equipment_number}`;
+
+    // 오프라인 고장 데이터 생성 (Breakdown 인터페이스와 일치하도록 필수 필드 추가)
+    const offlineBreakdownData: Breakdown = {
       id: tempId,
+      equipment_id: tempEquipmentId, // 임시 equipment_id
       equipment_type: request.equipment_type,
       equipment_number: request.equipment_number,
       occurred_at: request.occurred_at,
       symptoms: request.symptoms,
       cause: request.cause,
-      status: 'in_progress' as const,
+      status: 'in_progress',
       reporter_id: user.id,
+      plant_id: plantId, // 캐시된 정보에서 가져온 plant_id 또는 빈 문자열
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      // 오프라인 플래그
+      // 오프라인 플래그 (Breakdown 타입에 없는 속성은 타입 단언 후 추가)
       _offline: true,
       _tempId: tempId
-    };
+    } as Breakdown & { _offline: boolean; _tempId: string };
 
     // 오프라인 저장소에 저장
     await offlineStorage.saveOfflineData({
@@ -172,9 +190,9 @@ export class BreakdownService {
     }
 
     console.log('오프라인 고장 등록 완료:', tempId);
-    
-    // 임시 고장 객체 반환
-    return offlineBreakdownData as Breakdown;
+
+    // 고장 객체 반환
+    return offlineBreakdownData;
   }
 
   /**
@@ -202,7 +220,7 @@ export class BreakdownService {
       });
 
       const attachmentData = await Promise.all(attachmentPromises);
-      
+
       // 오프라인 저장소에 첨부 파일 정보 저장
       for (const attachment of attachmentData) {
         await offlineStorage.saveOfflineData({
@@ -212,7 +230,7 @@ export class BreakdownService {
           action: 'create'
         });
       }
-      
+
       console.log('오프라인 첨부 파일 저장 완료:', attachmentData.length, '개');
     } catch (error) {
       console.error('오프라인 첨부 파일 저장 실패:', error);
@@ -277,7 +295,7 @@ export class BreakdownService {
   async updateBreakdownStatus(id: string, status: Breakdown['status']): Promise<void> {
     try {
       await this.breakdownRepository.updateStatus(id, status);
-      
+
       // 상태 변경 알림 발송
       const breakdown = await this.breakdownRepository.findById(id);
       if (breakdown) {
@@ -294,7 +312,7 @@ export class BreakdownService {
   private async uploadAttachments(breakdownId: string, files: File[]): Promise<void> {
     try {
       const uploadedFiles = await this.fileUploadService.uploadFiles(files, breakdownId);
-      
+
       // 첨부 파일 정보를 데이터베이스에 저장
       const attachmentData = uploadedFiles.map(file => ({
         breakdown_id: breakdownId,
@@ -322,7 +340,7 @@ export class BreakdownService {
   private async sendRealtimeNotification(breakdown: Breakdown): Promise<void> {
     try {
       const channel = supabase.channel('breakdown-notifications');
-      
+
       await channel.send({
         type: 'broadcast',
         event: 'breakdown-created',
@@ -347,7 +365,7 @@ export class BreakdownService {
   private async sendStatusChangeNotification(breakdown: Breakdown, newStatus: Breakdown['status']): Promise<void> {
     try {
       const channel = supabase.channel('breakdown-notifications');
-      
+
       await channel.send({
         type: 'broadcast',
         event: 'breakdown-status-changed',

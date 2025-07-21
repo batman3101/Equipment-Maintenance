@@ -169,6 +169,15 @@ self.addEventListener('sync', (event) => {
   }
 });
 
+// 주기적 동기화 이벤트 (옵션)
+self.addEventListener('periodicsync', (event) => {
+  console.log('[SW] 주기적 동기화 이벤트:', event.tag);
+  
+  if (event.tag === 'periodic-sync') {
+    event.waitUntil(handleBackgroundSync());
+  }
+});
+
 // 백그라운드 동기화 처리
 async function handleBackgroundSync() {
   console.log('[SW] 백그라운드 동기화 실행 중...');
@@ -249,8 +258,7 @@ async function handleBackgroundSync() {
     });
   }
 }
-//
- 동기화 대기열 조회
+// 동기화 대기열 조회
 async function getSyncQueue() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('cnc-maintenance-offline', 1);
@@ -527,16 +535,96 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('message', (event) => {
   console.log('[SW] 메시지 수신:', event.data);
   
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (!event.data || !event.data.type) return;
   
-  if (event.data && event.data.type === 'SYNC_NOW') {
-    // 즉시 동기화 요청
-    handleBackgroundSync().then(() => {
-      event.ports[0].postMessage({ success: true });
-    }).catch((error) => {
-      event.ports[0].postMessage({ success: false, error: error.message });
-    });
+  switch (event.data.type) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+      
+    case 'SYNC_NOW':
+      // 즉시 동기화 요청
+      handleBackgroundSync().then(() => {
+        if (event.ports && event.ports[0]) {
+          event.ports[0].postMessage({ success: true });
+        }
+      }).catch((error) => {
+        if (event.ports && event.ports[0]) {
+          event.ports[0].postMessage({ success: false, error: error.message });
+        }
+      });
+      break;
+      
+    case 'SYNC_START':
+      // 동기화 시작 알림
+      notifyClients({
+        type: 'SYNC_START',
+        data: event.data.data || { timestamp: Date.now() }
+      });
+      break;
+      
+    case 'SYNC_PROGRESS':
+      // 동기화 진행 상황 알림
+      notifyClients({
+        type: 'SYNC_PROGRESS',
+        data: event.data.data
+      });
+      break;
+      
+    case 'SYNC_COMPLETE':
+      // 동기화 완료 알림
+      notifyClients({
+        type: 'SYNC_COMPLETE',
+        data: event.data.data
+      });
+      break;
+      
+    case 'SYNC_ITEM_FAILED':
+      // 개별 항목 동기화 실패 알림
+      notifyClients({
+        type: 'SYNC_ITEM_FAILED',
+        data: event.data.data
+      });
+      break;
+      
+    case 'CHECK_PENDING_SYNC':
+      // 대기 중인 동기화 항목 확인 요청
+      checkPendingSyncItems().then(result => {
+        if (event.ports && event.ports[0]) {
+          event.ports[0].postMessage(result);
+        }
+      }).catch(error => {
+        if (event.ports && event.ports[0]) {
+          event.ports[0].postMessage({ error: error.message });
+        }
+      });
+      break;
   }
 });
+
+// 모든 클라이언트에 메시지 전송
+async function notifyClients(message) {
+  const clients = await self.clients.matchAll();
+  clients.forEach(client => {
+    client.postMessage(message);
+  });
+}
+
+// 대기 중인 동기화 항목 확인
+async function checkPendingSyncItems() {
+  try {
+    const [syncQueue, unsyncedData] = await Promise.all([
+      getSyncQueue(),
+      getUnsyncedOfflineData()
+    ]);
+    
+    return {
+      pendingCount: syncQueue.length + unsyncedData.length,
+      syncQueueCount: syncQueue.length,
+      unsyncedDataCount: unsyncedData.length
+    };
+  } catch (error) {
+    console.error('[SW] 대기 중인 동기화 항목 확인 실패:', error);
+    throw error;
+  }
+}

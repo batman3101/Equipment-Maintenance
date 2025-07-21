@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { offlineStorage, type OfflineData } from '@/lib/offline-storage';
 import { syncManager, type SyncStatus, type SyncResult } from '@/lib/sync-manager';
+import { sendMessageToServiceWorker, registerBackgroundSync } from '@/lib/service-worker';
 
 export interface OfflineState {
   isOnline: boolean;
@@ -32,6 +33,24 @@ export function useOffline() {
     }
   });
 
+  // 상태 업데이트
+  const updateStatus = useCallback(async () => {
+    try {
+      const [syncStatus, storageStats] = await Promise.all([
+        syncManager.getSyncStatus(),
+        offlineStorage.getStorageStats()
+      ]);
+
+      setState(prev => ({
+        ...prev,
+        syncStatus,
+        storageStats
+      }));
+    } catch (error) {
+      console.error('상태 업데이트 실패:', error);
+    }
+  }, []);
+
   // 초기화
   useEffect(() => {
     const initialize = async () => {
@@ -40,6 +59,16 @@ export function useOffline() {
         
         // 자동 동기화 시작
         syncManager.startAutoSync(30000); // 30초마다
+        
+        // 백그라운드 동기화 등록 (Service Worker)
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+          try {
+            await registerBackgroundSync('background-sync');
+            console.log('백그라운드 동기화 등록 완료');
+          } catch (error) {
+            console.error('백그라운드 동기화 등록 실패:', error);
+          }
+        }
         
         // 초기 상태 업데이트
         await updateStatus();
@@ -71,6 +100,13 @@ export function useOffline() {
     const handleOnline = () => {
       setState(prev => ({ ...prev, isOnline: true }));
       updateStatus();
+      
+      // 온라인 복구 시 백그라운드 동기화 등록
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        registerBackgroundSync('background-sync').catch(error => {
+          console.error('백그라운드 동기화 등록 실패:', error);
+        });
+      }
     };
 
     const handleOffline = () => {
@@ -80,14 +116,41 @@ export function useOffline() {
 
     // Service Worker 메시지 처리
     const handleServiceWorkerMessage = (event: MessageEvent) => {
-      const { type, data } = event.data;
+      const { type, data } = event.data || {};
+      
+      if (!type) return;
       
       switch (type) {
+        case 'SYNC_START':
+          console.log('동기화 시작:', data);
+          setState(prev => ({
+            ...prev,
+            syncStatus: {
+              ...prev.syncStatus,
+              isRunning: true
+            }
+          }));
+          break;
+          
+        case 'SYNC_PROGRESS':
+          console.log('동기화 진행 중:', data);
+          if (data?.progress) {
+            setState(prev => ({
+              ...prev,
+              syncStatus: {
+                ...prev.syncStatus,
+                isRunning: true,
+                progress: data.progress
+              }
+            }));
+          }
+          break;
+          
         case 'SYNC_COMPLETE':
           console.log('동기화 완료:', data);
           updateStatus();
           // 동기화 완료 알림 표시
-          if (data.syncedCount > 0) {
+          if (data?.syncedCount > 0) {
             showNotification('동기화 완료', `${data.syncedCount}개의 데이터가 동기화되었습니다.`);
           }
           break;
@@ -95,7 +158,12 @@ export function useOffline() {
         case 'SYNC_ERROR':
           console.error('동기화 오류:', data);
           updateStatus();
-          showNotification('동기화 오류', '일부 데이터 동기화에 실패했습니다.');
+          showNotification('동기화 오류', data?.error || '일부 데이터 동기화에 실패했습니다.');
+          break;
+          
+        case 'SYNC_ITEM_FAILED':
+          console.error('항목 동기화 실패:', data);
+          updateStatus();
           break;
       }
     };
@@ -116,24 +184,6 @@ export function useOffline() {
       }
     };
   }, [updateStatus]);
-
-  // 상태 업데이트
-  const updateStatus = useCallback(async () => {
-    try {
-      const [syncStatus, storageStats] = await Promise.all([
-        syncManager.getSyncStatus(),
-        offlineStorage.getStorageStats()
-      ]);
-
-      setState(prev => ({
-        ...prev,
-        syncStatus,
-        storageStats
-      }));
-    } catch (error) {
-      console.error('상태 업데이트 실패:', error);
-    }
-  }, []);
 
   // 오프라인 데이터 저장
   const saveOfflineData = useCallback(async (
@@ -180,6 +230,16 @@ export function useOffline() {
   // 수동 동기화
   const syncNow = useCallback(async (): Promise<SyncResult> => {
     try {
+      // Service Worker에 동기화 시작 알림
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        try {
+          await sendMessageToServiceWorker({ type: 'SYNC_NOW' });
+        } catch (error) {
+          console.error('Service Worker 동기화 요청 실패:', error);
+          // Service Worker 요청 실패 시 직접 동기화 시도
+        }
+      }
+      
       const result = await syncManager.syncNow();
       await updateStatus();
       return result;
@@ -219,7 +279,7 @@ export function useOffline() {
   }, [updateStatus]);
 
   // 알림 표시 함수
-  const showNotification = useCallback((title: string, message: string) => {
+  const showNotification = useCallback((title: string, message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info') => {
     // 브라우저 알림 권한 확인 및 표시
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {
@@ -230,8 +290,24 @@ export function useOffline() {
     
     // 커스텀 이벤트 발생 (UI 컴포넌트에서 처리)
     window.dispatchEvent(new CustomEvent('offline-notification', {
-      detail: { title, message, type: 'info' }
+      detail: { title, message, type }
     }));
+  }, []);
+  
+  // 백그라운드 동기화 요청
+  const requestBackgroundSync = useCallback(async (): Promise<boolean> => {
+    if (!('serviceWorker' in navigator) || !('SyncManager' in window)) {
+      console.log('백그라운드 동기화가 지원되지 않는 브라우저입니다.');
+      return false;
+    }
+    
+    try {
+      await registerBackgroundSync('background-sync');
+      return true;
+    } catch (error) {
+      console.error('백그라운드 동기화 등록 실패:', error);
+      return false;
+    }
   }, []);
 
   return {
@@ -247,7 +323,9 @@ export function useOffline() {
     cacheResponse,
     clearStorage,
     cleanExpiredCache,
-    updateStatus
+    updateStatus,
+    requestBackgroundSync,
+    showNotification
   };
 }
 
