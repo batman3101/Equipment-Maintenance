@@ -11,6 +11,8 @@ import {
   onNetworkStatusChange,
   type NetworkStatus
 } from '@/lib/service-worker';
+import { setupMemoryOptimization } from '@/lib/utils/memory-optimization';
+import { setupAnimationOptimization, setupAnimationPause } from '@/lib/utils/animation-optimization';
 import { ServiceWorkerRegistration } from './ServiceWorkerRegistration';
 
 interface PWAContextType {
@@ -87,9 +89,18 @@ export function PWAProvider({ children }: PWAProviderProps) {
         setNetworkStatus(status);
         console.log('네트워크 상태 변경:', status);
       });
+      
+      // 메모리 최적화 설정
+      const cleanupMemoryOptimization = setupMemoryOptimization();
+      
+      // 애니메이션 최적화 설정
+      setupAnimationOptimization();
+      const cleanupAnimationPause = setupAnimationPause();
 
       return () => {
         unsubscribeNetworkStatus();
+        cleanupMemoryOptimization();
+        cleanupAnimationPause();
       };
     } catch (error) {
       console.error('PWA 초기화 오류:', error);

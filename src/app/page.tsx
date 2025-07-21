@@ -1,8 +1,14 @@
 'use client';
 
+import { Suspense, lazy } from 'react';
 import { ProtectedRoute } from '@/domains/auth/components/protected-route';
 import { UserProfile } from '@/domains/auth/components/user-profile';
-import { Dashboard } from '@/domains/dashboard';
+import { DashboardSkeleton } from '@/domains/dashboard/components/dashboard-skeleton';
+
+// 동적 임포트를 통한 코드 스플리팅
+const Dashboard = lazy(() => import('@/domains/dashboard/components/dashboard').then(mod => ({
+  default: mod.Dashboard
+})));
 
 export default function Home() {
   return (
@@ -12,7 +18,9 @@ export default function Home() {
           <UserProfile />
         </div>
         
-        <Dashboard />
+        <Suspense fallback={<DashboardSkeleton />}>
+          <Dashboard />
+        </Suspense>
       </div>
     </ProtectedRoute>
   );

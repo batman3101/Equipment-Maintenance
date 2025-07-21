@@ -324,6 +324,16 @@ class SyncManager {
     }
   }
   
+  // Background Sync API를 위한 타입 정의
+  interface SyncManager {
+    register(tag: string): Promise<void>;
+    getTags(): Promise<string[]>;
+  }
+
+  interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
+    sync: SyncManager;
+  }
+
   // 백그라운드 동기화 등록
   async registerBackgroundSync(): Promise<boolean> {
     try {
@@ -333,8 +343,8 @@ class SyncManager {
       }
       
       const registration = await navigator.serviceWorker.ready;
-      // TypeScript에서 sync 속성을 인식하지 못하므로 타입 단언(type assertion) 사용
-      await (registration as any).sync.register('background-sync');
+      // 명시적인 타입 정의를 사용하여 타입 안전성 향상
+      await (registration as ServiceWorkerRegistrationWithSync).sync.register('background-sync');
       console.log('백그라운드 동기화 등록 완료');
       return true;
     } catch (error) {

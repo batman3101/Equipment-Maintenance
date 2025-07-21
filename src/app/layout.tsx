@@ -9,6 +9,8 @@ import { OfflineNotification, OfflineBanner } from '@/components/OfflineNotifica
 import { SyncNotificationContainer } from '@/components/SyncNotification';
 import { SyncStatusNotification } from '@/components/SyncStatusNotification';
 import { ClientOnly } from '@/components/ClientOnly';
+import { InitialLoadOptimizer } from '@/components/InitialLoadOptimizer';
+import { checkWebPSupport } from '@/lib/utils';
 
 import './globals.css';
 
@@ -51,6 +53,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // WebP 지원 여부 확인 (클라이언트 사이드에서만 실행)
+  if (typeof window !== 'undefined') {
+    checkWebPSupport();
+  }
+  
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
@@ -63,6 +70,14 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="msapplication-tap-highlight" content="no" />
+        
+        {/* 주요 경로 프리로드 */}
+        <link rel="preload" href="/_next/static/chunks/main.js" as="script" />
+        <link rel="preload" href="/_next/static/chunks/app-client.js" as="script" />
+        <link rel="preload" href="/fonts/font.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        
+        {/* DNS 프리페치 */}
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL || ''} />
       </head>
       <body className="bg-background min-h-screen font-sans antialiased">
         <AuthProvider>
@@ -74,15 +89,26 @@ export default function RootLayout({
             }
           >
             <PWAProvider>
-              <div className="relative flex min-h-screen flex-col">
-                <OfflineNotification />
-                <OfflineBanner />
-                <main className="flex-1">{children}</main>
-                <PWAUpdateNotification />
-                <PWAInstallPrompt />
-                <SyncNotificationContainer />
-                <SyncStatusNotification />
-              </div>
+              <InitialLoadOptimizer
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen bg-background">
+                    <div className="text-center">
+                      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                      <p className="mt-4 text-sm text-muted-foreground">앱 로딩 중...</p>
+                    </div>
+                  </div>
+                }
+              >
+                <div className="relative flex min-h-screen flex-col mobile-optimized touch-optimized">
+                  <OfflineNotification />
+                  <OfflineBanner />
+                  <main className="flex-1">{children}</main>
+                  <PWAUpdateNotification />
+                  <PWAInstallPrompt />
+                  <SyncNotificationContainer />
+                  <SyncStatusNotification />
+                </div>
+              </InitialLoadOptimizer>
             </PWAProvider>
           </ClientOnly>
         </AuthProvider>
