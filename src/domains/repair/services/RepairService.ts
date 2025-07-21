@@ -1,5 +1,6 @@
 import { RepairRepository } from './RepairRepository';
 import { RepairPartRepository } from './RepairPartRepository';
+import { offlineStorage } from '@/lib/offline-storage';
 import type { 
   Repair, 
   CreateRepairRequest, 
@@ -21,7 +22,7 @@ export class RepairService {
   ) {}
 
   /**
-   * 수리 기록 생성
+   * 수리 기록 생성 (오프라인 지원)
    * 비즈니스 규칙: 총 비용 자동 계산, 데이터 검증
    */
   async createRepair(repairData: CreateRepairRequest): Promise<Repair> {
@@ -33,12 +34,76 @@ export class RepairService {
       this.validatePartsData(repairData.parts_used);
     }
 
+    // 네트워크 상태 확인
+    const isOnline = navigator.onLine;
+
     try {
-      const repair = await this.repairRepository.create(repairData);
-      return repair;
+      if (isOnline) {
+        // 온라인 상태: 일반적인 등록 프로세스
+        const repair = await this.repairRepository.create(repairData);
+        return repair;
+      } else {
+        // 오프라인 상태: 로컬 저장 후 동기화 대기
+        return await this.createRepairOffline(repairData);
+      }
     } catch (error) {
+      // 온라인 상태에서 실패한 경우 오프라인 저장 시도
+      if (navigator.onLine) {
+        console.warn('온라인 수리 기록 생성 실패, 오프라인 저장으로 전환:', error);
+        try {
+          return await this.createRepairOffline(repairData);
+        } catch (offlineError) {
+          console.error('오프라인 저장도 실패:', offlineError);
+        }
+      }
+      
       throw new Error(`수리 기록 생성 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     }
+  }
+
+  /**
+   * 오프라인 수리 기록 생성
+   */
+  private async createRepairOffline(repairData: CreateRepairRequest): Promise<Repair> {
+    // 임시 ID 생성
+    const tempId = `temp-repair-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 총 비용 계산
+    let totalCost = 0;
+    if (repairData.parts_used && repairData.parts_used.length > 0) {
+      totalCost = repairData.parts_used.reduce((sum, part) => {
+        return sum + (part.quantity * part.unit_price);
+      }, 0);
+    }
+
+    // 오프라인 수리 데이터 생성
+    const offlineRepairData = {
+      id: tempId,
+      breakdown_id: repairData.breakdown_id,
+      action_taken: repairData.action_taken,
+      technician_id: repairData.technician_id,
+      completed_at: repairData.completed_at,
+      total_cost: totalCost,
+      parts_used: repairData.parts_used || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      // 오프라인 플래그
+      _offline: true,
+      _tempId: tempId
+    };
+
+    // 오프라인 저장소에 저장
+    await offlineStorage.saveOfflineData({
+      id: tempId,
+      type: 'repair',
+      data: offlineRepairData,
+      action: 'create'
+    });
+
+    console.log('오프라인 수리 기록 생성 완료:', tempId);
+    
+    // 임시 수리 객체 반환
+    return offlineRepairData as Repair;
   }
 
   /**

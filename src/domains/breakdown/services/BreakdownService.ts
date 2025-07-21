@@ -1,6 +1,7 @@
 import { BreakdownRepository } from './BreakdownRepository';
 import { FileUploadService } from './FileUploadService';
 import { supabase } from '@/lib/supabase';
+import { offlineStorage } from '@/lib/offline-storage';
 import type { 
   Breakdown, 
   CreateBreakdownRequest, 
@@ -40,7 +41,7 @@ export class BreakdownService {
   }
 
   /**
-   * 고장 등록
+   * 고장 등록 (오프라인 지원)
    */
   async createBreakdown(request: CreateBreakdownRequest): Promise<Breakdown> {
     try {
@@ -50,57 +51,172 @@ export class BreakdownService {
         throw new Error('인증되지 않은 사용자입니다.');
       }
 
-      // 사용자 정보 조회
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('plant_id')
-        .eq('id', user.id)
-        .single();
+      // 네트워크 상태 확인
+      const isOnline = navigator.onLine;
 
-      if (userError || !userData) {
-        throw new Error('사용자 정보를 찾을 수 없습니다.');
+      if (isOnline) {
+        // 온라인 상태: 일반적인 등록 프로세스
+        return await this.createBreakdownOnline(request, user);
+      } else {
+        // 오프라인 상태: 로컬 저장 후 동기화 대기
+        return await this.createBreakdownOffline(request, user);
       }
-
-      // 설비 정보 확인
-      const { data: equipment, error: equipmentError } = await supabase
-        .from('equipment')
-        .select('id')
-        .eq('equipment_number', request.equipment_number)
-        .eq('equipment_type', request.equipment_type)
-        .eq('plant_id', userData.plant_id)
-        .single();
-
-      if (equipmentError || !equipment) {
-        throw new Error('해당 설비를 찾을 수 없습니다.');
-      }
-
-      // 고장 데이터 생성
-      const breakdownData: Omit<Breakdown, 'id' | 'created_at' | 'updated_at'> = {
-        equipment_id: equipment.id,
-        equipment_type: request.equipment_type,
-        equipment_number: request.equipment_number,
-        occurred_at: request.occurred_at,
-        symptoms: request.symptoms,
-        cause: request.cause,
-        status: 'in_progress',
-        reporter_id: user.id,
-        plant_id: userData.plant_id
-      };
-
-      // 고장 등록
-      const breakdown = await this.breakdownRepository.create(breakdownData);
-
-      // 파일 업로드 처리
-      if (request.attachments && request.attachments.length > 0) {
-        await this.uploadAttachments(breakdown.id, request.attachments);
-      }
-
-      // 실시간 알림 발송
-      await this.sendRealtimeNotification(breakdown);
-
-      return breakdown;
     } catch (error) {
+      // 온라인 상태에서 실패한 경우 오프라인 저장 시도
+      if (navigator.onLine) {
+        console.warn('온라인 등록 실패, 오프라인 저장으로 전환:', error);
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            return await this.createBreakdownOffline(request, user);
+          }
+        } catch (offlineError) {
+          console.error('오프라인 저장도 실패:', offlineError);
+        }
+      }
+      
       throw new Error(`고장 등록 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * 온라인 고장 등록
+   */
+  private async createBreakdownOnline(request: CreateBreakdownRequest, user: any): Promise<Breakdown> {
+    // 사용자 정보 조회
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('plant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || !userData) {
+      throw new Error('사용자 정보를 찾을 수 없습니다.');
+    }
+
+    // 설비 정보 확인
+    const { data: equipment, error: equipmentError } = await supabase
+      .from('equipment')
+      .select('id')
+      .eq('equipment_number', request.equipment_number)
+      .eq('equipment_type', request.equipment_type)
+      .eq('plant_id', userData.plant_id)
+      .single();
+
+    if (equipmentError || !equipment) {
+      throw new Error('해당 설비를 찾을 수 없습니다.');
+    }
+
+    // 고장 데이터 생성
+    const breakdownData: Omit<Breakdown, 'id' | 'created_at' | 'updated_at'> = {
+      equipment_id: equipment.id,
+      equipment_type: request.equipment_type,
+      equipment_number: request.equipment_number,
+      occurred_at: request.occurred_at,
+      symptoms: request.symptoms,
+      cause: request.cause,
+      status: 'in_progress',
+      reporter_id: user.id,
+      plant_id: userData.plant_id
+    };
+
+    // 고장 등록
+    const breakdown = await this.breakdownRepository.create(breakdownData);
+
+    // 파일 업로드 처리
+    if (request.attachments && request.attachments.length > 0) {
+      await this.uploadAttachments(breakdown.id, request.attachments);
+    }
+
+    // 실시간 알림 발송
+    await this.sendRealtimeNotification(breakdown);
+
+    return breakdown;
+  }
+
+  /**
+   * 오프라인 고장 등록
+   */
+  private async createBreakdownOffline(request: CreateBreakdownRequest, user: any): Promise<Breakdown> {
+    // 임시 ID 생성
+    const tempId = `temp-breakdown-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 오프라인 고장 데이터 생성
+    const offlineBreakdownData = {
+      id: tempId,
+      equipment_type: request.equipment_type,
+      equipment_number: request.equipment_number,
+      occurred_at: request.occurred_at,
+      symptoms: request.symptoms,
+      cause: request.cause,
+      status: 'in_progress' as const,
+      reporter_id: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      // 오프라인 플래그
+      _offline: true,
+      _tempId: tempId
+    };
+
+    // 오프라인 저장소에 저장
+    await offlineStorage.saveOfflineData({
+      id: tempId,
+      type: 'breakdown',
+      data: offlineBreakdownData,
+      action: 'create'
+    });
+
+    // 파일이 있는 경우 로컬 저장 (실제 구현에서는 IndexedDB나 다른 방법 사용)
+    if (request.attachments && request.attachments.length > 0) {
+      await this.saveAttachmentsOffline(tempId, request.attachments);
+    }
+
+    console.log('오프라인 고장 등록 완료:', tempId);
+    
+    // 임시 고장 객체 반환
+    return offlineBreakdownData as Breakdown;
+  }
+
+  /**
+   * 오프라인 첨부 파일 저장
+   */
+  private async saveAttachmentsOffline(breakdownId: string, files: File[]): Promise<void> {
+    try {
+      // 파일을 Base64로 변환하여 저장 (실제 구현에서는 더 효율적인 방법 사용)
+      const attachmentPromises = files.map(async (file) => {
+        return new Promise<any>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            resolve({
+              breakdown_id: breakdownId,
+              file_name: file.name,
+              file_type: file.type,
+              file_size: file.size,
+              file_data: reader.result, // Base64 데이터
+              _offline: true
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      });
+
+      const attachmentData = await Promise.all(attachmentPromises);
+      
+      // 오프라인 저장소에 첨부 파일 정보 저장
+      for (const attachment of attachmentData) {
+        await offlineStorage.saveOfflineData({
+          id: `${breakdownId}-attachment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: 'breakdown',
+          data: attachment,
+          action: 'create'
+        });
+      }
+      
+      console.log('오프라인 첨부 파일 저장 완료:', attachmentData.length, '개');
+    } catch (error) {
+      console.error('오프라인 첨부 파일 저장 실패:', error);
+      // 첨부 파일 저장 실패는 전체 프로세스를 중단시키지 않음
     }
   }
 
