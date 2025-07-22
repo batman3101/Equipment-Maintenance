@@ -33,6 +33,7 @@ interface FormErrors {
   symptoms?: string;
   occurred_at?: string;
   cause?: string;
+  attachments?: string;
   submit?: string;
 }
 
@@ -84,7 +85,9 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
   // 필드 포커스 아웃 핸들러
   const handleFieldBlur = (field: keyof FormData) => {
     setTouched(prev => ({ ...prev, [field]: true }));
-    validateField(field, formData[field]);
+    if (field !== 'attachments') {
+      validateField(field, formData[field] as string);
+    }
   };
 
   // 파일 첨부 핸들러
@@ -98,7 +101,7 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
   };
 
   // 개별 필드 유효성 검사
-  const validateField = async (field: keyof FormData, value: string) => {
+  const validateField = async (field: keyof Omit<FormData, 'attachments'>, value: string) => {
     let error: string | undefined;
 
     switch (field) {
@@ -283,38 +286,50 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
       {/* 설비 종류 선택 */}
       <EquipmentTypeSelect
         value={formData.equipment_type}
-        onChange={(value) => handleFieldChange('equipment_type', value)}
+        onChange={(value) => {
+          handleFieldChange('equipment_type', value);
+          setTouched(prev => ({ ...prev, equipment_type: true }));
+          validateField('equipment_type', value);
+        }}
         error={touched.equipment_type ? errors.equipment_type : undefined}
         required
-        onBlur={() => handleFieldBlur('equipment_type')}
       />
 
       {/* 설비 번호 입력 */}
       <EquipmentNumberInput
         value={formData.equipment_number}
-        onChange={(value) => handleFieldChange('equipment_number', value)}
+        onChange={(value) => {
+          handleFieldChange('equipment_number', value);
+          setTouched(prev => ({ ...prev, equipment_number: true }));
+          validateField('equipment_number', value);
+        }}
         equipmentType={formData.equipment_type}
         error={touched.equipment_number ? errors.equipment_number : undefined}
         required
-        onBlur={() => handleFieldBlur('equipment_number')}
       />
 
       {/* 고장 발생 시각 */}
       <OccurredAtInput
         value={formData.occurred_at}
-        onChange={(value) => handleFieldChange('occurred_at', value)}
+        onChange={(value) => {
+          handleFieldChange('occurred_at', value);
+          setTouched(prev => ({ ...prev, occurred_at: true }));
+          validateField('occurred_at', value);
+        }}
         error={touched.occurred_at ? errors.occurred_at : undefined}
         required
-        onBlur={() => handleFieldBlur('occurred_at')}
       />
 
       {/* 증상 입력 */}
       <SymptomsInput
         value={formData.symptoms}
-        onChange={(value) => handleFieldChange('symptoms', value)}
+        onChange={(value) => {
+          handleFieldChange('symptoms', value);
+          setTouched(prev => ({ ...prev, symptoms: true }));
+          validateField('symptoms', value);
+        }}
         error={touched.symptoms ? errors.symptoms : undefined}
         required
-        onBlur={() => handleFieldBlur('symptoms')}
       />
 
       {/* 원인 입력 (선택사항) */}
@@ -324,15 +339,18 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
         </label>
         <textarea
           value={formData.cause}
-          onChange={(e) => handleFieldChange('cause', e.target.value)}
-          onBlur={() => handleFieldBlur('cause')}
+          onChange={(e) => {
+            handleFieldChange('cause', e.target.value);
+            setTouched(prev => ({ ...prev, cause: true }));
+            validateField('cause', e.target.value);
+          }}
           placeholder="고장의 원인을 알고 있다면 입력해주세요."
           className="flex w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[80px] resize-y"
           maxLength={500}
         />
         <div className="flex justify-end mt-1">
           <span className="text-xs text-gray-500">
-            {formData.cause.length}/500
+            {formData.cause ? formData.cause.length : 0}/500
           </span>
         </div>
       </div>

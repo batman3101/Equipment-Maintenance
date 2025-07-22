@@ -6,7 +6,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Card, Badge, Button, Chip } from '@/shared/components/ui';
-import type { Equipment, EquipmentStatus, EquipmentPriority } from '../types';
+import { Equipment, EquipmentStatus, EquipmentPriority } from '../types';
 import { 
   EQUIPMENT_TYPE_LABELS, 
   EQUIPMENT_STATUS_LABELS, 
@@ -46,13 +46,13 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
     // 상태별 배지 변형
     const getStatusBadgeVariant = (status: EquipmentStatus) => {
       switch (status) {
-        case 'active':
+        case EquipmentStatus.ACTIVE:
           return 'success';
-        case 'inactive':
+        case EquipmentStatus.INACTIVE:
           return 'default';
-        case 'maintenance':
+        case EquipmentStatus.MAINTENANCE:
           return 'warning';
-        case 'broken':
+        case EquipmentStatus.BROKEN:
           return 'danger';
         default:
           return 'default';
@@ -62,13 +62,13 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
     // 우선순위별 칩 변형
     const getPriorityChipVariant = (priority: EquipmentPriority) => {
       switch (priority) {
-        case 'low':
+        case EquipmentPriority.LOW:
           return 'default';
-        case 'medium':
+        case EquipmentPriority.MEDIUM:
           return 'primary';
-        case 'high':
+        case EquipmentPriority.HIGH:
           return 'warning';
-        case 'critical':
+        case EquipmentPriority.CRITICAL:
           return 'danger';
         default:
           return 'default';
@@ -190,11 +190,11 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
                 size="sm"
                 onClick={(e) => handleActionClick(e, () => {
                   // 상태 변경 로직 (간단한 토글 예시)
-                  const newStatus = equipment.status === 'active' ? 'inactive' : 'active';
+                  const newStatus = equipment.status === EquipmentStatus.ACTIVE ? EquipmentStatus.INACTIVE : EquipmentStatus.ACTIVE;
                   onStatusChange(equipment, newStatus);
                 })}
               >
-                {equipment.status === 'active' ? '비활성화' : '활성화'}
+                {equipment.status === EquipmentStatus.ACTIVE ? '비활성화' : '활성화'}
               </Button>
             )}
 

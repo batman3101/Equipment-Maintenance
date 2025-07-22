@@ -120,7 +120,7 @@ export function BreakdownDetail({
   const actionSheetItems = [
     ...(canEdit ? [{
       label: '고장 정보 수정',
-      icon: Edit3,
+      icon: <Edit3 className="w-5 h-5" />,
       onClick: () => {
         setShowActionSheet(false);
         onEdit?.();
@@ -128,7 +128,7 @@ export function BreakdownDetail({
     }] : []),
     ...(breakdown.status !== 'completed' ? [{
       label: '수리 기록 추가',
-      icon: Plus,
+      icon: <Plus className="w-5 h-5" />,
       onClick: () => {
         setShowActionSheet(false);
         onAddRepair?.();
@@ -264,7 +264,7 @@ export function BreakdownDetail({
         isOpen={showActionSheet}
         onClose={() => setShowActionSheet(false)}
         title="작업 선택"
-        items={actionSheetItems}
+        actions={actionSheetItems}
       />
 
       {/* 이미지 뷰어 (간단한 구현) */}

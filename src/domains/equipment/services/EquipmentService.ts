@@ -1,7 +1,7 @@
 // Equipment Service 구현
 // 비즈니스 로직 계층 - SOLID 원칙 적용
 
-import type { 
+import { 
   Equipment, 
   CreateEquipmentRequest, 
   UpdateEquipmentRequest,

@@ -26,7 +26,7 @@ export function PartsInput({
   const [suggestions, setSuggestions] = useState<PartSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // 새 부품 추가
   const addPart = () => {

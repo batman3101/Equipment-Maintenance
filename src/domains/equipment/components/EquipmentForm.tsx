@@ -9,7 +9,7 @@ import {
   FormField,
   FormLabel 
 } from '@/shared/components/ui';
-import type { 
+import { 
   CreateEquipmentRequest, 
   UpdateEquipmentRequest,
   EquipmentType,
@@ -41,9 +41,9 @@ export const EquipmentForm = React.forwardRef<HTMLFormElement, EquipmentFormProp
     const [formData, setFormData] = useState<CreateEquipmentRequest>({
       equipment_number: initialData?.equipment_number || '',
       name: initialData?.name || '',
-      type: initialData?.type || 'cnc_machine',
+      type: initialData?.type || EquipmentType.CNC_MACHINE,
       location: initialData?.location || '',
-      priority: initialData?.priority || 'medium',
+      priority: initialData?.priority || EquipmentPriority.MEDIUM,
       model: initialData?.model || '',
       manufacturer: initialData?.manufacturer || '',
       description: initialData?.description || ''

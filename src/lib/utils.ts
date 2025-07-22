@@ -2,14 +2,14 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 /**
- * Utility function to merge Tailwind CSS classes
+ * 클래스 이름을 병합하는 유틸리티 함수
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 /**
- * Format date to Korean locale string
+ * 날짜를 한국 로케일 형식으로 포맷팅
  */
 export function formatDate(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -23,9 +23,9 @@ export function formatDate(date: string | Date): string {
 }
 
 /**
- * Format date to relative time (e.g., "2시간 전")
+ * 상대적 시간을 한국어로 포맷팅
  */
-export function formatRelativeTime(date: string | Date): string {
+export function formatRelativeTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
@@ -49,11 +49,12 @@ export function formatRelativeTime(date: string | Date): string {
     return `${diffInDays}일 전`;
   }
 
+  // 일주일 이상 지난 경우 formatDate 사용
   return formatDate(dateObj);
 }
 
 /**
- * Format currency to Korean Won
+ * 통화 형식으로 포맷팅
  */
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('ko-KR', {
@@ -63,7 +64,7 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Validate file type and size
+ * 파일 유효성 검사
  */
 export function validateFile(
   file: File,
@@ -73,7 +74,7 @@ export function validateFile(
   if (!allowedTypes.includes(file.type)) {
     return {
       isValid: false,
-      error: `지원하지 않는 파일 형식입니다. (${allowedTypes.join(', ')})`,
+      error: `지원하지 않는 파일 형식입니다. 허용된 형식: ${allowedTypes.join(', ')}`,
     };
   }
 
@@ -81,7 +82,7 @@ export function validateFile(
     const maxSizeMB = Math.round(maxSize / (1024 * 1024));
     return {
       isValid: false,
-      error: `파일 크기가 너무 큽니다. (최대 ${maxSizeMB}MB)`,
+      error: `파일 크기가 너무 큽니다. 최대 크기: ${maxSizeMB}MB`,
     };
   }
 
@@ -89,20 +90,21 @@ export function validateFile(
 }
 
 /**
- * Generate a random ID
+ * 고유 ID 생성
  */
 export function generateId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
 /**
- * Debounce function
+ * 디바운스 함수
  */
-export function debounce<T extends (...args: unknown[]) => unknown>(
+export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
+  
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);

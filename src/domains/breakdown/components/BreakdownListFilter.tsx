@@ -62,7 +62,7 @@ export function BreakdownListFilter({
         <SearchInput
           placeholder="설비 번호로 검색..."
           value={searchQuery}
-          onSubmit={handleSearchSubmit}
+          onSearch={handleSearchSubmit}
           className="w-full"
         />
       </div>
@@ -100,11 +100,11 @@ export function BreakdownListFilter({
               {statusOptions.map((option) => (
                 <Chip
                   key={option.value}
-                  label={option.label}
-                  selected={filter.status === option.value}
                   onClick={() => handleStatusFilter(option.value)}
-                  className={option.selected ? option.color : ''}
-                />
+                  className={filter.status === option.value ? option.color : ''}
+                >
+                  {option.label}
+                </Chip>
               ))}
             </div>
           </div>

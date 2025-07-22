@@ -14,11 +14,15 @@ export function ServiceWorkerRegistration() {
           
           // 백그라운드 동기화 등록
           if ('sync' in window.ServiceWorkerRegistration.prototype) {
-            registration.sync.register('background-sync').then(() => {
-              console.log('백그라운드 동기화 등록 완료');
-            }).catch((error) => {
-              console.error('백그라운드 동기화 등록 실패:', error);
-            });
+            try {
+              (registration as any).sync?.register('background-sync').then(() => {
+                console.log('백그라운드 동기화 등록 완료');
+              }).catch((error: any) => {
+                console.error('백그라운드 동기화 등록 실패:', error);
+              });
+            } catch (error) {
+              console.error('백그라운드 동기화 지원되지 않음:', error);
+            }
           }
         },
         onUpdate: (registration) => {

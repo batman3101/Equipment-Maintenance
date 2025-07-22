@@ -18,7 +18,7 @@ export function usePartSuggestions(): UsePartSuggestionsReturn {
   const [suggestions, setSuggestions] = useState<PartSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const searchParts = useCallback(async (query: string): Promise<PartSuggestion[]> => {
     // 이전 검색 요청 취소

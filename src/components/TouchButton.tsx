@@ -1,101 +1,119 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { triggerHapticFeedback, HapticFeedbackType } from '@/lib/utils/haptic';
+import { triggerHapticFeedback } from '@/lib/utils/haptic';
 
-interface TouchButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface TouchButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
-  hapticFeedback?: HapticFeedbackType;
   fullWidth?: boolean;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
 }
 
-/**
- * 터치 최적화 버튼 컴포넌트
- * - 44px 이상의 터치 영역 보장
- * - 햅틱 피드백 지원
- * - 터치 인터랙션 애니메이션
- * - 접근성 지원
- */
-export function TouchButton({
-  children,
-  className,
-  variant = 'primary',
-  size = 'md',
-  hapticFeedback = 'light',
-  fullWidth = false,
-  disabled = false,
-  icon,
-  iconPosition = 'left',
-  onClick,
-  ...props
-}: TouchButtonProps) {
-  const [isPressed, setIsPressed] = useState(false);
+const TouchButton = forwardRef<HTMLButtonElement, TouchButtonProps>(
+  (
+    {
+      className,
+      variant = 'primary',
+      size = 'md',
+      fullWidth = false,
+      icon,
+      iconPosition = 'left',
+      children,
+      onClick,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
+    const [isPressed, setIsPressed] = useState(false);
 
-  // 버튼 스타일 변형
-  const variantStyles = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 active:bg-gray-400',
-    outline: 'bg-transparent border border-gray-300 text-gray-800 hover:bg-gray-100 active:bg-gray-200',
-    ghost: 'bg-transparent text-gray-800 hover:bg-gray-100 active:bg-gray-200',
-    danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
-  };
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (disabled) return;
+      
+      triggerHapticFeedback('light');
+      onClick?.(event);
+    };
 
-  // 버튼 크기
-  const sizeStyles = {
-    sm: 'text-sm px-3 py-2 min-h-[40px] min-w-[40px]',
-    md: 'text-base px-4 py-2 min-h-[44px] min-w-[44px]',
-    lg: 'text-lg px-5 py-3 min-h-[48px] min-w-[48px]',
-  };
-
-  // 터치 이벤트 핸들러
-  const handleTouchStart = () => {
-    if (!disabled) {
+    const handleTouchStart = () => {
+      if (disabled) return;
+      
+      triggerHapticFeedback('light');
       setIsPressed(true);
-      triggerHapticFeedback(hapticFeedback);
-    }
-  };
+    };
 
-  const handleTouchEnd = () => {
-    if (!disabled) {
+    const handleTouchEnd = () => {
       setIsPressed(false);
-    }
-  };
+    };
 
-  // 클릭 이벤트 핸들러
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!disabled && onClick) {
-      triggerHapticFeedback(hapticFeedback);
-      onClick(e);
-    }
-  };
+    const baseClasses = cn(
+      // 기본 스타일
+      'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200',
+      'focus:outline-none focus:ring-2 focus:ring-offset-2',
+      'active:scale-95 select-none',
+      
+      // 터치 영역 최소 44px 보장
+      'min-h-[44px] min-w-[44px]',
+      
+      // 크기별 스타일
+      {
+        'px-3 py-2 text-sm': size === 'sm',
+        'px-4 py-2.5 text-base': size === 'md',
+        'px-6 py-3 text-lg': size === 'lg',
+      },
+      
+      // 변형별 스타일
+      {
+        'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500': variant === 'primary',
+        'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500': variant === 'secondary',
+        'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500': variant === 'outline',
+        'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500': variant === 'ghost',
+        'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500': variant === 'danger',
+      },
+      
+      // 전체 너비
+      {
+        'w-full': fullWidth,
+      },
+      
+      // 비활성화 상태
+      {
+        'opacity-50 cursor-not-allowed': disabled,
+      },
+      
+      // 터치 상태
+      {
+        'scale-95': isPressed,
+      },
+      
+      className
+    );
 
-  return (
-    <button
-      className={cn(
-        'relative rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-        variantStyles[variant],
-        sizeStyles[size],
-        fullWidth ? 'w-full' : '',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-        isPressed ? 'scale-95' : '',
-        className
-      )}
-      disabled={disabled}
-      onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      {...props}
-    >
-      <span className="flex items-center justify-center gap-2">
-        {icon && iconPosition === 'left' && <span className="flex-shrink-0">{icon}</span>}
+    return (
+      <button
+        ref={ref}
+        className={baseClasses}
+        onClick={handleClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        disabled={disabled}
+        {...props}
+      >
+        {icon && iconPosition === 'left' && (
+          <span className="mr-2">{icon}</span>
+        )}
         {children}
-        {icon && iconPosition === 'right' && <span className="flex-shrink-0">{icon}</span>}
-      </span>
-    </button>
-  );
-}
+        {icon && iconPosition === 'right' && (
+          <span className="ml-2">{icon}</span>
+        )}
+      </button>
+    );
+  }
+);
+
+TouchButton.displayName = 'TouchButton';
+
+export { TouchButton };

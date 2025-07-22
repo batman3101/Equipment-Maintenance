@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { KPICardProps } from '../types';
-import { TrendUp, TrendDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const colorClasses = {
   blue: {
@@ -46,9 +46,9 @@ export function KPICard({ title, value, trend, icon, color }: KPICardProps) {
     
     switch (trend.changeType) {
       case 'increase':
-        return <TrendUp className="h-4 w-4" />;
+        return <TrendingUp className="h-4 w-4" />;
       case 'decrease':
-        return <TrendDown className="h-4 w-4" />;
+        return <TrendingDown className="h-4 w-4" />;
       default:
         return <Minus className="h-4 w-4" />;
     }

@@ -119,7 +119,7 @@ export function BreakdownList({ onBreakdownClick }: BreakdownListProps) {
 
   // 로딩 상태
   if (loading && breakdowns.length === 0) {
-    return <FullScreenLoading message="고장 목록을 불러오는 중..." />;
+    return <FullScreenLoading isLoading={true} message="고장 목록을 불러오는 중..." />;
   }
 
   // 에러 상태
@@ -182,10 +182,12 @@ export function BreakdownList({ onBreakdownClick }: BreakdownListProps) {
                 ? "검색 조건을 변경하거나 필터를 초기화해보세요."
                 : "첫 번째 고장을 등록해보세요."
             }
-            actionLabel={searchQuery || filter.status ? "필터 초기화" : undefined}
-            onAction={searchQuery || filter.status ? () => {
-              setSearchQuery('');
-              handleFilterChange({});
+            action={searchQuery || filter.status ? {
+              label: "필터 초기화",
+              onClick: () => {
+                setSearchQuery('');
+                handleFilterChange({});
+              }
             } : undefined}
           />
         ) : (

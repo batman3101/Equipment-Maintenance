@@ -103,7 +103,8 @@ export class RepairService {
     console.log('오프라인 수리 기록 생성 완료:', tempId);
     
     // 임시 수리 객체 반환
-    return offlineRepairData as Repair;
+    // 오프라인 모드에서는 타입을 완전히 일치시키기 어려우므로 unknown으로 변환 후 Repair로 캐스팅
+    return offlineRepairData as unknown as Repair;
   }
 
   /**

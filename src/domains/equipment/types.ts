@@ -105,7 +105,7 @@ export interface EquipmentFilter {
  * 설비 정렬 옵션 인터페이스
  */
 export interface EquipmentSort {
-  field: 'equipment_number' | 'name' | 'type' | 'status' | 'priority' | 'location' | 'created_at' | 'updated_at';
+  field: 'equipment_number' | 'name' | 'type' | 'status' | 'priority' | 'location' | 'created_at' | 'updated_at' | 'next_maintenance_date';
   direction: 'asc' | 'desc';
 }
 

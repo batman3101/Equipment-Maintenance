@@ -1,0 +1,30 @@
+name: 데이터베이스 마이그레이션
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'supabase/migrations/**'
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    name: 데이터베이스 마이그레이션
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Supabase CLI 설치
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Supabase 로그인
+        run: supabase login --token ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - name: 스테이징 환경 마이그레이션
+        run: |
+          supabase link --project-ref ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          supabase db push
+      - name: 프로덕션 환경 마이그레이션
+        if: success()
+        run: |
+          supabase link --project-ref ${{ secrets.SUPABASE_PRODUCTION_PROJECT_ID }}
+          supabase db push

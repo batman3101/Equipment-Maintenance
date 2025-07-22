@@ -101,8 +101,8 @@ export const EquipmentNumberInput: React.FC<EquipmentNumberInputProps> = ({
   };
 
   // 값 변경 핸들러
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(event.target.value);
+  const handleInputChange = (value: string) => {
+    onChange(value);
   };
 
   // 제안 선택 핸들러
@@ -117,26 +117,31 @@ export const EquipmentNumberInput: React.FC<EquipmentNumberInputProps> = ({
 
   return (
     <div className={className}>
-      <SearchInput
-        label="설비 번호"
-        placeholder={equipmentType ? "설비 번호를 입력하세요" : "먼저 설비 종류를 선택하세요"}
-        value={value}
-        onChange={handleChange}
-        onSearch={handleSearch}
-        onSuggestionSelect={handleSuggestionSelect}
-        onClear={handleClear}
-        suggestions={suggestions}
-        loading={loading}
-        error={error || searchError || undefined}
-        required={required}
-        disabled={disabled || !equipmentType}
-        helperText={
-          !equipmentType 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          설비 번호
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        <SearchInput
+          placeholder={equipmentType ? "설비 번호를 입력하세요" : "먼저 설비 종류를 선택하세요"}
+          value={value}
+          onSearch={handleInputChange}
+          onSuggestionSelect={handleSuggestionSelect}
+          onClear={handleClear}
+          suggestions={suggestions}
+          loading={loading}
+          disabled={disabled || !equipmentType}
+          debounceMs={300}
+        />
+        {(error || searchError) && (
+          <p className="mt-1 text-sm text-red-600">{error || searchError}</p>
+        )}
+        <p className="mt-1 text-sm text-gray-500">
+          {!equipmentType 
             ? "설비 종류를 먼저 선택해주세요" 
-            : "등록된 설비 번호를 입력하거나 목록에서 선택하세요"
-        }
-        debounceMs={300}
-      />
+            : "등록된 설비 번호를 입력하거나 목록에서 선택하세요"}
+        </p>
+      </div>
     </div>
   );
 };

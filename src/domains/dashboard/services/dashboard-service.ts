@@ -157,7 +157,7 @@ export class DashboardService {
             equipmentType: breakdown.equipment_type,
             equipmentNumber: breakdown.equipment_number,
             status: breakdown.status as 'in_progress' | 'under_repair' | 'completed',
-            reporterName: breakdown.reporter?.name || '알 수 없음',
+            reporterName: (breakdown.reporter as any)?.name || '알 수 없음',
             createdAt: breakdown.created_at,
             symptoms: breakdown.symptoms,
           }))
@@ -172,10 +172,10 @@ export class DashboardService {
             .map((repair) => ({
               id: repair.id,
               type: 'repair' as const,
-              equipmentType: repair.breakdown.equipment_type,
-              equipmentNumber: repair.breakdown.equipment_number,
-              status: repair.breakdown.status as 'in_progress' | 'under_repair' | 'completed',
-              reporterName: repair.technician?.name || '알 수 없음',
+              equipmentType: (repair.breakdown as any).equipment_type,
+              equipmentNumber: (repair.breakdown as any).equipment_number,
+              status: (repair.breakdown as any).status as 'in_progress' | 'under_repair' | 'completed',
+              reporterName: (repair.technician as any)?.name || '알 수 없음',
               createdAt: repair.created_at,
               actionTaken: repair.action_taken,
             }))

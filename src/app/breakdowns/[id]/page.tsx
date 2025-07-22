@@ -12,9 +12,9 @@ import { useRealtimeNotifications } from '@/domains/breakdown/hooks/useRealtimeN
 import type { Breakdown } from '@/domains/breakdown/types';
 
 interface BreakdownDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -25,6 +25,7 @@ export default function BreakdownDetailPage({ params }: BreakdownDetailPageProps
   const router = useRouter();
   const { user } = useAuth();
   const [breakdown, setBreakdown] = useState<Breakdown | null>(null);
+  const [id, setId] = useState<string>('');
 
   const {
     breakdown: fetchedBreakdown,
@@ -40,16 +41,16 @@ export default function BreakdownDetailPage({ params }: BreakdownDetailPageProps
     setFilters: setRepairFilters,
     refreshRepairs
   } = useRepairList({
-    initialFilters: { breakdown_id: params.id },
-    autoFetch: true
+    initialFilters: { breakdown_id: id },
+    autoFetch: false // id가 설정된 후에 수동으로 fetch
   });
 
   // 실시간 업데이트 구독
   useRealtimeNotifications({
     onStatusChanged: (payload) => {
-      if (payload.breakdown_id === params.id) {
+      if (payload.breakdown_id === id) {
         // 고장 정보 새로고침
-        fetchBreakdown(params.id);
+        fetchBreakdown(id);
       }
     },
     onError: (error) => {
@@ -57,12 +58,21 @@ export default function BreakdownDetailPage({ params }: BreakdownDetailPageProps
     }
   });
 
+  // params에서 id 추출
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setId(resolvedParams.id);
+    };
+    getParams();
+  }, [params]);
+
   // 고장 정보 로드
   useEffect(() => {
-    if (params.id) {
-      fetchBreakdown(params.id);
+    if (id) {
+      fetchBreakdown(id);
     }
-  }, [params.id, fetchBreakdown]);
+  }, [id, fetchBreakdown]);
 
   // 고장 정보 업데이트
   useEffect(() => {
@@ -71,35 +81,36 @@ export default function BreakdownDetailPage({ params }: BreakdownDetailPageProps
     }
   }, [fetchedBreakdown]);
 
-  // 수리 필터 업데이트
+  // 수리 필터 업데이트 및 데이터 fetch
   useEffect(() => {
-    if (params.id) {
-      setRepairFilters({ breakdown_id: params.id });
+    if (id) {
+      setRepairFilters({ breakdown_id: id });
+      refreshRepairs();
     }
-  }, [params.id, setRepairFilters]);
+  }, [id, setRepairFilters, refreshRepairs]);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleEdit = () => {
-    router.push(`/breakdowns/${params.id}/edit`);
+    router.push(`/breakdowns/${id}/edit`);
   };
 
   const handleAddRepair = () => {
-    router.push(`/repairs/new?breakdown_id=${params.id}`);
+    router.push(`/repairs/new?breakdown_id=${id}`);
   };
 
   // 수정 권한 확인
-  const canEdit = breakdown && user && (
+  const canEdit = Boolean(breakdown && user && (
     breakdown.reporter_id === user.id || 
     user.role === 'admin' || 
     user.role === 'manager'
-  );
+  ));
 
   // 로딩 상태
   if (breakdownLoading && !breakdown) {
-    return <FullScreenLoading message="고장 정보를 불러오는 중..." />;
+    return <FullScreenLoading message="고장 정보를 불러오는 중..." isLoading={true} />;
   }
 
   // 에러 상태
@@ -127,7 +138,7 @@ export default function BreakdownDetailPage({ params }: BreakdownDetailPageProps
             <p className="text-gray-600 mb-4">{breakdownError}</p>
             <div className="space-x-3">
               <button
-                onClick={() => fetchBreakdown(params.id)}
+                onClick={() => fetchBreakdown(id)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 다시 시도
