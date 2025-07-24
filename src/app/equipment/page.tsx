@@ -15,6 +15,7 @@ import {
   EquipmentForm,
   useEquipment
 } from '@/domains/equipment';
+import { Navigation } from '@/components/navigation';
 import type { Equipment, EquipmentFilter, EquipmentStatus } from '@/domains/equipment/types';
 
 export default function EquipmentPage() {
@@ -91,12 +92,16 @@ export default function EquipmentPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      {/* 헤더 */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">설비 관리</h1>
-        <p className="text-gray-600">설비 정보를 등록하고 관리할 수 있습니다.</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* 네비게이션 */}
+      <Navigation />
+      
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* 헤더 */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">설비 관리</h1>
+          <p className="text-gray-600">설비 정보를 등록하고 관리할 수 있습니다.</p>
+        </div>
 
       {/* 검색 및 필터 */}
       <div className="mb-6 space-y-4">
