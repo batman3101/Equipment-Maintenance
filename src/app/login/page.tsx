@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { LoginForm } from '@/domains/auth/components/login-form';
 import { useAuth } from '@/domains/auth/hooks/use-auth';
@@ -28,5 +28,9 @@ export default function LoginPage() {
     );
   }
 
-  return <LoginForm />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">로딩 중...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
 }

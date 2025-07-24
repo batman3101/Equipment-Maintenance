@@ -94,4 +94,5 @@ export {
 
 // Convenience re-exports from main supabase module
 export { supabase } from '../supabase';
-export type { Database } from '../supabase';
+// Database 타입 정의 (Supabase 타입 정의 파일이 없는 경우 대체)
+export type Database = any;

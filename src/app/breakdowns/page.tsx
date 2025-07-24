@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 import { Plus } from 'lucide-react';
 import { BreakdownList } from '@/domains/breakdown/components/BreakdownList';
 import type { Breakdown } from '@/domains/breakdown/types';
@@ -9,7 +10,7 @@ import type { Breakdown } from '@/domains/breakdown/types';
  * 고장 목록 페이지
  * 등록된 고장들을 조회하고 관리할 수 있는 메인 페이지입니다.
  */
-export default function BreakdownsPage() {
+function BreakdownsContent() {
   const router = useRouter();
 
   const handleBreakdownClick = (breakdown: Breakdown) => {
@@ -46,5 +47,13 @@ export default function BreakdownsPage() {
         <BreakdownList onBreakdownClick={handleBreakdownClick} />
       </main>
     </div>
+  );
+}
+
+export default function BreakdownsPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center">로딩 중...</div>}>
+      <BreakdownsContent />
+    </Suspense>
   );
 }

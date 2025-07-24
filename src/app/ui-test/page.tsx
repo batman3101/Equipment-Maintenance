@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import {
   Button,
   Input,
@@ -23,11 +23,11 @@ import {
 } from '@/shared/components/ui';
 
 /**
- * UI 컴포넌트 테스트 페이지
+ * UI 컴포넌트 테스트 페이지 내용
  * - 모든 공통 UI 컴포넌트들의 동작 확인
  * - 모바일 최적화 및 접근성 테스트
  */
-export default function UITestPage() {
+function UITestContent() {
   const [inputValue, setInputValue] = useState('');
   const [selectValue, setSelectValue] = useState('');
   const [textareaValue, setTextareaValue] = useState('');
@@ -293,5 +293,18 @@ export default function UITestPage() {
       {/* 토스트 컨테이너 */}
       <ToastContainer position="top-right" />
     </div>
+  );
+}
+
+/**
+ * UI 컴포넌트 테스트 페이지
+ */
+export default function UITestPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+      <div className="text-center">로딩 중...</div>
+    </div>}>
+      <UITestContent />
+    </Suspense>
   );
 }

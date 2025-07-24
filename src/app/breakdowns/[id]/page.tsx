@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { BreakdownDetail } from '@/domains/breakdown/components/BreakdownDetail';
@@ -210,14 +210,16 @@ export default function BreakdownDetailPage({ params }: BreakdownDetailPageProps
 
       {/* 메인 콘텐츠 */}
       <main className="flex-1 overflow-y-auto">
-        <BreakdownDetail
-          breakdown={breakdown}
-          repairs={repairs}
-          repairsLoading={repairsLoading}
-          canEdit={canEdit}
-          onEdit={handleEdit}
-          onAddRepair={handleAddRepair}
-        />
+        <Suspense fallback={<div className="p-4 text-center">고장 상세 정보를 불러오는 중...</div>}>
+          <BreakdownDetail
+            breakdown={breakdown}
+            repairs={repairs}
+            repairsLoading={repairsLoading}
+            canEdit={canEdit}
+            onEdit={handleEdit}
+            onAddRepair={handleAddRepair}
+          />
+        </Suspense>
 
         {/* 수리 내역 로딩 에러 */}
         {repairsError && (

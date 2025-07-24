@@ -149,9 +149,20 @@ ChipGroup.displayName = 'ChipGroup';
 /**
  * 선택 가능한 칩 컴포넌트
  */
-export interface SelectableChipProps extends Omit<ChipProps, 'onClick'> {
+export interface SelectableChipProps {
+  variant?: ChipVariant;
+  size?: ChipSize;
+  disabled?: boolean;
   selected?: boolean;
   onSelect?: (selected: boolean) => void;
+  className?: string;
+  children: React.ReactNode;
+  // 기타 버튼 속성
+  type?: 'button' | 'submit' | 'reset';
+  name?: string;
+  id?: string;
+  tabIndex?: number;
+  'aria-label'?: string;
 }
 
 export const SelectableChip = React.forwardRef<HTMLButtonElement, SelectableChipProps>(

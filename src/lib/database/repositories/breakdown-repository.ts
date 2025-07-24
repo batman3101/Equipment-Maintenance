@@ -2,7 +2,6 @@
 // Handles all database operations for breakdowns with proper error handling
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../../supabase';
 import { BaseRepository } from '../base-repository';
 import {
   Breakdown,
@@ -21,7 +20,7 @@ export class BreakdownRepository
   extends BaseRepository<Breakdown, BreakdownInsert, BreakdownUpdate, BreakdownFilters>
   implements IBreakdownRepository {
 
-  constructor(supabase: SupabaseClient<Database>) {
+  constructor(supabase: SupabaseClient<any>) {
     super(supabase, 'breakdowns');
   }
 

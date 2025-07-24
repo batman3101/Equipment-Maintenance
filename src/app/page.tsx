@@ -12,16 +12,20 @@ const Dashboard = lazy(() => import('@/domains/dashboard/components/dashboard').
 
 export default function Home() {
   return (
-    <ProtectedRoute>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <UserProfile />
+    <Suspense fallback={<div className="p-4 text-center">로딩 중...</div>}>
+      <ProtectedRoute>
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Suspense fallback={<div className="h-12 bg-gray-200 rounded animate-pulse"></div>}>
+              <UserProfile />
+            </Suspense>
+          </div>
+          
+          <Suspense fallback={<DashboardSkeleton />}>
+            <Dashboard />
+          </Suspense>
         </div>
-        
-        <Suspense fallback={<DashboardSkeleton />}>
-          <Dashboard />
-        </Suspense>
-      </div>
-    </ProtectedRoute>
+      </ProtectedRoute>
+    </Suspense>
   );
 }

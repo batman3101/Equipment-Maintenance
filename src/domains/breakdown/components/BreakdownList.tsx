@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, Suspense } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { BreakdownCard } from './BreakdownCard';
 import { BreakdownListFilter } from './BreakdownListFilter';
@@ -142,11 +142,13 @@ export function BreakdownList({ onBreakdownClick }: BreakdownListProps) {
   return (
     <div className="flex flex-col h-full bg-gray-50">
       {/* 필터 */}
-      <BreakdownListFilter
-        filter={filter}
-        onFilterChange={handleFilterChange}
-        onSearchChange={handleSearchChange}
-      />
+      <Suspense fallback={<div className="p-4 bg-white border-b border-gray-200">필터를 불러오는 중...</div>}>
+        <BreakdownListFilter
+          filter={filter}
+          onFilterChange={handleFilterChange}
+          onSearchChange={handleSearchChange}
+        />
+      </Suspense>
 
       {/* Pull-to-refresh 인디케이터 */}
       {(isPulling || isRefreshing) && (
@@ -167,13 +169,14 @@ export function BreakdownList({ onBreakdownClick }: BreakdownListProps) {
       )}
 
       {/* 목록 컨테이너 */}
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+      <Suspense fallback={<div className="p-4 text-center">목록을 불러오는 중...</div>}>
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
         {breakdowns.length === 0 ? (
           <EmptyState
             title="등록된 고장이 없습니다"
@@ -222,7 +225,8 @@ export function BreakdownList({ onBreakdownClick }: BreakdownListProps) {
             )}
           </div>
         )}
-      </div>
+        </div>
+      </Suspense>
     </div>
   );
 }

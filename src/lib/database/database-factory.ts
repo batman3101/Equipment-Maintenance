@@ -2,7 +2,6 @@
 // Creates and manages database service instances with proper dependency injection
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../supabase';
 import { supabase } from '../supabase';
 
 // Repository imports
@@ -32,7 +31,7 @@ import {
  */
 export class DatabaseFactory {
   private static instance: DatabaseFactory;
-  private supabaseClient: SupabaseClient<Database>;
+  private supabaseClient: SupabaseClient<any>;
 
   // Repository instances (lazy-loaded)
   private _breakdownRepository?: IBreakdownRepository;
@@ -46,7 +45,7 @@ export class DatabaseFactory {
   // private _equipmentService?: IEquipmentService;
   // private _dashboardService?: IDashboardService;
 
-  private constructor(supabaseClient?: SupabaseClient<Database>) {
+  private constructor(supabaseClient?: SupabaseClient<any>) {
     this.supabaseClient = supabaseClient || supabase;
   }
 
@@ -54,7 +53,7 @@ export class DatabaseFactory {
    * Get singleton instance of DatabaseFactory
    * Follows Singleton pattern for consistent database connections
    */
-  public static getInstance(supabaseClient?: SupabaseClient<Database>): DatabaseFactory {
+  public static getInstance(supabaseClient?: SupabaseClient<any>): DatabaseFactory {
     if (!DatabaseFactory.instance) {
       DatabaseFactory.instance = new DatabaseFactory(supabaseClient);
     }
@@ -144,7 +143,7 @@ export class DatabaseFactory {
    * Get the underlying Supabase client
    * Useful for direct database operations when needed
    */
-  public getSupabaseClient(): SupabaseClient<Database> {
+  public getSupabaseClient(): SupabaseClient<any> {
     return this.supabaseClient;
   }
 
@@ -181,7 +180,7 @@ export class DatabaseFactory {
  * Follows the Factory pattern for easy access
  */
 export function createDatabaseFactory(
-  supabaseClient?: SupabaseClient<Database>
+  supabaseClient?: SupabaseClient<any>
 ): DatabaseFactory {
   return DatabaseFactory.getInstance(supabaseClient);
 }

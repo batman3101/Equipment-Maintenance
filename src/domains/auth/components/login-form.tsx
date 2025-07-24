@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useAuth } from '../hooks/use-auth';
 import type { LoginCredentials } from '../types';
 
-// Login form component (SRP - only handles login form UI and validation)
-export function LoginForm() {
+// Login form content component
+function LoginFormContent() {
   const { authState, signIn } = useAuth();
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
@@ -153,5 +153,18 @@ export function LoginForm() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Login form component (SRP - only handles login form UI and validation)
+export function LoginForm() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">로딩 중...</div>
+      </div>
+    </div>}>
+      <LoginFormContent />
+    </Suspense>
   );
 }

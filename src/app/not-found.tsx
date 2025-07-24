@@ -1,6 +1,9 @@
-import Link from 'next/link';
+'use client';
 
-export default function NotFound() {
+import Link from 'next/link';
+import { Suspense } from 'react';
+
+function NotFoundContent() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4 text-center">
       <div className="rounded-lg bg-white p-8 shadow-lg">
@@ -16,5 +19,13 @@ export default function NotFound() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function NotFound() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center">로딩 중...</div>}>
+      <NotFoundContent />
+    </Suspense>
   );
 }

@@ -61,7 +61,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       const newValue = event.target.value;
       setValue(newValue);
       
-      if (newValue.trim()) {
+      if (typeof newValue === 'string' && newValue.trim()) {
         debouncedSearch(newValue);
         setShowSuggestions(suggestions.length > 0);
       } else {
@@ -111,7 +111,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           event.preventDefault();
           if (activeSuggestionIndex >= 0) {
             handleSuggestionClick(suggestions[activeSuggestionIndex]);
-          } else if (value.trim()) {
+          } else if (typeof value === 'string' && value.trim()) {
             onSearch?.(value);
             setShowSuggestions(false);
           }
@@ -158,7 +158,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             onFocus={() => {
-              if (suggestions.length > 0 && value.trim()) {
+              if (suggestions.length > 0 && typeof value === 'string' && value.trim()) {
                 setShowSuggestions(true);
               }
             }}

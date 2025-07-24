@@ -2,7 +2,6 @@
 // Provides common database operations with proper error handling
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../supabase';
 import { 
   PaginationOptions, 
   PaginatedResult, 
@@ -17,7 +16,7 @@ export abstract class BaseRepository<
   TFilters extends Record<string, unknown> = Record<string, unknown>
 > {
   protected constructor(
-    protected supabase: SupabaseClient<Database>,
+    protected supabase: SupabaseClient<any>,
     protected tableName: string
   ) {}
 
@@ -217,7 +216,7 @@ export abstract class BaseRepository<
 
   // Utility method for transactions
   protected async executeInTransaction<TResult>(
-    operation: (client: SupabaseClient<Database>) => Promise<TResult>
+    operation: (client: SupabaseClient<any>) => Promise<TResult>
   ): Promise<TResult> {
     try {
       // Note: Supabase doesn't support explicit transactions in the client

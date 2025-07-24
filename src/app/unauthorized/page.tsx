@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { useAuth } from '@/domains/auth/hooks/use-auth';
 
-// Unauthorized access page (SRP - only handles unauthorized access UI)
-export default function UnauthorizedPage() {
+// Unauthorized access page content
+function UnauthorizedContent() {
   const { authState } = useAuth();
 
   return (
@@ -48,5 +49,20 @@ export default function UnauthorizedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Unauthorized access page (SRP - only handles unauthorized access UI)
+export default function UnauthorizedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 text-center">
+          <div className="text-center">로딩 중...</div>
+        </div>
+      </div>
+    }>
+      <UnauthorizedContent />
+    </Suspense>
   );
 }

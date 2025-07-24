@@ -97,7 +97,7 @@ class SyncManager {
       for (const item of syncQueue) {
         try {
           await this.processSyncItem(item);
-          await offlineStorage.removeFromSyncQueue(item.id);
+          await offlineStorage.removeSyncQueueItem(item.id);
           result.syncedCount++;
           console.log('동기화 성공:', item.id);
           
@@ -115,7 +115,7 @@ class SyncManager {
 
           // 최대 재시도 횟수 초과 시 대기열에서 제거
           if (item.retryCount >= item.maxRetries) {
-            await offlineStorage.removeFromSyncQueue(item.id);
+            await offlineStorage.removeSyncQueueItem(item.id);
             console.log('최대 재시도 횟수 초과로 대기열에서 제거:', item.id);
             
             // 실패 알림
