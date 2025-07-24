@@ -39,11 +39,6 @@ export function Navigation() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      // 개발 환경에서는 로컬 스토리지 정리
-      if (process.env.NODE_ENV === 'development') {
-        localStorage.removeItem('dev_user');
-        sessionStorage.removeItem('dev_user');
-      }
       window.location.href = '/login';
     } catch (error) {
       console.error('로그아웃 실패:', error);

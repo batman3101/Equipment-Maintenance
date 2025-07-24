@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '../hooks/use-auth';
-import { LogoutButton } from './logout-button';
 
 // User profile component (SRP - only displays user information)
 interface UserProfileProps {
@@ -10,7 +9,7 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ showLogout = true, className = '' }: UserProfileProps) {
-  const { authState } = useAuth();
+  const { authState, signOut } = useAuth();
 
   if (!authState.user) {
     return null;
@@ -34,6 +33,15 @@ export function UserProfile({ showLogout = true, className = '' }: UserProfilePr
       engineer: 'bg-green-100 text-green-800',
     };
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
   };
 
   return (
@@ -62,11 +70,12 @@ export function UserProfile({ showLogout = true, className = '' }: UserProfilePr
             {getRoleDisplayName(user.role)}
           </span>
           {showLogout && (
-            <LogoutButton 
-              variant="link" 
-              className="text-xs"
-              showConfirmation={true}
-            />
+            <button
+              onClick={handleLogout}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              로그아웃
+            </button>
           )}
         </div>
       </div>

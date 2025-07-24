@@ -8,10 +8,90 @@ import { DashboardStats, RecentActivity } from '../types';
 
 export class DashboardService {
   /**
+   * 개발 환경용 모의 대시보드 통계 데이터
+   */
+  private getMockDashboardStats(): DashboardStats {
+    return {
+      totalBreakdowns: 45,
+      inProgressBreakdowns: 8,
+      completedRepairs: 37,
+      previousDayStats: {
+        totalBreakdowns: 42,
+        inProgressBreakdowns: 10,
+        completedRepairs: 32,
+      },
+    };
+  }
+
+  /**
+   * 개발 환경용 모의 최근 활동 데이터
+   */
+  private getMockRecentActivities(limit: number): RecentActivity[] {
+    const mockActivities: RecentActivity[] = [
+      {
+        id: '1',
+        type: 'breakdown',
+        equipmentType: 'CNC 밀링머신',
+        equipmentNumber: 'CNC-001',
+        status: 'in_progress',
+        reporterName: '김현장',
+        createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30분 전
+        symptoms: '스핀들 모터에서 이상 소음 발생',
+      },
+      {
+        id: '2',
+        type: 'repair',
+        equipmentType: 'CNC 선반',
+        equipmentNumber: 'CNC-002',
+        status: 'completed',
+        reporterName: '이기술',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2시간 전
+        actionTaken: '베어링 교체 및 윤활유 보충',
+      },
+      {
+        id: '3',
+        type: 'breakdown',
+        equipmentType: 'CNC 머시닝센터',
+        equipmentNumber: 'CNC-003',
+        status: 'under_repair',
+        reporterName: '박작업',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4시간 전
+        symptoms: '자동 공구 교환 장치 오작동',
+      },
+      {
+        id: '4',
+        type: 'repair',
+        equipmentType: 'CNC 밀링머신',
+        equipmentNumber: 'CNC-004',
+        status: 'completed',
+        reporterName: '최수리',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6시간 전
+        actionTaken: '냉각수 펌프 교체',
+      },
+      {
+        id: '5',
+        type: 'breakdown',
+        equipmentType: 'CNC 선반',
+        equipmentNumber: 'CNC-005',
+        status: 'in_progress',
+        reporterName: '정현장',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8시간 전
+        symptoms: '척 클램핑 압력 부족',
+      },
+    ];
+
+    return mockActivities.slice(0, limit);
+  }
+  /**
    * 대시보드 통계 데이터 조회
    */
   async getDashboardStats(): Promise<DashboardStats> {
     try {
+      // 개발 환경에서는 모의 데이터 반환
+      if (process.env.NODE_ENV === 'development') {
+        return this.getMockDashboardStats();
+      }
+
       // 현재 사용자의 plant_id 조회
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('인증되지 않은 사용자입니다.');
@@ -95,6 +175,11 @@ export class DashboardService {
    */
   async getRecentActivities(limit: number = 10): Promise<RecentActivity[]> {
     try {
+      // 개발 환경에서는 모의 데이터 반환
+      if (process.env.NODE_ENV === 'development') {
+        return this.getMockRecentActivities(limit);
+      }
+
       // 현재 사용자의 plant_id 조회
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('인증되지 않은 사용자입니다.');

@@ -15,48 +15,81 @@ const withBundleAnalyzer_ = withBundleAnalyzer({
  * 프로덕션 배포에 최적화된 설정
  */
 const nextConfig: NextConfig = {
-
-  // 정적 내보내기 비활성화
+  // 빌드 디렉토리 설정
   distDir: '.next',
-  // 정적 페이지 생성 비활성화
-  reactStrictMode: false,
   
-  // 서비스 워커 비활성화 (개발 환경에서 리다이렉트 문제 해결)
-  skipMiddlewareUrlNormalize: true,
-  skipTrailingSlashRedirect: true,
+  // React Strict Mode 활성화 (개발 시 더 나은 디버깅)
+  reactStrictMode: true,
+  
+  // 미들웨어 최적화
+  skipMiddlewareUrlNormalize: false,
+  skipTrailingSlashRedirect: false,
 
-  // 빌드 시 타입 및 린트 오류 무시 (프로덕션 배포 최적화)
+  // 빌드 시 타입 체크 (개발 환경에서는 활성화, 프로덕션에서는 CI/CD에서 처리)
   typescript: {
-    ignoreBuildErrors: true, // 타입 오류 무시
+    ignoreBuildErrors: process.env.NODE_ENV === 'production',
   },
   eslint: {
-    ignoreDuringBuilds: true, // 린트 오류 무시
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
     dirs: ['src'],
   },
-  // 정적 페이지 생성 비활성화
-  env: {
-    NEXT_PUBLIC_SKIP_PRERENDER: 'true',
-  },
-  // 서버 사이드 렌더링만 사용
+
+  // 실험적 기능들
   experimental: {
-    // 코드 스플리팅 최적화
+    // 패키지 임포트 최적화
     optimizePackageImports: [
       'lucide-react',
       'date-fns',
       '@supabase/supabase-js',
+      'clsx',
+      'tailwind-merge',
     ],
+
   },
-  // 정적 페이지 생성 비활성화
-  webpack: (config, { isServer }) => {
-    // 클라이언트 사이드에서만 적용
-    if (!isServer) {
-      // 빌드 시 useSearchParams 관련 오류 무시
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
+
+  // 서버 외부 패키지 설정 (Supabase는 클라이언트에서 사용하므로 제외)
+  // serverExternalPackages: ['@supabase/supabase-js'],
+
+  // Webpack 설정 최적화
+  webpack: (config, { isServer, dev }) => {
+    // self is not defined 문제 해결
+    if (isServer) {
+      // 서버에서 self 전역 변수 정의
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new (require('webpack')).DefinePlugin({
+          'typeof self': JSON.stringify('undefined'),
+        })
+      );
+    }
+
+    // 폴백 설정
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      path: false,
+      crypto: false,
+      stream: false,
+      util: false,
+    };
+
+    // 프로덕션 빌드 최적화 (간소화)
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+          },
+        },
       };
     }
+
     return config;
   },
   
@@ -74,48 +107,62 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // 헤더 설정 - 보안 및 캐싱 최적화 (프로덕션 배포 시 활성화)
-  // async headers() {
-  //   return [
-  //     // 정적 자산 캐싱 최적화
-  //     {
-  //       source: '/_next/static/(.*)',
-  //       headers: [
-  //         {
-  //           key: 'Cache-Control',
-  //           value: 'public, max-age=31536000, immutable',
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       source: '/static/(.*)',
-  //       headers: [
-  //         {
-  //           key: 'Cache-Control',
-  //           value: 'public, max-age=31536000, immutable',
-  //         },
-  //       ],
-  //     },
-  //     // 보안 헤더
-  //     {
-  //       source: '/(.*)',
-  //       headers: [
-  //         {
-  //           key: 'X-Frame-Options',
-  //           value: 'DENY',
-  //         },
-  //         {
-  //           key: 'X-Content-Type-Options',
-  //           value: 'nosniff',
-  //         },
-  //         {
-  //           key: 'Referrer-Policy',
-  //           value: 'strict-origin-when-cross-origin',
-  //         },
-  //       ],
-  //     },
-  //   ];
-  // },
+  // 헤더 설정 - 보안 및 캐싱 최적화
+  async headers() {
+    return [
+      // 정적 자산 캐싱 최적화
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // 이미지 캐싱
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, s-maxage=86400',
+          },
+        ],
+      },
+      // 보안 헤더
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
+  },
 
   // 압축 설정 - 프로덕션에서 성능 향상
   compress: true,

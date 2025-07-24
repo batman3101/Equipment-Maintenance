@@ -1,114 +1,111 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// 개발 환경에서는 미들웨어를 완전히 비활성화
-const isDev = process.env.NODE_ENV === 'development';
+// 보호된 경로 목록
+const protectedPaths = [
+  '/',
+  '/breakdowns',
+  '/equipment',
+  '/api'
+];
 
-// 미들웨어 비활성화 (개발 환경에서 리다이렉트 문제 해결)
-export async function middleware(req: NextRequest) {
-  // 모든 환경에서 미들웨어 처리 건너뛰기
-  return NextResponse.next();
-  let response = NextResponse.next({
-    request: {
-      headers: req.headers,
-    },
-  });
+// 공개 경로 목록
+const publicPaths = [
+  '/login',
+  '/unauthorized'
+];
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          req.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: any) {
-          req.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-        },
-      },
-    }
-  );
+// 정적 자산 경로 패턴
+const staticAssetPatterns = [
+  /\/_next\//,
+  /\/favicon\.ico$/,
+  /\/manifest\.json$/,
+  /\.(png|jpg|jpeg|gif|svg|ico|webp)$/,
+  /\.(css|js|woff|woff2|ttf|eot)$/
+];
 
-  // Refresh session if expired
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-  const { pathname } = req.nextUrl;
-
-  // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/unauthorized'];
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-
-  // Static files and API routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/static') ||
-    pathname.includes('.')
-  ) {
-    return response;
+  // 정적 자산은 미들웨어 처리 건너뛰기
+  if (staticAssetPatterns.some(pattern => pattern.test(pathname))) {
+    return NextResponse.next();
   }
 
-  // Redirect to login if not authenticated and trying to access protected route
-  if (!session && !isPublicRoute) {
-    const redirectUrl = new URL('/login', req.url);
-    redirectUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(redirectUrl);
+  // 개발 환경에서의 간단한 인증 체크
+  if (process.env.NODE_ENV === 'development') {
+    return handleDevAuth(request);
   }
 
-  // Redirect to home if authenticated and trying to access login
-  if (session && pathname === '/login') {
-    const redirectUrl = req.nextUrl.searchParams.get('redirect') || '/';
-    return NextResponse.redirect(new URL(redirectUrl, req.url));
-  }
-
-  // Role-based route protection can be added here
-  // For now, we'll handle it in the components
-
-  return response;
+  // 프로덕션 환경에서의 Supabase 인증 체크
+  return handleProdAuth(request);
 }
 
+/**
+ * 개발 환경 인증 처리
+ */
+function handleDevAuth(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 공개 경로는 통과
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
+
+  // 보호된 경로 체크
+  if (protectedPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
+    // 개발 환경에서는 쿠키나 헤더에서 인증 정보 확인
+    const devAuth = request.cookies.get('dev_auth')?.value;
+    
+    if (!devAuth) {
+      // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return NextResponse.next();
+}
+
+/**
+ * 프로덕션 환경 인증 처리
+ */
+function handleProdAuth(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 공개 경로는 통과
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
+
+  // 보호된 경로 체크
+  if (protectedPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
+    // Supabase 세션 토큰 확인
+    const supabaseToken = request.cookies.get('sb-access-token')?.value ||
+                         request.cookies.get('supabase-auth-token')?.value;
+    
+    if (!supabaseToken) {
+      // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return NextResponse.next();
+}
+
+// 미들웨어가 실행될 경로 설정
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * 다음 경로를 제외한 모든 요청에 대해 실행:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
