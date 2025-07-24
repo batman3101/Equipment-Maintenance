@@ -59,36 +59,84 @@ export class SupabaseAuthService implements AuthService {
   ) {}
 
   async signIn(credentials: LoginCredentials): Promise<User> {
-    console.log('Supabase 로그인 시도:', credentials.email);
+    console.log('=== Supabase 로그인 시작 ===');
+    console.log('이메일:', credentials.email);
+    console.log('비밀번호 길이:', credentials.password.length);
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
     
-    // 실제 Supabase 로그인 처리
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
+    try {
+      // 실제 Supabase 로그인 처리
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-    if (error) {
-      console.error('Supabase 로그인 오류:', error);
-      throw new Error(error.message);
+      console.log('Supabase 응답:', { data: !!data, error: !!error });
+
+      if (error) {
+        console.error('=== Supabase 로그인 오류 상세 ===');
+        console.error('오류 코드:', error.status);
+        console.error('오류 메시지:', error.message);
+        console.error('전체 오류:', error);
+        throw new Error(error.message);
+      }
+
+      if (!data.user) {
+        console.error('사용자 데이터 없음');
+        throw new Error('로그인에 실패했습니다.');
+      }
+
+      console.log('=== Supabase 인증 성공 ===');
+      console.log('사용자 ID:', data.user.id);
+      console.log('사용자 이메일:', data.user.email);
+      console.log('이메일 인증 상태:', data.user.email_confirmed_at);
+
+      // Get user profile from our users table
+      console.log('사용자 프로필 조회 시작...');
+      const userProfile = await this.userRepository.getUserProfile(data.user.id);
+      
+      if (!userProfile) {
+        console.error('=== 사용자 프로필 없음 ===');
+        console.error('찾는 사용자 ID:', data.user.id);
+        
+        // users 테이블에 사용자가 없는 경우, 자동으로 생성
+        console.log('사용자 프로필 자동 생성 시도...');
+        try {
+          const { data: newUser, error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Unknown User',
+              role: 'engineer', // 기본 역할
+              plant_id: '550e8400-e29b-41d4-a716-446655440001', // 기본 공장 ID
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('사용자 프로필 생성 실패:', insertError);
+            throw new Error('사용자 프로필을 생성할 수 없습니다.');
+          }
+
+          console.log('사용자 프로필 자동 생성 성공:', newUser);
+          return newUser;
+        } catch (createError) {
+          console.error('사용자 프로필 생성 중 오류:', createError);
+          throw new Error('사용자 프로필을 찾을 수 없습니다.');
+        }
+      }
+
+      console.log('=== 사용자 프로필 로드 성공 ===');
+      console.log('프로필:', userProfile);
+      return userProfile;
+    } catch (error) {
+      console.error('=== signIn 메서드 전체 오류 ===');
+      console.error(error);
+      throw error;
     }
-
-    if (!data.user) {
-      console.error('사용자 데이터 없음');
-      throw new Error('로그인에 실패했습니다.');
-    }
-
-    console.log('Supabase 인증 성공:', data.user.email);
-
-    // Get user profile from our users table
-    const userProfile = await this.userRepository.getUserProfile(data.user.id);
-    
-    if (!userProfile) {
-      console.error('사용자 프로필을 찾을 수 없습니다. ID:', data.user.id);
-      throw new Error('사용자 프로필을 찾을 수 없습니다.');
-    }
-
-    console.log('사용자 프로필 로드 성공:', userProfile);
-    return userProfile;
   }
 
   async signOut(): Promise<void> {
