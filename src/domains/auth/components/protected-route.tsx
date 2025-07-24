@@ -20,6 +20,17 @@ export function ProtectedRoute({
   const router = useRouter();
 
   useEffect(() => {
+    // 개발 환경에서는 로컬 스토리지에서 사용자 정보 확인
+    if (process.env.NODE_ENV === 'development') {
+      const devUser = localStorage.getItem('dev_user');
+      if (!devUser) {
+        console.log('개발 환경: 사용자 인증되지 않음, 로그인 페이지로 이동');
+        window.location.href = '/login';
+      }
+      return;
+    }
+    
+    // 프로덕션 환경에서는 일반적인 인증 확인
     // Don't redirect while loading
     if (authState.loading) {
       return;

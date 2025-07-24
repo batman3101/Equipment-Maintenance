@@ -46,6 +46,28 @@ function LoginFormContent() {
 
     setIsSubmitting(true);
     try {
+      // 개발 환경에서는 로그인 성공 후 직접 홈페이지로 이동
+      if (process.env.NODE_ENV === 'development') {
+        // 개발 환경에서는 모의 로그인 처리
+        console.log('개발 환경 모의 로그인 처리');
+        
+        // 로컬 스토리지에 모의 사용자 정보 저장
+        localStorage.setItem('dev_user', JSON.stringify({
+          id: 'dev-user-' + Date.now(),
+          email: credentials.email,
+          name: credentials.email.split('@')[0] || '테스트 사용자',
+          role: 'engineer',
+          plant_id: '1',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }));
+        
+        // 홈페이지로 이동
+        window.location.href = '/';
+        return;
+      }
+      
+      // 프로덕션 환경에서는 실제 로그인 처리
       await signIn(credentials);
     } catch (error) {
       // Error is handled by the auth context
@@ -73,6 +95,27 @@ function LoginFormContent() {
           <p className="mt-2 text-center text-sm text-gray-600">
             로그인하여 시스템에 접속하세요
           </p>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-2 p-2 bg-gray-100 rounded-md">
+              <p className="text-xs text-gray-600 text-center">
+                <strong>개발 환경 테스트 계정:</strong><br />
+                이메일: test@example.com<br />
+                비밀번호: password123
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setCredentials({
+                    email: 'test@example.com',
+                    password: 'password123'
+                  });
+                }}
+                className="mt-2 w-full text-xs py-1 px-2 bg-gray-200 hover:bg-gray-300 rounded"
+              >
+                테스트 계정 자동 입력
+              </button>
+            </div>
+          )}
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

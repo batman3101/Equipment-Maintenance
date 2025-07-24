@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
   distDir: '.next',
   // 정적 페이지 생성 비활성화
   reactStrictMode: false,
+  
+  // 서비스 워커 비활성화 (개발 환경에서 리다이렉트 문제 해결)
+  skipMiddlewareUrlNormalize: true,
+  skipTrailingSlashRedirect: true,
 
   // 빌드 시 타입 및 린트 오류 무시 (프로덕션 배포 최적화)
   typescript: {
