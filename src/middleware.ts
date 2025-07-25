@@ -34,6 +34,11 @@ export function middleware(request: NextRequest) {
 
   // 개발 환경에서의 간단한 인증 체크
   if (process.env.NODE_ENV === 'development') {
+    // Supabase 연결 문제가 있을 때 임시로 인증 우회
+    if (process.env.BYPASS_AUTH === 'true') {
+      console.log('BYPASS_AUTH enabled - 인증 우회');
+      return NextResponse.next();
+    }
     return handleDevAuth(request);
   }
 

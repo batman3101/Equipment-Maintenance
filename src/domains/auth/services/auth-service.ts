@@ -94,9 +94,8 @@ export class SupabaseAuthService implements AuthService {
     console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
     
     try {
-      // 네트워크 연결 테스트
-      console.log('네트워크 연결 테스트 중...');
-      await this.testSupabaseConnection();
+      // 네트워크 연결 테스트 (임시로 비활성화 - 타임아웃 문제로 인해)
+      console.log('연결 테스트 건너뛰고 직접 로그인 시도...');
       
       // 실제 Supabase 로그인 처리
       console.log('Supabase 인증 요청 전송 중...');
@@ -108,7 +107,7 @@ export class SupabaseAuthService implements AuthService {
       });
       
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('로그인 요청이 30초 내에 완료되지 않았습니다. 네트워크 연결을 확인해주세요.')), 30000);
+        setTimeout(() => reject(new Error('로그인 요청이 15초 내에 완료되지 않았습니다. 네트워크 연결이나 Supabase 서비스 상태를 확인해주세요.')), 15000);
       });
       
       const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
@@ -191,6 +190,11 @@ export class SupabaseAuthService implements AuthService {
       // 네트워크 오류인지 확인
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('네트워크 연결에 문제가 있습니다. 인터넷 연결을 확인해주세요.');
+      }
+      
+      // 타임아웃 오류의 경우 더 자세한 안내
+      if (error instanceof Error && error.message.includes('15초 내에 완료되지 않았습니다')) {
+        throw new Error('Supabase 서버 연결이 지연되고 있습니다. 잠시 후 다시 시도하거나 네트워크 상태를 확인해주세요.');
       }
       
       throw error;
