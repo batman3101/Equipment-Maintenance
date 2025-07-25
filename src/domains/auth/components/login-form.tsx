@@ -3,6 +3,7 @@
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/use-auth';
+import { ErrorBoundary } from '@/components/error-boundary';
 import type { LoginCredentials } from '../types';
 
 // Login form content component
@@ -136,35 +137,6 @@ function LoginFormContent() {
           <p className="mt-2 text-center text-sm text-gray-600">
             로그인하여 시스템에 접속하세요
           </p>
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-xs text-blue-800 text-center mb-2">
-                <strong>디버깅 도구</strong>
-              </p>
-              <button
-                type="button"
-                onClick={async () => {
-                  console.log('=== 수동 연결 테스트 시작 ===');
-                  try {
-                    const response = await fetch(process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/', {
-                      headers: {
-                        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
-                      }
-                    });
-                    console.log('연결 테스트 결과:', response.status, response.statusText);
-                    alert(`연결 테스트: ${response.status} ${response.statusText}`);
-                  } catch (error) {
-                    console.error('연결 테스트 실패:', error);
-                    alert(`연결 테스트 실패: ${error}`);
-                  }
-                }}
-                className="w-full text-xs py-1 px-2 bg-green-200 hover:bg-green-300 rounded text-green-800"
-              >
-                Supabase 연결 테스트
-              </button>
-            </div>
-          )}
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -257,12 +229,14 @@ function LoginFormContent() {
 // Login form component (SRP - only handles login form UI and validation)
 export function LoginForm() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">로딩 중...</div>
-      </div>
-    </div>}>
-      <LoginFormContent />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">로딩 중...</div>
+        </div>
+      </div>}>
+        <LoginFormContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
