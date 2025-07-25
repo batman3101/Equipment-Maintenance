@@ -6,7 +6,7 @@ import { EquipmentForm } from '@/domains/equipment/components/EquipmentForm';
 import { EquipmentCard } from '@/domains/equipment/components/EquipmentCard';
 import { EquipmentExcelUpload } from '@/domains/equipment/components/EquipmentExcelUpload';
 import { Pagination } from '@/shared/components/ui';
-import { CreateEquipmentRequest, Equipment, EquipmentStatus } from '@/domains/equipment/types';
+import { CreateEquipmentRequest, UpdateEquipmentRequest, Equipment, EquipmentStatus, EquipmentSort } from '@/domains/equipment/types';
 import { equipmentService } from '@/domains/equipment/services/EquipmentService';
 import type { ParsedEquipmentData } from '@/domains/equipment/utils/excel-template';
 
@@ -16,8 +16,16 @@ export default function EquipmentPage() {
   // State 관리
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExcelUploading, setIsExcelUploading] = useState(false);
+  
+  // 정렬 상태
+  const [sortOption, setSortOption] = useState<EquipmentSort>({
+    field: 'created_at',
+    direction: 'desc'
+  });
   
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,12 +34,12 @@ export default function EquipmentPage() {
   const [isListLoading, setIsListLoading] = useState(true);
 
   // 설비 목록 로드
-  const loadEquipmentList = async (page: number = currentPage, search: string = searchQuery) => {
+  const loadEquipmentList = async (page: number = currentPage, search: string = searchQuery, sort: EquipmentSort = sortOption) => {
     setIsListLoading(true);
     try {
       const result = await equipmentService.getEquipmentList({
         filter: { search: search || undefined },
-        sort: { field: 'created_at', direction: 'desc' },
+        sort: sort,
         page,
         limit: ITEMS_PER_PAGE
       });
@@ -56,9 +64,15 @@ export default function EquipmentPage() {
   // 페이지 변경 시 데이터 로드
   useEffect(() => {
     if (currentPage > 1) {
-      loadEquipmentList(currentPage, searchQuery);
+      loadEquipmentList(currentPage, searchQuery, sortOption);
     }
   }, [currentPage]);
+
+  // 정렬 옵션 변경 시 데이터 로드
+  useEffect(() => {
+    loadEquipmentList(1, searchQuery, sortOption);
+    setCurrentPage(1);
+  }, [sortOption]);
 
   // 개별 설비 등록
   const handleCreateEquipment = async (data: CreateEquipmentRequest) => {
@@ -71,7 +85,7 @@ export default function EquipmentPage() {
       setIsModalOpen(false);
       
       // 목록 새로고침
-      await loadEquipmentList(1, searchQuery);
+      await loadEquipmentList(1, searchQuery, sortOption);
       setCurrentPage(1);
     } catch (error) {
       console.error('설비 등록 실패:', error);
@@ -113,7 +127,7 @@ export default function EquipmentPage() {
       }
       
       // 목록 새로고침
-      await loadEquipmentList(1, searchQuery);
+      await loadEquipmentList(1, searchQuery, sortOption);
       setCurrentPage(1);
       
     } catch (error) {
@@ -124,6 +138,49 @@ export default function EquipmentPage() {
     }
   };
 
+  // 설비 수정 핸들러
+  const handleEditEquipment = (equipment: Equipment) => {
+    setEditingEquipment(equipment);
+    setIsEditModalOpen(true);
+  };
+
+  // 설비 업데이트 핸들러
+  const handleUpdateEquipment = async (data: CreateEquipmentRequest) => {
+    if (!editingEquipment) return;
+
+    setIsLoading(true);
+    try {
+      const updateData: UpdateEquipmentRequest = {
+        equipment_number: data.equipment_number,
+        equipment_type: data.equipment_type,
+        status: data.status
+      };
+
+      await equipmentService.updateEquipment(editingEquipment.id, updateData);
+      
+      alert('설비가 성공적으로 수정되었습니다!');
+      setIsEditModalOpen(false);
+      setEditingEquipment(null);
+      
+      // 목록 새로고침
+      await loadEquipmentList(currentPage, searchQuery, sortOption);
+    } catch (error) {
+      console.error('설비 수정 실패:', error);
+      const errorMessage = error instanceof Error ? error.message : '설비 수정에 실패했습니다.';
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 정렬 변경 핸들러
+  const handleSortChange = (field: EquipmentSort['field']) => {
+    setSortOption(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -131,6 +188,10 @@ export default function EquipmentPage() {
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingEquipment(null);
+  };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
@@ -159,6 +220,27 @@ export default function EquipmentPage() {
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
+              {/* 정렬 옵션 */}
+              <select
+                value={`${sortOption.field}-${sortOption.direction}`}
+                onChange={(e) => {
+                  const [field, direction] = e.target.value.split('-') as [EquipmentSort['field'], EquipmentSort['direction']];
+                  setSortOption({ field, direction });
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="created_at-desc">최신 등록순</option>
+                <option value="created_at-asc">오래된 등록순</option>
+                <option value="equipment_number-asc">설비번호 ↑</option>
+                <option value="equipment_number-desc">설비번호 ↓</option>
+                <option value="equipment_type-asc">설비종류 ↑</option>
+                <option value="equipment_type-desc">설비종류 ↓</option>
+                <option value="status-asc">상태 ↑</option>
+                <option value="status-desc">상태 ↓</option>
+                <option value="updated_at-desc">최근 수정순</option>
+                <option value="updated_at-asc">오래된 수정순</option>
+              </select>
+              
               <EquipmentExcelUpload
                 onDataParsed={handleExcelDataParsed}
                 onUploadComplete={() => {}}
@@ -242,8 +324,7 @@ export default function EquipmentPage() {
                         // TODO: 상세 페이지로 이동
                       }}
                       onEdit={(equipment) => {
-                        console.log('설비 수정:', equipment);
-                        // TODO: 수정 모달 열기
+                        handleEditEquipment(equipment);
                       }}
                       onDelete={(equipment) => {
                         if (confirm(`설비 "${equipment.equipment_number}"를 삭제하시겠습니까?`)) {
@@ -296,6 +377,39 @@ export default function EquipmentPage() {
               <EquipmentForm
                 onSubmit={handleCreateEquipment}
                 onCancel={closeModal}
+                loading={isLoading}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 설비 수정 모달 */}
+      {isEditModalOpen && editingEquipment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">설비 수정</h2>
+                <button
+                  onClick={closeEditModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <EquipmentForm
+                initialData={{
+                  equipment_number: editingEquipment.equipment_number,
+                  equipment_type: editingEquipment.equipment_type,
+                  plant_id: editingEquipment.plant_id,
+                  status: editingEquipment.status
+                }}
+                onSubmit={handleUpdateEquipment}
+                onCancel={closeEditModal}
                 loading={isLoading}
               />
             </div>

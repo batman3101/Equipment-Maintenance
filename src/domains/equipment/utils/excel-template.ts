@@ -41,9 +41,8 @@ export const EQUIPMENT_TYPE_OPTIONS = [
  */
 export const STATUS_OPTIONS = [
   EquipmentStatus.ACTIVE,
-  EquipmentStatus.INACTIVE, 
   EquipmentStatus.MAINTENANCE,
-  EquipmentStatus.BROKEN
+  EquipmentStatus.TEST
 ] as const;
 
 /**
@@ -58,12 +57,12 @@ const SAMPLE_DATA = [
   {
     equipment_number: 'LATHE-001', 
     equipment_type: 'lathe',
-    status: EquipmentStatus.ACTIVE
+    status: EquipmentStatus.MAINTENANCE
   },
   {
     equipment_number: 'MILL-001',
     equipment_type: 'milling_machine', 
-    status: EquipmentStatus.MAINTENANCE
+    status: EquipmentStatus.TEST
   }
 ];
 

@@ -6,9 +6,8 @@
  */
 export enum EquipmentStatus {
   ACTIVE = 'active',
-  INACTIVE = 'inactive',
   MAINTENANCE = 'maintenance',
-  BROKEN = 'broken'
+  TEST = 'test'
 }
 
 /**
@@ -157,9 +156,8 @@ export const EQUIPMENT_TYPE_LABELS: Record<EquipmentType, string> = {
  */
 export const EQUIPMENT_STATUS_LABELS: Record<EquipmentStatus, string> = {
   [EquipmentStatus.ACTIVE]: '정상',
-  [EquipmentStatus.INACTIVE]: '비활성',
   [EquipmentStatus.MAINTENANCE]: '정비중',
-  [EquipmentStatus.BROKEN]: '고장'
+  [EquipmentStatus.TEST]: '테스트'
 };
 
 /**

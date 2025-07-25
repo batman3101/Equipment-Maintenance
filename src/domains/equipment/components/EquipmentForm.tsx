@@ -59,9 +59,8 @@ export const EquipmentForm = React.forwardRef<HTMLFormElement, EquipmentFormProp
 
     const statusOptions = [
       { value: EquipmentStatus.ACTIVE, label: '정상' },
-      { value: EquipmentStatus.INACTIVE, label: '비활성' },
       { value: EquipmentStatus.MAINTENANCE, label: '정비중' },
-      { value: EquipmentStatus.BROKEN, label: '고장' }
+      { value: EquipmentStatus.TEST, label: '테스트' }
     ];
 
     return (

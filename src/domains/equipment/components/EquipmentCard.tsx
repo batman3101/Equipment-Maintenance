@@ -39,12 +39,10 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
       switch (status) {
         case EquipmentStatus.ACTIVE:
           return 'success';
-        case EquipmentStatus.INACTIVE:
-          return 'default';
         case EquipmentStatus.MAINTENANCE:
           return 'warning';
-        case EquipmentStatus.BROKEN:
-          return 'destructive';
+        case EquipmentStatus.TEST:
+          return 'default';
         default:
           return 'default';
       }
@@ -55,12 +53,10 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
       switch (status) {
         case EquipmentStatus.ACTIVE:
           return '정상';
-        case EquipmentStatus.INACTIVE:
-          return '비활성';
         case EquipmentStatus.MAINTENANCE:
           return '정비중';
-        case EquipmentStatus.BROKEN:
-          return '고장';
+        case EquipmentStatus.TEST:
+          return '테스트';
         default:
           return status;
       }
