@@ -124,3 +124,7 @@ export type { ChipProps, ChipGroupProps, SelectableChipProps, ChipVariant, ChipS
 // 구분선 컴포넌트들
 export { Divider } from './Divider';
 export type { DividerProps } from './Divider';
+
+// 페이지네이션 컴포넌트들
+export { Pagination } from './Pagination';
+export type { PaginationProps } from './Pagination';

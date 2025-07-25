@@ -103,6 +103,59 @@ export class EquipmentService implements IEquipmentService {
   }
 
   /**
+   * 설비 일괄 생성
+   */
+  async createEquipmentBatch(dataList: CreateEquipmentRequest[]): Promise<{ 
+    success: Equipment[], 
+    failed: { data: CreateEquipmentRequest, error: string }[] 
+  }> {
+    const results = {
+      success: [] as Equipment[],
+      failed: [] as { data: CreateEquipmentRequest, error: string }[]
+    };
+
+    // 병렬 처리를 위해 배치 크기 제한 (한 번에 최대 10개)
+    const batchSize = 10;
+    for (let i = 0; i < dataList.length; i += batchSize) {
+      const batch = dataList.slice(i, i + batchSize);
+      
+      const batchPromises = batch.map(async (data) => {
+        try {
+          // 개별 검증
+          const validationErrors = this.validateEquipmentData(data);
+          if (validationErrors.length > 0) {
+            throw new Error(validationErrors.map(e => e.message).join(', '));
+          }
+
+          // 비즈니스 규칙 적용
+          const processedData = this.applyBusinessRules(data);
+          const equipment = await this.repository.create(processedData);
+          
+          return { success: true, equipment, data };
+        } catch (error) {
+          return { 
+            success: false, 
+            data, 
+            error: error instanceof Error ? error.message : '알 수 없는 오류' 
+          };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      
+      batchResults.forEach(result => {
+        if (result.success) {
+          results.success.push(result.equipment);
+        } else {
+          results.failed.push({ data: result.data, error: result.error });
+        }
+      });
+    }
+
+    return results;
+  }
+
+  /**
    * 설비 생성
    */
   async createEquipment(data: CreateEquipmentRequest): Promise<Equipment> {
