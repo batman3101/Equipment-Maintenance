@@ -126,3 +126,4 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ## 라이선스
 
 MIT License# First Deploy
+\n# Trigger redeploy
