@@ -54,10 +54,12 @@ function handleDevAuth(request: NextRequest) {
 
   // 보호된 경로 체크
   if (protectedPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
-    // 개발 환경에서는 쿠키나 헤더에서 인증 정보 확인
-    const devAuth = request.cookies.get('dev_auth')?.value;
+    // Supabase 세션 토큰 확인 (프로덕션과 동일하게)
+    const supabaseAccessToken = request.cookies.get('sb-access-token')?.value ||
+                               request.cookies.get('supabase-auth-token')?.value ||
+                               request.cookies.get('sb-mlkvoizulowopmxckcmg-auth-token')?.value;
     
-    if (!devAuth) {
+    if (!supabaseAccessToken) {
       // 인증되지 않은 경우 로그인 페이지로 리다이렉트
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
@@ -83,7 +85,8 @@ function handleProdAuth(request: NextRequest) {
   if (protectedPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
     // Supabase 세션 토큰 확인
     const supabaseToken = request.cookies.get('sb-access-token')?.value ||
-                         request.cookies.get('supabase-auth-token')?.value;
+                         request.cookies.get('supabase-auth-token')?.value ||
+                         request.cookies.get('sb-mlkvoizulowopmxckcmg-auth-token')?.value;
     
     if (!supabaseToken) {
       // 인증되지 않은 경우 로그인 페이지로 리다이렉트

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/use-auth';
 import type { LoginCredentials } from '../types';
 
 // Login form content component
 function LoginFormContent() {
   const { authState, signIn } = useAuth();
+  const router = useRouter();
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -17,6 +19,15 @@ function LoginFormContent() {
     general?: string;
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 로그인 성공 시 자동 리다이렉션
+  useEffect(() => {
+    if (authState.user && !authState.loading) {
+      console.log('=== 인증된 사용자 감지, 리다이렉트 실행 ===');
+      const redirectPath = new URLSearchParams(window.location.search).get('redirect') || '/';
+      router.push(redirectPath);
+    }
+  }, [authState.user, authState.loading, router]);
 
   // Form validation (SRP - separated validation logic)
   const validateForm = (): boolean => {
@@ -62,12 +73,7 @@ function LoginFormContent() {
       await signIn(credentials);
       
       console.log('=== 로그인 성공 ===');
-      
-      // 성공 시 잠시 대기 후 홈페이지로 이동
-      setTimeout(() => {
-        console.log('홈페이지로 리다이렉션...');
-        window.location.href = '/';
-      }, 1000);
+      // useEffect에서 authState.user 변경을 감지하여 자동 리다이렉션
       
     } catch (error) {
       console.error('=== 로그인 실패 ===');
