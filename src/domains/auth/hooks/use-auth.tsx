@@ -37,13 +37,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const authService: AuthService = createAuthService();
 
-  // Initialize auth state
+  // Initialize auth state (간소화된 초기화)
   useEffect(() => {
     let mounted = true;
 
     async function initializeAuth() {
       try {
+        // 빠른 초기 상태 설정
+        setAuthState(prev => ({ ...prev, loading: true }));
+        
         const user = await authService.getCurrentUser();
+        
         if (mounted) {
           setAuthState({
             user,
@@ -51,67 +55,72 @@ export function AuthProvider({ children }: AuthProviderProps) {
             error: null,
           });
           
-          // Start automatic session refresh if user is authenticated
+          // 사용자가 있으면 세션 자동 갱신 시작
           if (user) {
             SessionManager.startAutoRefresh();
           }
         }
       } catch (error) {
+        console.error('Auth 초기화 실패:', error);
         if (mounted) {
           setAuthState({
             user: null,
             loading: false,
-            error: error instanceof Error ? error.message : '인증 초기화 실패',
+            error: null, // 초기화 에러는 사용자에게 표시하지 않음
           });
         }
       }
     }
 
-    initializeAuth();
+    // 초기화를 약간 지연시켜 다른 초기화와 충돌 방지
+    const timeoutId = setTimeout(initializeAuth, 100);
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       SessionManager.stopAutoRefresh();
     };
-  }, []);
+  }, [authService]);
 
-  // Listen for auth state changes
+  // Listen for auth state changes (최적화된 리스너)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth 상태 변경:', event);
+        
         if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            const user = await authService.getCurrentUser();
-            setAuthState({
-              user,
-              loading: false,
-              error: null,
-            });
-          } catch (error) {
-            setAuthState({
-              user: null,
-              loading: false,
-              error: error instanceof Error ? error.message : '사용자 정보 로드 실패',
-            });
-          }
+          // 로그인 시 기본 사용자 객체로 빠른 상태 업데이트
+          const basicUser: User = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            role: 'engineer',
+            plant_id: '550e8400-e29b-41d4-a716-446655440001',
+            created_at: session.user.created_at,
+            updated_at: new Date().toISOString()
+          };
+          
+          setAuthState({
+            user: basicUser,
+            loading: false,
+            error: null,
+          });
+          
+          SessionManager.startAutoRefresh();
         } else if (event === 'SIGNED_OUT') {
           SessionManager.stopAutoRefresh();
+          // 캐시 정리
+          const { authCache } = await import('@/lib/auth-cache');
+          authCache.clear();
+          
           setAuthState({
             user: null,
             loading: false,
             error: null,
           });
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          try {
-            const user = await authService.getCurrentUser();
-            setAuthState(prev => ({
-              ...prev,
-              user,
-              error: null,
-            }));
-          } catch (error) {
-            console.error('Token refresh failed:', error);
-          }
+          // 토큰 갱신 시에는 상태를 유지하고 캐시만 갱신
+          console.log('토큰 갱신됨');
         }
       }
     );

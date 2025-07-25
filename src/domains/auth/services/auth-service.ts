@@ -1,21 +1,50 @@
 import { supabase } from '@/lib/supabase';
+import { authCache } from '@/lib/auth-cache';
 import type { AuthService, LoginCredentials, User, SessionManager, UserRepository } from '../types';
 
 // Concrete implementation of SessionManager (SRP)
 export class SupabaseSessionManager implements SessionManager {
   async getSession() {
+    const cacheKey = 'current-session';
+    
+    // 캐시에서 먼저 확인
+    const cached = authCache.get(cacheKey);
+    if (cached) {
+      console.log('세션 캐시 히트');
+      return cached;
+    }
+
+    console.log('세션 캐시 미스 - Supabase에서 조회');
     const { data, error } = await supabase.auth.getSession();
     if (error) throw error;
+    
+    // 세션이 있으면 1분간 캐시
+    if (data.session) {
+      authCache.set(cacheKey, data.session, 60 * 1000);
+    }
+    
     return data.session;
   }
 
   async refreshSession() {
+    // 기존 세션 캐시 무효화
+    authCache.delete('current-session');
+    
     const { data, error } = await supabase.auth.refreshSession();
     if (error) throw error;
+    
+    // 새 세션 캐시
+    if (data.session) {
+      authCache.set('current-session', data.session, 60 * 1000);
+    }
+    
     return data.session;
   }
 
   async clearSession() {
+    // 모든 auth 관련 캐시 정리
+    authCache.deleteByPattern('current-session|user-profile-.*');
+    
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }
@@ -24,6 +53,16 @@ export class SupabaseSessionManager implements SessionManager {
 // Concrete implementation of UserRepository (SRP)
 export class SupabaseUserRepository implements UserRepository {
   async getUserProfile(userId: string): Promise<User | null> {
+    const cacheKey = `user-profile-${userId}`;
+    
+    // 캐시에서 먼저 확인
+    const cached = authCache.get<User>(cacheKey);
+    if (cached) {
+      console.log('사용자 프로필 캐시 히트:', userId);
+      return cached;
+    }
+
+    console.log('사용자 프로필 캐시 미스 - DB에서 조회:', userId);
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -35,10 +74,18 @@ export class SupabaseUserRepository implements UserRepository {
       throw error;
     }
 
+    // 프로필을 3분간 캐시
+    if (data) {
+      authCache.set(cacheKey, data, 3 * 60 * 1000);
+    }
+
     return data;
   }
 
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<User> {
+    // 기존 캐시 무효화
+    authCache.delete(`user-profile-${userId}`);
+    
     const { data, error } = await supabase
       .from('users')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -47,6 +94,10 @@ export class SupabaseUserRepository implements UserRepository {
       .single();
 
     if (error) throw error;
+    
+    // 업데이트된 프로필 캐시
+    authCache.set(`user-profile-${userId}`, data, 3 * 60 * 1000);
+    
     return data;
   }
 }
@@ -84,6 +135,58 @@ export class SupabaseAuthService implements AuthService {
     } catch (error) {
       console.error('Supabase 연결 테스트 실패:', error);
       throw new Error(`Supabase 서버에 연결할 수 없습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * 백그라운드에서 사용자 프로필 동기화
+   * 로그인 속도에 영향을 주지 않도록 비동기 처리
+   */
+  private async syncUserProfileInBackground(userId: string, basicUser: User): Promise<void> {
+    try {
+      console.log('백그라운드 프로필 동기화 시작:', userId);
+      
+      // 캐시된 프로필이 있으면 동기화 스킵
+      if (authCache.has(`user-profile-${userId}`)) {
+        console.log('캐시된 프로필 존재, 동기화 스킵');
+        return;
+      }
+
+      const userProfile = await this.userRepository.getUserProfile(userId);
+      
+      if (!userProfile) {
+        console.log('프로필 없음, 백그라운드에서 생성');
+        // 프로필이 없으면 생성 (백그라운드에서)
+        try {
+          const { data: newUser, error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: userId,
+              email: basicUser.email,
+              name: basicUser.name,
+              role: basicUser.role,
+              plant_id: basicUser.plant_id,
+              created_at: basicUser.created_at,
+              updated_at: basicUser.updated_at
+            })
+            .select()
+            .single();
+
+          if (!insertError && newUser) {
+            console.log('백그라운드 프로필 생성 성공');
+            // 생성된 프로필을 캐시에 저장
+            authCache.set(`user-profile-${userId}`, newUser, 3 * 60 * 1000);
+          }
+        } catch (createError) {
+          console.error('백그라운드 프로필 생성 실패:', createError);
+          // 실패해도 로그인에는 영향 없음
+        }
+      } else {
+        console.log('백그라운드 프로필 동기화 완료');
+      }
+    } catch (error) {
+      console.error('백그라운드 동기화 실패:', error);
+      // 백그라운드 작업 실패는 로그인에 영향 없음
     }
   }
 
@@ -138,48 +241,24 @@ export class SupabaseAuthService implements AuthService {
       console.log('이메일 인증 상태:', data.user.email_confirmed_at);
       console.log('세션 정보:', !!data.session);
 
-      // Get user profile from our users table
-      console.log('사용자 프로필 조회 시작...');
+      // 인증 성공 시 기본 사용자 객체 반환 (DB 조회 없이)
+      const basicUser: User = {
+        id: data.user.id,
+        email: data.user.email!,
+        name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+        role: 'engineer', // 기본 역할
+        plant_id: '550e8400-e29b-41d4-a716-446655440001', // 기본 공장 ID
+        created_at: data.user.created_at,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('=== 기본 사용자 객체로 빠른 로그인 ===');
+      console.log('기본 사용자:', basicUser);
       
-      try {
-        const userProfile = await this.userRepository.getUserProfile(data.user.id);
-        
-        if (!userProfile) {
-          console.log('=== 사용자 프로필 없음, 자동 생성 시도 ===');
-          console.log('찾는 사용자 ID:', data.user.id);
-          
-          // users 테이블에 사용자가 없는 경우, 자동으로 생성
-          const { data: newUser, error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Unknown User',
-              role: 'engineer', // 기본 역할
-              plant_id: '550e8400-e29b-41d4-a716-446655440001', // 기본 공장 ID
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error('사용자 프로필 생성 실패:', insertError);
-            throw new Error(`사용자 프로필을 생성할 수 없습니다: ${insertError.message}`);
-          }
-
-          console.log('사용자 프로필 자동 생성 성공:', newUser);
-          return newUser;
-        }
-
-        console.log('=== 사용자 프로필 로드 성공 ===');
-        console.log('프로필:', userProfile);
-        return userProfile;
-        
-      } catch (profileError) {
-        console.error('사용자 프로필 처리 중 오류:', profileError);
-        throw new Error(`사용자 프로필 처리 실패: ${profileError instanceof Error ? profileError.message : '알 수 없는 오류'}`);
-      }
+      // 백그라운드에서 프로필 동기화 (비동기, 블로킹하지 않음)
+      this.syncUserProfileInBackground(data.user.id, basicUser);
+      
+      return basicUser;
       
     } catch (error) {
       console.error('=== signIn 메서드 전체 오류 ===');
@@ -218,12 +297,33 @@ export class SupabaseAuthService implements AuthService {
 
       console.log('세션 확인됨:', session.user.email);
       
-      // 사용자 프로필 조회
+      // 캐시된 프로필 먼저 확인
+      const cachedProfile = authCache.get<User>(`user-profile-${session.user.id}`);
+      if (cachedProfile) {
+        console.log('캐시된 프로필 사용');
+        return cachedProfile;
+      }
+
+      // 캐시에 없으면 DB에서 조회
       const userProfile = await this.userRepository.getUserProfile(session.user.id);
       
       if (!userProfile) {
-        console.error('사용자 프로필을 찾을 수 없습니다. ID:', session.user.id);
-        return null;
+        // 프로필이 없으면 기본 사용자 객체 반환
+        console.log('프로필 없음, 기본 객체 반환');
+        const basicUser: User = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+          role: 'engineer',
+          plant_id: '550e8400-e29b-41d4-a716-446655440001',
+          created_at: session.user.created_at,
+          updated_at: new Date().toISOString()
+        };
+        
+        // 백그라운드에서 프로필 생성
+        this.syncUserProfileInBackground(session.user.id, basicUser);
+        
+        return basicUser;
       }
 
       console.log('현재 사용자:', userProfile);
