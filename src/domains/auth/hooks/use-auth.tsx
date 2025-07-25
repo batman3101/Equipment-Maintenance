@@ -120,19 +120,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signIn = async (credentials: LoginCredentials) => {
+    console.log('=== useAuth signIn 시작 ===');
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
+      console.log('authService.signIn 호출...');
       const user = await authService.signIn(credentials);
+      
+      console.log('authService.signIn 성공, 상태 업데이트...');
       setAuthState({
         user,
         loading: false,
         error: null,
       });
       
+      console.log('세션 자동 갱신 시작...');
       // Start automatic session refresh after successful login
       SessionManager.startAutoRefresh();
+      
+      console.log('=== useAuth signIn 완료 ===');
     } catch (error) {
+      console.error('=== useAuth signIn 실패 ===');
+      console.error('에러:', error);
+      
       setAuthState({
         user: null,
         loading: false,

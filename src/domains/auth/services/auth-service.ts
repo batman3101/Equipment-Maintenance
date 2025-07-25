@@ -65,13 +65,22 @@ export class SupabaseAuthService implements AuthService {
     console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
     
     try {
+      // 네트워크 연결 테스트
+      console.log('네트워크 연결 테스트 중...');
+      
       // 실제 Supabase 로그인 처리
+      console.log('Supabase 인증 요청 전송 중...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
 
-      console.log('Supabase 응답:', { data: !!data, error: !!error });
+      console.log('Supabase 응답 수신:', { 
+        hasData: !!data, 
+        hasUser: !!data?.user,
+        hasSession: !!data?.session,
+        hasError: !!error 
+      });
 
       if (error) {
         console.error('=== Supabase 로그인 오류 상세 ===');
@@ -90,18 +99,19 @@ export class SupabaseAuthService implements AuthService {
       console.log('사용자 ID:', data.user.id);
       console.log('사용자 이메일:', data.user.email);
       console.log('이메일 인증 상태:', data.user.email_confirmed_at);
+      console.log('세션 정보:', !!data.session);
 
       // Get user profile from our users table
       console.log('사용자 프로필 조회 시작...');
-      const userProfile = await this.userRepository.getUserProfile(data.user.id);
       
-      if (!userProfile) {
-        console.error('=== 사용자 프로필 없음 ===');
-        console.error('찾는 사용자 ID:', data.user.id);
+      try {
+        const userProfile = await this.userRepository.getUserProfile(data.user.id);
         
-        // users 테이블에 사용자가 없는 경우, 자동으로 생성
-        console.log('사용자 프로필 자동 생성 시도...');
-        try {
+        if (!userProfile) {
+          console.log('=== 사용자 프로필 없음, 자동 생성 시도 ===');
+          console.log('찾는 사용자 ID:', data.user.id);
+          
+          // users 테이블에 사용자가 없는 경우, 자동으로 생성
           const { data: newUser, error: insertError } = await supabase
             .from('users')
             .insert({
@@ -118,23 +128,33 @@ export class SupabaseAuthService implements AuthService {
 
           if (insertError) {
             console.error('사용자 프로필 생성 실패:', insertError);
-            throw new Error('사용자 프로필을 생성할 수 없습니다.');
+            throw new Error(`사용자 프로필을 생성할 수 없습니다: ${insertError.message}`);
           }
 
           console.log('사용자 프로필 자동 생성 성공:', newUser);
           return newUser;
-        } catch (createError) {
-          console.error('사용자 프로필 생성 중 오류:', createError);
-          throw new Error('사용자 프로필을 찾을 수 없습니다.');
         }
-      }
 
-      console.log('=== 사용자 프로필 로드 성공 ===');
-      console.log('프로필:', userProfile);
-      return userProfile;
+        console.log('=== 사용자 프로필 로드 성공 ===');
+        console.log('프로필:', userProfile);
+        return userProfile;
+        
+      } catch (profileError) {
+        console.error('사용자 프로필 처리 중 오류:', profileError);
+        throw new Error(`사용자 프로필 처리 실패: ${profileError instanceof Error ? profileError.message : '알 수 없는 오류'}`);
+      }
+      
     } catch (error) {
       console.error('=== signIn 메서드 전체 오류 ===');
-      console.error(error);
+      console.error('오류 타입:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('오류 메시지:', error instanceof Error ? error.message : error);
+      console.error('전체 오류 객체:', error);
+      
+      // 네트워크 오류인지 확인
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('네트워크 연결에 문제가 있습니다. 인터넷 연결을 확인해주세요.');
+      }
+      
       throw error;
     }
   }

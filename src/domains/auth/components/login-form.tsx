@@ -14,6 +14,7 @@ function LoginFormContent() {
   const [validationErrors, setValidationErrors] = useState<{
     email?: string;
     password?: string;
+    general?: string;
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,56 +48,75 @@ function LoginFormContent() {
     setIsSubmitting(true);
     
     try {
-      // 실제 Supabase 인증 사용
-      console.log('Supabase 로그인 시도:', credentials.email);
+      // 기존 에러 메시지 초기화
+      setValidationErrors({});
+      
+      console.log('=== 로그인 프로세스 시작 ===');
+      console.log('이메일:', credentials.email);
       console.log('환경 변수 확인:', {
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       });
       
+      // 실제 Supabase 인증 사용
       await signIn(credentials);
       
-      // 성공 시 홈페이지로 이동
-      console.log('로그인 성공, 홈페이지로 이동');
-      window.location.replace('/');
+      console.log('=== 로그인 성공 ===');
+      
+      // 성공 시 잠시 대기 후 홈페이지로 이동
+      setTimeout(() => {
+        console.log('홈페이지로 리다이렉션...');
+        window.location.href = '/';
+      }, 1000);
+      
     } catch (error) {
-      console.error('로그인 실패 상세:', error);
+      console.error('=== 로그인 실패 ===');
+      console.error('에러 상세:', error);
       
       // 로딩 상태 해제
       setIsSubmitting(false);
       
-      // 에러 메시지 설정
-      let errorMessage = '로그인에 실패했습니다.';
+      // 명확한 에러 메시지 설정
+      let errorMessage = '로그인에 실패했습니다. 다시 시도해주세요.';
       
       if (error instanceof Error) {
         console.log('에러 메시지:', error.message);
         
         if (error.message.includes('Invalid login credentials')) {
-          errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해주세요.';
+          errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다.';
         } else if (error.message.includes('Email not confirmed')) {
           errorMessage = '이메일 인증이 완료되지 않았습니다. 이메일을 확인해주세요.';
         } else if (error.message.includes('Too many requests')) {
           errorMessage = '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
-        } else if (error.message.includes('Network')) {
+        } else if (error.message.includes('Network') || error.message.includes('fetch')) {
           errorMessage = '네트워크 연결을 확인해주세요.';
+        } else if (error.message.includes('사용자 프로필')) {
+          errorMessage = '사용자 계정 설정에 문제가 있습니다. 관리자에게 문의하세요.';
         } else {
-          errorMessage = `로그인 오류: ${error.message}`;
+          errorMessage = `로그인 중 오류가 발생했습니다: ${error.message}`;
         }
       }
       
-      // 에러 표시 (authState.error 대신 별도 상태 사용)
+      // 에러 메시지 표시
       setValidationErrors({ 
-        email: errorMessage 
+        general: errorMessage 
       });
+      
+      // 비밀번호 필드 초기화 (보안상 이유)
+      setCredentials(prev => ({ ...prev, password: '' }));
     }
   };
 
   const handleInputChange = (field: keyof LoginCredentials, value: string) => {
     setCredentials(prev => ({ ...prev, [field]: value }));
     
-    // Clear validation error when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+    // Clear validation errors when user starts typing
+    if (validationErrors[field] || validationErrors.general) {
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        [field]: undefined,
+        general: undefined 
+      }));
     }
   };
 
@@ -110,27 +130,6 @@ function LoginFormContent() {
           <p className="mt-2 text-center text-sm text-gray-600">
             로그인하여 시스템에 접속하세요
           </p>
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-xs text-blue-800 text-center">
-                <strong>실제 Supabase 계정으로 로그인:</strong><br />
-                이메일: zetooo1972@gmail.com<br />
-                (실제 비밀번호 입력 필요)
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setCredentials({
-                    email: 'zetooo1972@gmail.com',
-                    password: ''
-                  });
-                }}
-                className="mt-2 w-full text-xs py-1 px-2 bg-blue-200 hover:bg-blue-300 rounded text-blue-800"
-              >
-                이메일 자동 입력
-              </button>
-            </div>
-          )}
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -182,9 +181,15 @@ function LoginFormContent() {
             </div>
           </div>
 
-          {authState.error && (
+          {/* 일반 에러 메시지 표시 */}
+          {validationErrors.general && (
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-sm text-red-600">{authState.error}</p>
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-red-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-red-600 font-medium">{validationErrors.general}</p>
+              </div>
             </div>
           )}
 
