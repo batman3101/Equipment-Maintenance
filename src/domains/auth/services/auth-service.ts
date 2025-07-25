@@ -252,6 +252,13 @@ export class SupabaseAuthService implements AuthService {
 
 // Factory function for dependency injection (DIP)
 export function createAuthService(): AuthService {
+  // 환경 변수로 데모 모드 제어
+  if (process.env.NEXT_PUBLIC_USE_DEMO_AUTH === 'true') {
+    console.log('데모 인증 모드 활성화');
+    const { DemoAuthService } = require('./demo-auth-service');
+    return new DemoAuthService();
+  }
+  
   const sessionManager = new SupabaseSessionManager();
   const userRepository = new SupabaseUserRepository();
   return new SupabaseAuthService(sessionManager, userRepository);

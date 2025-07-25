@@ -59,12 +59,15 @@ function handleDevAuth(request: NextRequest) {
 
   // 보호된 경로 체크
   if (protectedPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
-    // Supabase 세션 토큰 확인 (프로덕션과 동일하게)
+    // 데모 인증 토큰 확인
+    const demoToken = request.cookies.get('demo-auth-token')?.value;
+    
+    // Supabase 세션 토큰 확인
     const supabaseAccessToken = request.cookies.get('sb-access-token')?.value ||
                                request.cookies.get('supabase-auth-token')?.value ||
                                request.cookies.get('sb-mlkvoizulowopmxckcmg-auth-token')?.value;
     
-    if (!supabaseAccessToken) {
+    if (!supabaseAccessToken && !demoToken) {
       // 인증되지 않은 경우 로그인 페이지로 리다이렉트
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
@@ -88,12 +91,15 @@ function handleProdAuth(request: NextRequest) {
 
   // 보호된 경로 체크
   if (protectedPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
+    // 데모 인증 토큰 확인
+    const demoToken = request.cookies.get('demo-auth-token')?.value;
+    
     // Supabase 세션 토큰 확인
     const supabaseToken = request.cookies.get('sb-access-token')?.value ||
                          request.cookies.get('supabase-auth-token')?.value ||
                          request.cookies.get('sb-mlkvoizulowopmxckcmg-auth-token')?.value;
     
-    if (!supabaseToken) {
+    if (!supabaseToken && !demoToken) {
       // 인증되지 않은 경우 로그인 페이지로 리다이렉트
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
