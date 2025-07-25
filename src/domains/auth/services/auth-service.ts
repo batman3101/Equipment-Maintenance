@@ -58,6 +58,35 @@ export class SupabaseAuthService implements AuthService {
     private userRepository: UserRepository
   ) {}
 
+  private async testSupabaseConnection(): Promise<void> {
+    try {
+      console.log('Supabase 연결 테스트 시작...');
+      const testPromise = fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`, {
+        method: 'GET',
+        headers: {
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`
+        }
+      });
+      
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('연결 테스트 타임아웃')), 10000);
+      });
+      
+      const response = await Promise.race([testPromise, timeoutPromise]) as Response;
+      console.log('Supabase 연결 테스트 결과:', response.status, response.statusText);
+      
+      if (!response.ok && response.status !== 401) {
+        throw new Error(`Supabase 서버 연결 실패: ${response.status} ${response.statusText}`);
+      }
+      
+      console.log('Supabase 연결 성공');
+    } catch (error) {
+      console.error('Supabase 연결 테스트 실패:', error);
+      throw new Error(`Supabase 서버에 연결할 수 없습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
   async signIn(credentials: LoginCredentials): Promise<User> {
     console.log('=== Supabase 로그인 시작 ===');
     console.log('이메일:', credentials.email);
@@ -67,13 +96,22 @@ export class SupabaseAuthService implements AuthService {
     try {
       // 네트워크 연결 테스트
       console.log('네트워크 연결 테스트 중...');
+      await this.testSupabaseConnection();
       
       // 실제 Supabase 로그인 처리
       console.log('Supabase 인증 요청 전송 중...');
-      const { data, error } = await supabase.auth.signInWithPassword({
+      
+      // 타임아웃을 위한 Promise.race 사용
+      const authPromise = supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
+      
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('로그인 요청이 30초 내에 완료되지 않았습니다. 네트워크 연결을 확인해주세요.')), 30000);
+      });
+      
+      const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
 
       console.log('Supabase 응답 수신:', { 
         hasData: !!data, 

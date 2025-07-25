@@ -136,6 +136,35 @@ function LoginFormContent() {
           <p className="mt-2 text-center text-sm text-gray-600">
             로그인하여 시스템에 접속하세요
           </p>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-xs text-blue-800 text-center mb-2">
+                <strong>디버깅 도구</strong>
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  console.log('=== 수동 연결 테스트 시작 ===');
+                  try {
+                    const response = await fetch(process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/', {
+                      headers: {
+                        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+                      }
+                    });
+                    console.log('연결 테스트 결과:', response.status, response.statusText);
+                    alert(`연결 테스트: ${response.status} ${response.statusText}`);
+                  } catch (error) {
+                    console.error('연결 테스트 실패:', error);
+                    alert(`연결 테스트 실패: ${error}`);
+                  }
+                }}
+                className="w-full text-xs py-1 px-2 bg-green-200 hover:bg-green-300 rounded text-green-800"
+              >
+                Supabase 연결 테스트
+              </button>
+            </div>
+          )}
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
