@@ -14,7 +14,9 @@ import type { CreateBreakdownRequest } from '../types';
 
 export interface BreakdownFormProps {
   onSuccess?: (breakdownId: string) => void;
+  onSubmit?: (data: CreateBreakdownRequest) => void;
   onCancel?: () => void;
+  loading?: boolean;
   className?: string;
 }
 
@@ -46,7 +48,9 @@ interface FormErrors {
  */
 export const BreakdownForm: React.FC<BreakdownFormProps> = ({
   onSuccess,
+  onSubmit,
   onCancel,
+  loading: externalLoading = false,
   className
 }) => {
   const { createBreakdown, creating, error: submitError, clearError } = useBreakdown();
@@ -226,6 +230,13 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
         attachments: formData.attachments.length > 0 ? formData.attachments : undefined
       };
 
+      // onSubmit이 제공된 경우 외부에서 처리
+      if (onSubmit) {
+        await onSubmit(request);
+        return;
+      }
+
+      // 기본 내부 처리 로직
       if (isOnline) {
         // 온라인 상태: 즉시 서버에 등록
         const breakdown = await createBreakdown(request);
@@ -363,7 +374,7 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
         <BreakdownFileUpload
           onFilesChange={handleFilesChange}
           onError={handleFileError}
-          disabled={creating || isValidating}
+          disabled={creating || isValidating || externalLoading}
           maxFiles={5}
         />
       </div>
@@ -389,7 +400,7 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
             type="button"
             variant="secondary"
             onClick={onCancel}
-            disabled={creating || isValidating}
+            disabled={creating || isValidating || externalLoading}
             className="w-full sm:w-auto"
           >
             취소
@@ -397,11 +408,11 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
         )}
         <Button
           type="submit"
-          loading={creating || isValidating}
-          disabled={creating || isValidating}
+          loading={creating || isValidating || externalLoading}
+          disabled={creating || isValidating || externalLoading}
           className="w-full sm:w-auto"
         >
-          {creating ? '등록 중...' : '고장 등록'}
+          {(creating || externalLoading) ? '등록 중...' : '고장 등록'}
         </Button>
       </div>
     </form>
