@@ -44,7 +44,7 @@ export interface Equipment {
   equipment_number: string;
   equipment_type: string;
   plant_id: string;
-  status: string;
+  status: EquipmentStatus;
   created_at: string;
   updated_at: string;
 }
@@ -56,7 +56,7 @@ export interface CreateEquipmentRequest {
   equipment_number: string;
   equipment_type: string;
   plant_id: string;
-  status?: string;
+  status?: EquipmentStatus;
 }
 
 /**

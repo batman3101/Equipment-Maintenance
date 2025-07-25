@@ -12,6 +12,7 @@ import type {
   EquipmentListResponse,
   EquipmentStats
 } from '../types';
+import { EquipmentStatus } from '../types';
 
 /**
  * Equipment Repository 인터페이스
@@ -140,7 +141,7 @@ export class SupabaseEquipmentRepository implements IEquipmentRepository {
         equipment_number: data.equipment_number,
         equipment_type: data.equipment_type,
         plant_id: data.plant_id,
-        status: data.status || 'active'
+        status: data.status || EquipmentStatus.ACTIVE
       })
       .select()
       .single();

@@ -11,7 +11,8 @@ import {
 } from '@/shared/components/ui';
 import { 
   CreateEquipmentRequest, 
-  UpdateEquipmentRequest
+  UpdateEquipmentRequest,
+  EquipmentStatus
 } from '../types';
 
 export interface EquipmentFormProps {
@@ -36,7 +37,7 @@ export const EquipmentForm = React.forwardRef<HTMLFormElement, EquipmentFormProp
       equipment_number: initialData?.equipment_number || '',
       equipment_type: initialData?.equipment_type || '',
       plant_id: initialData?.plant_id || '550e8400-e29b-41d4-a716-446655440001', // 기본 공장 ID
-      status: initialData?.status || 'active'
+      status: initialData?.status || EquipmentStatus.ACTIVE
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -57,10 +58,10 @@ export const EquipmentForm = React.forwardRef<HTMLFormElement, EquipmentFormProp
     ];
 
     const statusOptions = [
-      { value: 'active', label: '정상' },
-      { value: 'inactive', label: '비활성' },
-      { value: 'maintenance', label: '정비중' },
-      { value: 'broken', label: '고장' }
+      { value: EquipmentStatus.ACTIVE, label: '정상' },
+      { value: EquipmentStatus.INACTIVE, label: '비활성' },
+      { value: EquipmentStatus.MAINTENANCE, label: '정비중' },
+      { value: EquipmentStatus.BROKEN, label: '고장' }
     ];
 
     return (

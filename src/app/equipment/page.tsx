@@ -6,7 +6,7 @@ import { EquipmentForm } from '@/domains/equipment/components/EquipmentForm';
 import { EquipmentCard } from '@/domains/equipment/components/EquipmentCard';
 import { EquipmentExcelUpload } from '@/domains/equipment/components/EquipmentExcelUpload';
 import { Pagination } from '@/shared/components/ui';
-import { CreateEquipmentRequest, Equipment } from '@/domains/equipment/types';
+import { CreateEquipmentRequest, Equipment, EquipmentStatus } from '@/domains/equipment/types';
 import { equipmentService } from '@/domains/equipment/services/EquipmentService';
 import type { ParsedEquipmentData } from '@/domains/equipment/utils/excel-template';
 
@@ -89,7 +89,7 @@ export default function EquipmentPage() {
       equipment_number: item.equipment_number,
       equipment_type: item.equipment_type,
       plant_id: '550e8400-e29b-41d4-a716-446655440001', // 기본 공장 ID
-      status: item.status || 'active'
+      status: (item.status as EquipmentStatus) || EquipmentStatus.ACTIVE
     }));
 
     setIsExcelUploading(true);

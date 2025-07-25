@@ -345,6 +345,11 @@ export class EquipmentService implements IEquipmentService {
       processedData.equipment_type = processedData.equipment_type.trim().toLowerCase();
     }
 
+    // 상태값 기본값 설정 (생성 시)
+    if ('status' in processedData && processedData.status === undefined) {
+      processedData.status = EquipmentStatus.ACTIVE;
+    }
+
     return processedData;
   }
 

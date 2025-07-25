@@ -1,6 +1,7 @@
 // Excel 템플릿 생성 및 다운로드 유틸리티
 
 import * as XLSX from 'xlsx';
+import { EquipmentStatus } from '../types';
 
 /**
  * Excel 템플릿 헤더 정의
@@ -39,10 +40,10 @@ export const EQUIPMENT_TYPE_OPTIONS = [
  * 상태 옵션
  */
 export const STATUS_OPTIONS = [
-  'active',
-  'inactive', 
-  'maintenance',
-  'broken'
+  EquipmentStatus.ACTIVE,
+  EquipmentStatus.INACTIVE, 
+  EquipmentStatus.MAINTENANCE,
+  EquipmentStatus.BROKEN
 ] as const;
 
 /**
@@ -52,17 +53,17 @@ const SAMPLE_DATA = [
   {
     equipment_number: 'CNC-001',
     equipment_type: 'cnc_machine',
-    status: 'active'
+    status: EquipmentStatus.ACTIVE
   },
   {
     equipment_number: 'LATHE-001', 
     equipment_type: 'lathe',
-    status: 'active'
+    status: EquipmentStatus.ACTIVE
   },
   {
     equipment_number: 'MILL-001',
     equipment_type: 'milling_machine', 
-    status: 'maintenance'
+    status: EquipmentStatus.MAINTENANCE
   }
 ];
 
@@ -142,7 +143,7 @@ export function downloadEquipmentTemplate(): void {
 export interface ParsedEquipmentData {
   equipment_number: string;
   equipment_type: string;
-  status?: string;
+  status?: EquipmentStatus;
 }
 
 export interface ExcelParseResult {
@@ -252,15 +253,15 @@ export function parseEquipmentExcel(file: File): Promise<ExcelParseResult> {
             if (status) {
               if (!STATUS_OPTIONS.includes(status as any)) {
                 result.warnings.push(`${rowNumber}행: 유효하지 않은 상태입니다. 기본값(active)을 사용합니다. (${status})`);
-                equipment.status = 'active';
+                equipment.status = EquipmentStatus.ACTIVE;
               } else {
                 equipment.status = status;
               }
             } else {
-              equipment.status = 'active';
+              equipment.status = EquipmentStatus.ACTIVE;
             }
           } else {
-            equipment.status = 'active';
+            equipment.status = EquipmentStatus.ACTIVE;
           }
           
           if (!hasErrors) {

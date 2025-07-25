@@ -6,7 +6,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Card, Badge, Button } from '@/shared/components/ui';
-import { Equipment } from '../types';
+import { Equipment, EquipmentStatus } from '../types';
 
 export interface EquipmentCardProps {
   equipment: Equipment;
@@ -35,15 +35,15 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
     ...props 
   }, ref) => {
     // 상태별 배지 변형
-    const getStatusBadgeVariant = (status: string) => {
+    const getStatusBadgeVariant = (status: EquipmentStatus) => {
       switch (status) {
-        case 'active':
+        case EquipmentStatus.ACTIVE:
           return 'success';
-        case 'inactive':
+        case EquipmentStatus.INACTIVE:
           return 'default';
-        case 'maintenance':
+        case EquipmentStatus.MAINTENANCE:
           return 'warning';
-        case 'broken':
+        case EquipmentStatus.BROKEN:
           return 'destructive';
         default:
           return 'default';
@@ -51,15 +51,15 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
     };
 
     // 상태 라벨 매핑
-    const getStatusLabel = (status: string) => {
+    const getStatusLabel = (status: EquipmentStatus) => {
       switch (status) {
-        case 'active':
+        case EquipmentStatus.ACTIVE:
           return '정상';
-        case 'inactive':
+        case EquipmentStatus.INACTIVE:
           return '비활성';
-        case 'maintenance':
+        case EquipmentStatus.MAINTENANCE:
           return '정비중';
-        case 'broken':
+        case EquipmentStatus.BROKEN:
           return '고장';
         default:
           return status;
