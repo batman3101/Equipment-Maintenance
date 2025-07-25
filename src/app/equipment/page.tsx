@@ -5,6 +5,7 @@ import { Navigation } from '@/components/navigation';
 import { EquipmentForm } from '@/domains/equipment/components/EquipmentForm';
 import { EquipmentList } from '@/domains/equipment/components/EquipmentList';
 import { CreateEquipmentRequest } from '@/domains/equipment/types';
+import { equipmentService } from '@/domains/equipment/services/EquipmentService';
 
 export default function EquipmentPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,14 +16,20 @@ export default function EquipmentPage() {
     setIsLoading(true);
     try {
       console.log('설비 등록 데이터:', data);
-      // TODO: 실제 API 호출 구현
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 시뮬레이션
+      
+      // 실제 API 호출
+      const newEquipment = await equipmentService.createEquipment(data);
+      console.log('생성된 설비:', newEquipment);
       
       alert('설비가 성공적으로 등록되었습니다!');
       setIsModalOpen(false);
+      
+      // 목록을 새로고침하기 위해 페이지를 리로드하거나 상태를 업데이트
+      window.location.reload();
     } catch (error) {
       console.error('설비 등록 실패:', error);
-      alert('설비 등록에 실패했습니다. 다시 시도해주세요.');
+      const errorMessage = error instanceof Error ? error.message : '설비 등록에 실패했습니다.';
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }

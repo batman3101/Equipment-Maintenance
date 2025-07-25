@@ -37,47 +37,26 @@ export enum EquipmentPriority {
 }
 
 /**
- * 설비 기본 정보 인터페이스
+ * 설비 기본 정보 인터페이스 (DB 스키마에 맞게 수정)
  */
 export interface Equipment {
   id: string;
   equipment_number: string;
-  name: string;
-  type: EquipmentType;
-  model?: string;
-  manufacturer?: string;
-  serial_number?: string;
-  installation_date?: string;
-  location: string;
-  status: EquipmentStatus;
-  priority: EquipmentPriority;
-  description?: string;
-  specifications?: Record<string, any>;
-  maintenance_schedule?: string;
-  last_maintenance_date?: string;
-  next_maintenance_date?: string;
+  equipment_type: string;
+  plant_id: string;
+  status: string;
   created_at: string;
   updated_at: string;
-  created_by: string;
 }
 
 /**
- * 설비 생성 요청 인터페이스
+ * 설비 생성 요청 인터페이스 (DB 스키마에 맞게 수정)
  */
 export interface CreateEquipmentRequest {
   equipment_number: string;
-  name: string;
-  type: EquipmentType;
-  model?: string;
-  manufacturer?: string;
-  serial_number?: string;
-  installation_date?: string;
-  location: string;
-  priority: EquipmentPriority;
-  description?: string;
-  specifications?: Record<string, any>;
-  maintenance_schedule?: string;
-  next_maintenance_date?: string;
+  equipment_type: string;
+  plant_id: string;
+  status?: string;
 }
 
 /**
@@ -89,23 +68,20 @@ export interface UpdateEquipmentRequest extends Partial<CreateEquipmentRequest> 
 }
 
 /**
- * 설비 검색 필터 인터페이스
+ * 설비 검색 필터 인터페이스 (DB 스키마에 맞게 수정)
  */
 export interface EquipmentFilter {
   search?: string;
-  type?: EquipmentType[];
-  status?: EquipmentStatus[];
-  priority?: EquipmentPriority[];
-  location?: string[];
-  manufacturer?: string[];
-  maintenance_due?: boolean;
+  equipment_type?: string[];
+  status?: string[];
+  plant_id?: string;
 }
 
 /**
- * 설비 정렬 옵션 인터페이스
+ * 설비 정렬 옵션 인터페이스 (DB 스키마에 맞게 수정)
  */
 export interface EquipmentSort {
-  field: 'equipment_number' | 'name' | 'type' | 'status' | 'priority' | 'location' | 'created_at' | 'updated_at' | 'next_maintenance_date';
+  field: 'equipment_number' | 'equipment_type' | 'status' | 'created_at' | 'updated_at';
   direction: 'asc' | 'desc';
 }
 

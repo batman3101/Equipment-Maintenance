@@ -245,13 +245,13 @@ export class EquipmentService implements IEquipmentService {
   }
 
   /**
-   * 설비 데이터 유효성 검사
+   * 설비 데이터 유효성 검사 (DB 스키마에 맞게 수정)
    */
   validateEquipmentData(data: CreateEquipmentRequest | UpdateEquipmentRequest): EquipmentValidationError[] {
     const errors: EquipmentValidationError[] = [];
 
     // 설비 번호 검사
-    if ('equipment_number' in data && data.equipment_number) {
+    if ('equipment_number' in data && data.equipment_number !== undefined) {
       if (!data.equipment_number.trim()) {
         errors.push({ field: 'equipment_number', message: '설비 번호는 필수입니다.' });
       } else if (data.equipment_number.length > 50) {
@@ -259,39 +259,17 @@ export class EquipmentService implements IEquipmentService {
       }
     }
 
-    // 설비명 검사
-    if ('name' in data && data.name) {
-      if (!data.name.trim()) {
-        errors.push({ field: 'name', message: '설비명은 필수입니다.' });
-      } else if (data.name.length > 100) {
-        errors.push({ field: 'name', message: '설비명은 100자 이하여야 합니다.' });
+    // 설비 종류 검사
+    if ('equipment_type' in data && data.equipment_type !== undefined) {
+      if (!data.equipment_type.trim()) {
+        errors.push({ field: 'equipment_type', message: '설비 종류는 필수입니다.' });
       }
     }
 
-    // 위치 검사
-    if ('location' in data && data.location) {
-      if (!data.location.trim()) {
-        errors.push({ field: 'location', message: '설치 위치는 필수입니다.' });
-      } else if (data.location.length > 100) {
-        errors.push({ field: 'location', message: '설치 위치는 100자 이하여야 합니다.' });
-      }
-    }
-
-    // 설치일 검사
-    if ('installation_date' in data && data.installation_date) {
-      const installDate = new Date(data.installation_date);
-      const now = new Date();
-      if (installDate > now) {
-        errors.push({ field: 'installation_date', message: '설치일은 현재 날짜보다 이후일 수 없습니다.' });
-      }
-    }
-
-    // 다음 정비일 검사
-    if ('next_maintenance_date' in data && data.next_maintenance_date) {
-      const maintenanceDate = new Date(data.next_maintenance_date);
-      const now = new Date();
-      if (maintenanceDate < now) {
-        errors.push({ field: 'next_maintenance_date', message: '다음 정비일은 현재 날짜 이후여야 합니다.' });
+    // 공장 ID 검사
+    if ('plant_id' in data && data.plant_id !== undefined) {
+      if (!data.plant_id.trim()) {
+        errors.push({ field: 'plant_id', message: '공장 ID는 필수입니다.' });
       }
     }
 
@@ -299,7 +277,7 @@ export class EquipmentService implements IEquipmentService {
   }
 
   /**
-   * 비즈니스 규칙 적용
+   * 비즈니스 규칙 적용 (DB 스키마에 맞게 수정)
    */
   private applyBusinessRules<T extends CreateEquipmentRequest | UpdateEquipmentRequest>(data: T): T {
     const processedData = { ...data };
@@ -309,14 +287,9 @@ export class EquipmentService implements IEquipmentService {
       processedData.equipment_number = processedData.equipment_number.trim().toUpperCase();
     }
 
-    // 설비명 정규화 (앞뒤 공백 제거)
-    if ('name' in processedData && processedData.name) {
-      processedData.name = processedData.name.trim();
-    }
-
-    // 위치 정규화 (앞뒤 공백 제거)
-    if ('location' in processedData && processedData.location) {
-      processedData.location = processedData.location.trim();
+    // 설비 종류 정규화 (소문자 변환, 공백 제거)
+    if ('equipment_type' in processedData && processedData.equipment_type) {
+      processedData.equipment_type = processedData.equipment_type.trim().toLowerCase();
     }
 
     return processedData;

@@ -125,7 +125,7 @@ export class SupabaseEquipmentRepository implements IEquipmentRepository {
   }
 
   /**
-   * 설비 생성
+   * 설비 생성 (DB 스키마에 맞게 수정)
    */
   async create(data: CreateEquipmentRequest): Promise<Equipment> {
     // 설비 번호 중복 확인
@@ -137,10 +137,10 @@ export class SupabaseEquipmentRepository implements IEquipmentRepository {
     const { data: equipment, error } = await supabase
       .from(this.tableName)
       .insert({
-        ...data,
-        status: 'active', // 기본 상태
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        equipment_number: data.equipment_number,
+        equipment_type: data.equipment_type,
+        plant_id: data.plant_id,
+        status: data.status || 'active'
       })
       .select()
       .single();
@@ -244,13 +244,13 @@ export class SupabaseEquipmentRepository implements IEquipmentRepository {
   }
 
   /**
-   * 설비 검색
+   * 설비 검색 (DB 스키마에 맞게 수정)
    */
   async search(query: string, limit: number = 10): Promise<Equipment[]> {
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
-      .or(`equipment_number.ilike.%${query}%,name.ilike.%${query}%,location.ilike.%${query}%`)
+      .or(`equipment_number.ilike.%${query}%,equipment_type.ilike.%${query}%`)
       .limit(limit)
       .order('equipment_number');
 
@@ -284,36 +284,23 @@ export class SupabaseEquipmentRepository implements IEquipmentRepository {
   }
 
   /**
-   * 필터 적용 헬퍼 메서드
+   * 필터 적용 헬퍼 메서드 (DB 스키마에 맞게 수정)
    */
   private applyFilters(query: any, filter: EquipmentFilter) {
     if (filter.search) {
-      query = query.or(`equipment_number.ilike.%${filter.search}%,name.ilike.%${filter.search}%,location.ilike.%${filter.search}%`);
+      query = query.or(`equipment_number.ilike.%${filter.search}%,equipment_type.ilike.%${filter.search}%`);
     }
 
-    if (filter.type && filter.type.length > 0) {
-      query = query.in('type', filter.type);
+    if (filter.equipment_type && filter.equipment_type.length > 0) {
+      query = query.in('equipment_type', filter.equipment_type);
     }
 
     if (filter.status && filter.status.length > 0) {
       query = query.in('status', filter.status);
     }
 
-    if (filter.priority && filter.priority.length > 0) {
-      query = query.in('priority', filter.priority);
-    }
-
-    if (filter.location && filter.location.length > 0) {
-      query = query.in('location', filter.location);
-    }
-
-    if (filter.manufacturer && filter.manufacturer.length > 0) {
-      query = query.in('manufacturer', filter.manufacturer);
-    }
-
-    if (filter.maintenance_due) {
-      const now = new Date().toISOString();
-      query = query.lte('next_maintenance_date', now);
+    if (filter.plant_id) {
+      query = query.eq('plant_id', filter.plant_id);
     }
 
     return query;

@@ -11,13 +11,7 @@ import {
 } from '@/shared/components/ui';
 import { 
   CreateEquipmentRequest, 
-  UpdateEquipmentRequest,
-  EquipmentType,
-  EquipmentPriority 
-} from '../types';
-import { 
-  EQUIPMENT_TYPE_LABELS, 
-  EQUIPMENT_PRIORITY_LABELS 
+  UpdateEquipmentRequest
 } from '../types';
 
 export interface EquipmentFormProps {
@@ -40,13 +34,9 @@ export const EquipmentForm = React.forwardRef<HTMLFormElement, EquipmentFormProp
     
     const [formData, setFormData] = useState<CreateEquipmentRequest>({
       equipment_number: initialData?.equipment_number || '',
-      name: initialData?.name || '',
-      type: initialData?.type || EquipmentType.CNC_MACHINE,
-      location: initialData?.location || '',
-      priority: initialData?.priority || EquipmentPriority.MEDIUM,
-      model: initialData?.model || '',
-      manufacturer: initialData?.manufacturer || '',
-      description: initialData?.description || ''
+      equipment_type: initialData?.equipment_type || '',
+      plant_id: initialData?.plant_id || '550e8400-e29b-41d4-a716-446655440001', // 기본 공장 ID
+      status: initialData?.status || 'active'
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -54,15 +44,24 @@ export const EquipmentForm = React.forwardRef<HTMLFormElement, EquipmentFormProp
       onSubmit?.(formData);
     };
 
-    const typeOptions = Object.entries(EQUIPMENT_TYPE_LABELS).map(([value, label]) => ({
-      value,
-      label
-    }));
+    const equipmentTypeOptions = [
+      { value: 'cnc_machine', label: 'CNC 머신' },
+      { value: 'lathe', label: '선반' },
+      { value: 'milling_machine', label: '밀링머신' },
+      { value: 'drill_press', label: '드릴프레스' },
+      { value: 'grinder', label: '그라인더' },
+      { value: 'press', label: '프레스' },
+      { value: 'conveyor', label: '컨베이어' },
+      { value: 'robot', label: '로봇' },
+      { value: 'other', label: '기타' }
+    ];
 
-    const priorityOptions = Object.entries(EQUIPMENT_PRIORITY_LABELS).map(([value, label]) => ({
-      value,
-      label
-    }));
+    const statusOptions = [
+      { value: 'active', label: '정상' },
+      { value: 'inactive', label: '비활성' },
+      { value: 'maintenance', label: '정비중' },
+      { value: 'broken', label: '고장' }
+    ];
 
     return (
       <form ref={ref} onSubmit={handleSubmit} className={className} {...props}>
@@ -78,70 +77,21 @@ export const EquipmentForm = React.forwardRef<HTMLFormElement, EquipmentFormProp
           </FormField>
 
           <FormField>
-            <FormLabel required>설비명</FormLabel>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="설비명을 입력하세요"
-              required
-            />
-          </FormField>
-
-          <FormField>
             <FormLabel required>설비 종류</FormLabel>
             <Select
-              value={formData.type}
-              onChange={(value) => setFormData(prev => ({ ...prev, type: value as EquipmentType }))}
-              options={typeOptions}
+              value={formData.equipment_type}
+              onChange={(value) => setFormData(prev => ({ ...prev, equipment_type: value }))}
+              options={equipmentTypeOptions}
               required
             />
           </FormField>
 
           <FormField>
-            <FormLabel required>설치 위치</FormLabel>
-            <Input
-              value={formData.location}
-              onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-              placeholder="예: 1층 생산라인 A"
-              required
-            />
-          </FormField>
-
-          <FormField>
-            <FormLabel required>우선순위</FormLabel>
+            <FormLabel>상태</FormLabel>
             <Select
-              value={formData.priority}
-              onChange={(value) => setFormData(prev => ({ ...prev, priority: value as EquipmentPriority }))}
-              options={priorityOptions}
-              required
-            />
-          </FormField>
-
-          <FormField>
-            <FormLabel>제조사</FormLabel>
-            <Input
-              value={formData.manufacturer}
-              onChange={(e) => setFormData(prev => ({ ...prev, manufacturer: e.target.value }))}
-              placeholder="제조사명"
-            />
-          </FormField>
-
-          <FormField>
-            <FormLabel>모델명</FormLabel>
-            <Input
-              value={formData.model}
-              onChange={(e) => setFormData(prev => ({ ...prev, model: e.target.value }))}
-              placeholder="모델명"
-            />
-          </FormField>
-
-          <FormField>
-            <FormLabel>설명</FormLabel>
-            <Textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="설비에 대한 추가 설명"
-              rows={3}
+              value={formData.status}
+              onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+              options={statusOptions}
             />
           </FormField>
         </div>
