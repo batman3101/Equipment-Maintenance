@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createUserManagementService } from '../services';
 import { createAuthService } from '@/domains/auth/services/auth-service';
 import type { UserPermissions } from '../types';
@@ -10,7 +10,8 @@ export function usePermissions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const authService = createAuthService();
+  // authService를 useMemo로 메모이제이션하여 무한 재생성 방지
+  const authService = useMemo(() => createAuthService(), []);
 
   const loadPermissions = useCallback(async () => {
     setLoading(true);
