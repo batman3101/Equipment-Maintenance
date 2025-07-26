@@ -100,6 +100,113 @@ export class SupabaseUserRepository implements UserRepository {
     
     return data;
   }
+
+  async getUserPermissions(userId: string): Promise<UserPermissions> {
+    const cacheKey = `user-permissions-${userId}`;
+    
+    // 캐시에서 먼저 확인
+    const cached = authCache.get<UserPermissions>(cacheKey);
+    if (cached) {
+      console.log('권한 캐시 히트:', userId);
+      return cached;
+    }
+
+    // 실제 구현에서는 role_permissions 조인으로 권한 조회
+    // 현재는 기본 구현으로 대체
+    const userProfile = await this.getUserProfile(userId);
+    const permissions: UserPermissions = {};
+
+    // 역할에 따른 기본 권한 설정
+    if (userProfile?.role === 'admin') {
+      permissions['equipment:read'] = true;
+      permissions['equipment:write'] = true;
+      permissions['equipment:delete'] = true;
+      permissions['equipment:manage'] = true;
+      permissions['breakdown:read'] = true;
+      permissions['breakdown:write'] = true;
+      permissions['breakdown:delete'] = true;
+      permissions['breakdown:assign'] = true;
+      permissions['breakdown:approve'] = true;
+      permissions['repair:read'] = true;
+      permissions['repair:write'] = true;
+      permissions['repair:complete'] = true;
+      permissions['user:read'] = true;
+      permissions['user:write'] = true;
+      permissions['user:delete'] = true;
+      permissions['user:approve'] = true;
+      permissions['user:assign_role'] = true;
+      permissions['permission:read'] = true;
+      permissions['permission:write'] = true;
+      permissions['permission:assign'] = true;
+      permissions['system:admin'] = true;
+      permissions['system:settings'] = true;
+      permissions['system:logs'] = true;
+    } else if (userProfile?.role === 'manager') {
+      permissions['equipment:read'] = true;
+      permissions['equipment:write'] = true;
+      permissions['equipment:delete'] = true;
+      permissions['equipment:manage'] = true;
+      permissions['breakdown:read'] = true;
+      permissions['breakdown:write'] = true;
+      permissions['breakdown:delete'] = true;
+      permissions['breakdown:assign'] = true;
+      permissions['breakdown:approve'] = true;
+      permissions['repair:read'] = true;
+      permissions['repair:write'] = true;
+      permissions['repair:complete'] = true;
+      permissions['user:read'] = true;
+      permissions['user:write'] = true;
+      permissions['user:approve'] = true;
+      permissions['user:assign_role'] = true;
+    } else if (userProfile?.role === 'engineer') {
+      permissions['equipment:read'] = true;
+      permissions['equipment:write'] = true;
+      permissions['breakdown:read'] = true;
+      permissions['breakdown:write'] = true;
+      permissions['breakdown:assign'] = true;
+      permissions['repair:read'] = true;
+      permissions['repair:write'] = true;
+      permissions['repair:complete'] = true;
+    } else if (userProfile?.role === 'operator') {
+      permissions['equipment:read'] = true;
+      permissions['breakdown:read'] = true;
+      permissions['breakdown:write'] = true;
+      permissions['repair:read'] = true;
+    } else {
+      permissions['equipment:read'] = true;
+      permissions['breakdown:read'] = true;
+      permissions['repair:read'] = true;
+    }
+
+    // 2분간 캐시
+    authCache.set(cacheKey, permissions, 2 * 60 * 1000);
+
+    return permissions;
+  }
+
+  async getUserRoles(userId: string): Promise<import('../types').Role[]> {
+    // 기본 구현 - 실제로는 user_role_assignments와 roles 테이블 조인
+    const userProfile = await this.getUserProfile(userId);
+    
+    if (!userProfile) {
+      return [];
+    }
+
+    // 임시로 기본 역할 반환
+    return [{
+      id: `role-${userProfile.role}`,
+      name: userProfile.role,
+      display_name: userProfile.role === 'admin' ? '관리자' :
+                   userProfile.role === 'manager' ? '매니저' :
+                   userProfile.role === 'engineer' ? '엔지니어' :
+                   userProfile.role === 'operator' ? '운영자' : '사용자',
+      description: `${userProfile.role} 역할`,
+      is_system_role: true,
+      plant_id: userProfile.plant_id,
+      created_at: userProfile.created_at,
+      updated_at: userProfile.updated_at
+    }];
+  }
 }
 
 // Main AuthService implementation (DIP - depends on abstractions)

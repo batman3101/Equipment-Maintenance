@@ -1,4 +1,4 @@
-import type { AuthService, LoginCredentials, User } from '../types';
+import type { AuthService, LoginCredentials, User, UserPermissions } from '../types';
 
 /**
  * 데모용 인증 서비스
@@ -11,6 +11,7 @@ export class DemoAuthService implements AuthService {
     name: '데모 사용자',
     role: 'engineer',
     plant_id: '550e8400-e29b-41d4-a716-446655440001',
+    status: 'active',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -59,5 +60,40 @@ export class DemoAuthService implements AuthService {
 
   async refreshSession(): Promise<User | null> {
     return this.getCurrentUser();
+  }
+
+  async checkPermission(permission: string): Promise<boolean> {
+    console.log('데모 권한 확인:', permission);
+    
+    // 데모 모드에서는 엔지니어 권한으로 기본 권한 부여
+    const permissions = await this.getUserPermissions();
+    return permissions[permission] === true;
+  }
+
+  async getUserPermissions(): Promise<UserPermissions> {
+    console.log('데모 사용자 권한 조회');
+    
+    // 데모 모드에서는 엔지니어 역할의 기본 권한 반환
+    const permissions: UserPermissions = {
+      // 설비 관리 권한
+      'equipment:read': true,
+      'equipment:write': true,
+      
+      // 고장 관리 권한
+      'breakdown:read': true,
+      'breakdown:write': true,
+      'breakdown:assign': true,
+      
+      // 수리 관리 권한
+      'repair:read': true,
+      'repair:write': true,
+      'repair:complete': true,
+      
+      // 기본 조회 권한
+      'dashboard:read': true,
+      'settings:read': true
+    };
+    
+    return permissions;
   }
 }

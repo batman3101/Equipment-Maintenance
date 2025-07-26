@@ -22,8 +22,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
   },
   // fetch 옵션으로 타임아웃 설정
-  supabaseKey: supabaseAnonKey,
-  supabaseUrl: supabaseUrl,
 });
 
 // 기본 fetch를 타임아웃이 있는 fetch로 래핑

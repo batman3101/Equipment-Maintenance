@@ -7,7 +7,7 @@ export interface User {
   name: string;
   role: string; // 동적 역할로 변경
   plant_id: string;
-  status: UserStatus;
+  status?: UserStatus; // 선택적 필드로 변경
   phone?: string;
   department?: string;
   position?: string;
@@ -148,9 +148,36 @@ export interface UserRepository {
   getUserRoles(userId: string): Promise<Role[]>;
 }
 
+export interface UserStatistics {
+  total: number;
+  active: number;
+  inactive: number;
+  pending: number;
+  suspended: number;
+  byRole: { [roleName: string]: number };
+  byDepartment: { [department: string]: number };
+}
+
+export interface UserListFilters {
+  status?: string;
+  role?: string;
+  plant_id?: string;
+  department?: string;
+  search?: string;
+}
+
+export interface RegistrationRequestFilters {
+  status?: 'pending' | 'approved' | 'rejected';
+  plant_id?: string;
+  requested_role?: string;
+  date_from?: string;
+  date_to?: string;
+}
+
 export interface UserManagementService {
   // 사용자 관리
   getUsers(plantId?: string): Promise<User[]>;
+  getUsersWithFilters(filters: UserListFilters): Promise<User[]>;
   createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User>;
   updateUser(userId: string, updates: Partial<User>): Promise<User>;
   deleteUser(userId: string): Promise<void>;
@@ -166,6 +193,9 @@ export interface UserManagementService {
   assignRole(userId: string, roleId: string): Promise<UserRoleAssignment>;
   removeRole(userId: string, roleId: string): Promise<void>;
   getUserRoles(userId: string): Promise<Role[]>;
+  
+  // 통계
+  getUserStatistics(plantId?: string): Promise<UserStatistics>;
 }
 
 export interface RoleManagementService {
