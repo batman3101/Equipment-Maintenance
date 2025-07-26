@@ -54,33 +54,33 @@ const StatCard: React.FC<StatCardProps> = ({
   loading = false 
 }) => {
   const colorClasses = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    red: 'bg-red-50 border-red-200 text-red-700',
-    yellow: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700',
-    gray: 'bg-gray-50 border-gray-200 text-gray-700'
+    blue: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300',
+    green: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300',
+    red: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300',
+    yellow: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300',
+    purple: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300',
+    gray: 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
   };
 
   const iconColorClasses = {
-    blue: 'text-blue-600',
-    green: 'text-green-600',
-    red: 'text-red-600',
-    yellow: 'text-yellow-600',
-    purple: 'text-purple-600',
-    gray: 'text-gray-600'
+    blue: 'text-blue-600 dark:text-blue-400',
+    green: 'text-green-600 dark:text-green-400',
+    red: 'text-red-600 dark:text-red-400',
+    yellow: 'text-yellow-600 dark:text-yellow-400',
+    purple: 'text-purple-600 dark:text-purple-400',
+    gray: 'text-gray-600 dark:text-gray-400'
   };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div className="animate-pulse">
           <div className="flex items-center justify-between mb-2">
-            <div className="h-4 bg-gray-200 rounded w-24"></div>
-            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
-          <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-          <div className="h-3 bg-gray-200 rounded w-20"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-2"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
         </div>
       </div>
     );
@@ -89,7 +89,7 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:scale-[1.02] dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</h3>
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
           <div className={`w-5 h-5 ${iconColorClasses[color]}`}>
             {icon}
@@ -98,12 +98,12 @@ const StatCard: React.FC<StatCardProps> = ({
       </div>
       
       <div className="flex items-baseline space-x-2">
-        <p className="text-2xl font-bold text-gray-900">
+        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </p>
         {trend && (
           <div className={`flex items-center text-sm ${
-            trend.isPositive ? 'text-green-600' : 'text-red-600'
+            trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}>
             {trend.isPositive ? (
               <TrendingUp className="w-4 h-4 mr-1" />
@@ -116,7 +116,7 @@ const StatCard: React.FC<StatCardProps> = ({
       </div>
       
       {trend && (
-        <p className="text-xs text-gray-500 mt-1">{trend.label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{trend.label}</p>
       )}
     </div>
   );
@@ -165,8 +165,8 @@ const EquipmentStatsCards: React.FC<EquipmentStatsCardsProps> = ({ stats, loadin
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">설비 현황을 한눈에 확인하세요</h2>
-        <p className="text-sm text-gray-600">실시간 설비 및 고장/수리 현황</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">설비 현황을 한눈에 확인하세요</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400">실시간 설비 및 고장/수리 현황</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

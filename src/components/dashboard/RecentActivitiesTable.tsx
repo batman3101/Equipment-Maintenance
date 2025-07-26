@@ -49,22 +49,22 @@ const activityConfig = {
   breakdown: {
     label: '고장 신고',
     icon: AlertTriangle,
-    color: 'text-red-600 bg-red-50'
+    color: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
   },
   repair: {
     label: '수리',
     icon: Wrench,
-    color: 'text-blue-600 bg-blue-50'
+    color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
   },
   maintenance: {
     label: '정비',
     icon: Settings,
-    color: 'text-green-600 bg-green-50'
+    color: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
   },
   inspection: {
     label: '점검',
     icon: CheckCircle,
-    color: 'text-purple-600 bg-purple-50'
+    color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20'
   }
 };
 
@@ -72,28 +72,28 @@ const activityConfig = {
 const statusConfig = {
   pending: {
     label: '대기',
-    color: 'bg-yellow-100 text-yellow-800'
+    color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
   },
   in_progress: {
     label: '진행중',
-    color: 'bg-blue-100 text-blue-800'
+    color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
   },
   completed: {
     label: '완료',
-    color: 'bg-green-100 text-green-800'
+    color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
   },
   cancelled: {
     label: '취소',
-    color: 'bg-gray-100 text-gray-800'
+    color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
   }
 };
 
 // 우선순위 색상
 const priorityConfig = {
-  low: 'bg-gray-100 text-gray-800',
-  medium: 'bg-yellow-100 text-yellow-800', 
-  high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800'
+  low: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
+  medium: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300', 
+  high: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300',
+  critical: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
 };
 
 const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
@@ -204,11 +204,11 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-lg hover:scale-[1.01] dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out">
       {/* 헤더 */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">최근 활동</h3>
-            <p className="text-sm text-gray-600">가장 최근 활동 10개 표시</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">최근 활동</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">가장 최근 활동 10개 표시</p>
           </div>
 
           {/* 검색 및 필터 */}
@@ -221,7 +221,7 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
                 placeholder="검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -229,7 +229,7 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as ActivityType | 'all')}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">모든 타입</option>
               <option value="breakdown">고장 신고</option>
@@ -242,7 +242,7 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as ActivityStatus | 'all')}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">모든 상태</option>
               <option value="pending">대기</option>
@@ -259,14 +259,14 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">활동 내역을 불러오는 중...</p>
+            <p className="text-gray-600 dark:text-gray-400">활동 내역을 불러오는 중...</p>
           </div>
         ) : filteredAndSortedActivities.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="text-gray-400 mb-2">
+            <div className="text-gray-400 dark:text-gray-500 mb-2">
               <Calendar className="w-12 h-12 mx-auto" />
             </div>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-gray-400">
               {searchQuery || typeFilter !== 'all' || statusFilter !== 'all' 
                 ? '검색 조건에 맞는 활동이 없습니다' 
                 : '최근 활동이 없습니다'
@@ -274,14 +274,14 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
             </p>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   타입/상태
                 </th>
                 <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                   onClick={() => handleSort('equipmentNumber')}
                 >
                   <div className="flex items-center">
@@ -291,14 +291,14 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
                     )}
                   </div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   내용
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   담당자
                 </th>
                 <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                   onClick={() => handleSort('createdAt')}
                 >
                   <div className="flex items-center">
@@ -308,17 +308,17 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
                     )}
                   </div>
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   액션
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredAndSortedActivities.map((activity) => {
                 const TypeIcon = activityConfig[activity.type].icon;
                 
                 return (
-                  <tr key={activity.id} className="hover:bg-gray-50 transition-colors duration-200">
+                  <tr key={activity.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                     {/* 타입/상태 */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col space-y-2">
@@ -326,7 +326,7 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
                           <div className={`p-2 rounded-lg ${activityConfig[activity.type].color}`}>
                             <TypeIcon className="w-4 h-4" />
                           </div>
-                          <span className="ml-2 text-sm font-medium text-gray-900">
+                          <span className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                             {activityConfig[activity.type].label}
                           </span>
                         </div>
@@ -339,10 +339,10 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
                     {/* 설비 정보 */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {activity.equipmentNumber}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           {activity.equipmentType}
                         </div>
                       </div>
@@ -351,10 +351,10 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
                     {/* 내용 */}
                     <td className="px-6 py-4">
                       <div className="max-w-xs">
-                        <div className="text-sm font-medium text-gray-900 truncate">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                           {activity.title}
                         </div>
-                        <div className="text-sm text-gray-500 truncate">
+                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           {activity.description}
                         </div>
                         {activity.priority && (
@@ -367,14 +367,14 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
 
                     {/* 담당자 */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-900 dark:text-gray-100">
                         {activity.assignee || activity.reporter || '-'}
                       </div>
                     </td>
 
                     {/* 생성일 */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-900 dark:text-gray-100">
                         {formatDate(activity.createdAt)}
                       </div>
                     </td>
@@ -383,7 +383,7 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
                         onClick={() => handleViewDetail(activity)}
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                       >
                         <Eye className="w-4 h-4 mr-1" />
                         상세보기
@@ -399,12 +399,12 @@ const RecentActivitiesTable: React.FC<RecentActivitiesTableProps> = ({
 
       {/* 푸터 */}
       {!loading && filteredAndSortedActivities.length > 0 && (
-        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               총 {activities.length}개 중 {filteredAndSortedActivities.length}개 표시
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               최근 활동 순으로 정렬됨
             </div>
           </div>

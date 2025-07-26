@@ -169,8 +169,8 @@ export function Dashboard() {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">대시보드</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">대시보드</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             설비 현황을 한눈에 확인하세요
           </p>
         </div>
