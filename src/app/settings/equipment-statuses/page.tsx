@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { Card } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
-import { useEquipmentTypes } from '@/domains/settings';
+import { useEquipmentStatuses } from '@/domains/settings';
 import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
 
-const EquipmentTypesPage = () => {
-  const { equipmentTypes, loading, error } = useEquipmentTypes();
+const EquipmentStatusesPage = () => {
+  const { equipmentStatuses, loading, error } = useEquipmentStatuses();
 
   if (loading) {
     return (
@@ -40,40 +39,44 @@ const EquipmentTypesPage = () => {
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">설비 종류 설정</h1>
-          <p className="text-gray-600 mt-1">설비의 종류를 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-gray-900">설비 상태 설정</h1>
+          <p className="text-gray-600 mt-1">설비의 상태를 관리합니다.</p>
         </div>
-        <Link href="/settings/equipment-types/new">
-          <Button>새 설비 종류 추가</Button>
-        </Link>
+        <Button>새 설비 상태 추가</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {equipmentTypes.map((equipmentType) => (
-          <Card key={equipmentType.id} className="p-6">
+        {equipmentStatuses.map((status) => (
+          <Card key={status.id} className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  {equipmentType.name}
-                </h3>
-                {equipmentType.description && (
-                  <p className="text-gray-600 text-sm">
-                    {equipmentType.description}
-                  </p>
-                )}
+              <div className="flex items-center">
+                <div 
+                  className="w-4 h-4 rounded-full mr-3"
+                  style={{ backgroundColor: status.color }}
+                />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {status.name}
+                  </h3>
+                  {status.description && (
+                    <p className="text-gray-600 text-sm">
+                      {status.description}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                equipmentType.is_active 
+                status.is_active 
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {equipmentType.is_active ? '활성' : '비활성'}
+                {status.is_active ? '활성' : '비활성'}
               </div>
             </div>
             
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <span className="text-sm text-gray-500">
-                순서: {equipmentType.display_order}
+                순서: {status.display_order}
               </span>
               <div className="space-x-2">
                 <button className="text-sm text-blue-600 hover:text-blue-800">
@@ -88,16 +91,14 @@ const EquipmentTypesPage = () => {
         ))}
       </div>
 
-      {equipmentTypes.length === 0 && (
+      {equipmentStatuses.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">등록된 설비 종류가 없습니다.</p>
-          <Link href="/settings/equipment-types/new">
-            <Button>첫 번째 설비 종류 추가</Button>
-          </Link>
+          <p className="text-gray-500 mb-4">등록된 설비 상태가 없습니다.</p>
+          <Button>첫 번째 설비 상태 추가</Button>
         </div>
       )}
     </div>
   );
 };
 
-export default EquipmentTypesPage;
+export default EquipmentStatusesPage;
