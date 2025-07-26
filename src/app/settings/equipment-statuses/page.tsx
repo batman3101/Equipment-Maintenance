@@ -11,9 +11,11 @@ const EquipmentStatusesPage = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner size="lg" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto p-4">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <LoadingSpinner size="lg" />
+          </div>
         </div>
       </div>
     );
@@ -21,82 +23,86 @@ const EquipmentStatusesPage = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center py-8">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            다시 시도
-          </button>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto p-4">
+          <div className="text-center py-8">
+            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            >
+              다시 시도
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">설비 상태 설정</h1>
-          <p className="text-gray-600 mt-1">설비의 상태를 관리합니다.</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto p-4 max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">설비 상태 설정</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">설비의 상태를 관리합니다.</p>
+          </div>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white">새 설비 상태 추가</Button>
         </div>
-        <Button>새 설비 상태 추가</Button>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {equipmentStatuses.map((status) => (
-          <Card key={status.id} className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center">
-                <div 
-                  className="w-4 h-4 rounded-full mr-3"
-                  style={{ backgroundColor: status.color }}
-                />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {status.name}
-                  </h3>
-                  {status.description && (
-                    <p className="text-gray-600 text-sm">
-                      {status.description}
-                    </p>
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {equipmentStatuses.map((status) => (
+            <Card key={status.id} className="p-6 card-hover transition-all duration-200 hover:shadow-lg">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center">
+                  <div 
+                    className="w-4 h-4 rounded-full mr-3 border border-gray-200 dark:border-gray-600"
+                    style={{ backgroundColor: status.color }}
+                  />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                      {status.name}
+                    </h3>
+                    {status.description && (
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        {status.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  status.is_active 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                }`}>
+                  {status.is_active ? '활성' : '비활성'}
                 </div>
               </div>
-              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                status.is_active 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {status.is_active ? '활성' : '비활성'}
+              
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  순서: {status.display_order}
+                </span>
+                <div className="space-x-2">
+                  <button className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                    수정
+                  </button>
+                  <button className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium">
+                    삭제
+                  </button>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <span className="text-sm text-gray-500">
-                순서: {status.display_order}
-              </span>
-              <div className="space-x-2">
-                <button className="text-sm text-blue-600 hover:text-blue-800">
-                  수정
-                </button>
-                <button className="text-sm text-red-600 hover:text-red-800">
-                  삭제
-                </button>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {equipmentStatuses.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">등록된 설비 상태가 없습니다.</p>
-          <Button>첫 번째 설비 상태 추가</Button>
+            </Card>
+          ))}
         </div>
-      )}
+
+        {equipmentStatuses.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">등록된 설비 상태가 없습니다.</p>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">첫 번째 설비 상태 추가</Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

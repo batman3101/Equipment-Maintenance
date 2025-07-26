@@ -78,9 +78,10 @@ export function BreakdownCard({ breakdown, onClick }: BreakdownCardProps) {
   return (
     <div
       className={`
-        p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
+        p-4 rounded-lg border-2 cursor-pointer
         ${statusConfig.bgColor} ${statusConfig.borderColor}
-        hover:shadow-md active:scale-[0.98]
+        hover:shadow-lg hover:scale-[1.02] dark:hover:shadow-2xl dark:hover:shadow-black/25 
+        transition-all duration-300 ease-in-out active:scale-[0.98]
         min-h-[120px] touch-manipulation
       `}
       onClick={handleClick}

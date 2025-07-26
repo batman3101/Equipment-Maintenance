@@ -87,7 +87,7 @@ const StatCard: React.FC<StatCardProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:scale-[1.02] dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium text-gray-600">{title}</h3>
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>

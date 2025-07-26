@@ -96,7 +96,7 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
       <Card
         ref={ref}
         className={cn(
-          'cursor-pointer transition-all duration-200 hover:shadow-md',
+          'cursor-pointer hover:shadow-lg hover:scale-[1.02] dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out',
           compact && 'p-3',
           className
         )}

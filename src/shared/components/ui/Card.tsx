@@ -57,10 +57,12 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
     const cardClasses = cn(
       'bg-white rounded-lg',
+      'dark:bg-gray-800 dark:border-gray-700',
       border && 'border border-gray-200',
       shadowClasses[shadow],
       paddingClasses[padding],
-      hover && 'hover:shadow-md transition-shadow duration-200 cursor-pointer',
+      hover && 'hover:shadow-lg hover:scale-[1.02] dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out cursor-pointer',
+      !hover && 'transition-all duration-300 ease-in-out',
       'min-h-[44px]', // 최소 터치 영역 보장
       className
     );

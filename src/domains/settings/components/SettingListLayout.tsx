@@ -100,7 +100,7 @@ export function SettingListLayout<T extends BaseSettingItem>({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* 네비게이션 */}
       <Navigation />
       
@@ -114,8 +114,8 @@ export function SettingListLayout<T extends BaseSettingItem>({
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              <p className="text-gray-600 text-sm mt-1">{description}</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{description}</p>
             </div>
           </div>
         </div>
@@ -197,14 +197,14 @@ export function SettingListLayout<T extends BaseSettingItem>({
         </div>
 
         {/* 목록 컨테이너 */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="p-6">
             {loading ? (
               // 로딩 상태
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <LoadingSpinner size="lg" className="mx-auto mb-4" />
-                  <p className="text-gray-600">목록을 불러오는 중...</p>
+                  <p className="text-gray-600 dark:text-gray-400">목록을 불러오는 중...</p>
                 </div>
               </div>
             ) : items.length === 0 ? (

@@ -39,7 +39,7 @@ export function SettingFormLayout({
   const defaultSubmitText = isEditing ? '수정 완료' : '생성 완료';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* 네비게이션 */}
       <Navigation />
       
@@ -53,8 +53,8 @@ export function SettingFormLayout({
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              <p className="text-gray-600 text-sm mt-1">{description}</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{description}</p>
             </div>
           </div>
         </div>
@@ -72,7 +72,7 @@ export function SettingFormLayout({
               {children}
 
               {/* 액션 버튼 */}
-              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-gray-200">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                 {showCancelButton && (
                   <Button
                     type="button"
@@ -103,8 +103,8 @@ export function SettingFormLayout({
         </Card>
 
         {/* 안내 메시지 */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="text-sm text-blue-700">
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="text-sm text-blue-700 dark:text-blue-300">
             <p className="font-medium mb-1">입력 시 참고사항</p>
             <ul className="space-y-1 text-xs">
               <li>• 모든 필수 항목을 입력해주세요</li>

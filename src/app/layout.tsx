@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Analytics } from '@/components/Analytics';
 import { AuthProvider } from '@/domains/auth/hooks/use-auth';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -13,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         <title>CNC 설비 유지보수 앱</title>
         <meta name="description" content="현장 엔지니어를 위한 CNC 설비 고장 관리 웹앱" />
@@ -31,15 +32,25 @@ export default function RootLayout({
                   }
                 });
               }
+              
+              // 다크모드 초기화 스크립트 (flash 방지)
+              try {
+                var theme = localStorage.getItem('cnc-theme');
+                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (e) {}
             `,
           }}
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-          <Analytics />
-        </AuthProvider>
+        <ThemeProvider defaultTheme="system" storageKey="cnc-theme">
+          <AuthProvider>
+            {children}
+            <Analytics />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

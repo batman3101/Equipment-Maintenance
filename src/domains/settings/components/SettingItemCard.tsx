@@ -89,14 +89,14 @@ export function SettingItemCard<T extends BaseSettingItem>({
   return (
     <>
       <Card 
-        className={`transition-all duration-200 hover:shadow-md ${
+        className={`hover:shadow-lg hover:scale-[1.02] dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out ${
           isDragging ? 'shadow-lg scale-105' : ''
         } ${!item.is_active ? 'opacity-60' : ''}`}
       >
         <CardContent className="p-4">
           <div className="flex items-center space-x-3">
             {/* 드래그 핸들 (순서 변경용) */}
-            <div className="cursor-move text-gray-400 hover:text-gray-600">
+            <div className="cursor-move text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400">
               <GripVertical className="h-4 w-4" />
             </div>
 
@@ -120,7 +120,7 @@ export function SettingItemCard<T extends BaseSettingItem>({
             {/* 메인 콘텐츠 */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-1">
-                <h3 className="font-medium text-gray-900 truncate">
+                <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
                   {item.name}
                 </h3>
                 <Badge 
@@ -131,9 +131,9 @@ export function SettingItemCard<T extends BaseSettingItem>({
                 </Badge>
               </div>
               
-              <div className="flex items-center space-x-3 text-sm text-gray-500">
+              <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400">
                 {'code' in item && (
-                  <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                  <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                     {(item as any).code}
                   </span>
                 )}
@@ -142,7 +142,7 @@ export function SettingItemCard<T extends BaseSettingItem>({
               </div>
               
               {item.description && (
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
                   {item.description}
                 </p>
               )}

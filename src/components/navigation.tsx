@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/domains/auth/hooks/use-auth';
+import { ThemeToggle } from '@/shared/components/ui/ThemeToggle';
 
 const navigationItems = [
   {
@@ -53,13 +54,13 @@ export function Navigation() {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* 로고 및 데스크톱 네비게이션 */}
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">CNC 설비 관리</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">CNC 설비 관리</h1>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {navigationItems.map((item) => {
@@ -70,10 +71,10 @@ export function Navigation() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
                       isActive
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        ? 'border-blue-500 text-gray-900 dark:text-white'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
                     <Icon className="h-4 w-4 mr-2" />
@@ -84,11 +85,12 @@ export function Navigation() {
             </div>
           </div>
 
-          {/* 데스크톱 로그아웃 버튼 */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          {/* 데스크톱 테마토글 및 로그아웃 버튼 */}
+          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-3">
+            <ThemeToggle />
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
               <LogOut className="h-4 w-4 mr-2" />
               로그아웃
@@ -96,10 +98,11 @@ export function Navigation() {
           </div>
 
           {/* 모바일 메뉴 버튼 */}
-          <div className="sm:hidden flex items-center">
+          <div className="sm:hidden flex items-center space-x-2">
+            <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-200"
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -113,7 +116,7 @@ export function Navigation() {
 
       {/* 모바일 메뉴 */}
       {isMobileMenuOpen && (
-        <div className="sm:hidden">
+        <div className="sm:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <div className="pt-2 pb-3 space-y-1">
             {navigationItems.map((item) => {
               const isActive = pathname === item.href;
@@ -123,10 +126,10 @@ export function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                  className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200 ${
                     isActive
-                      ? 'bg-blue-50 border-blue-500 text-blue-700'
-                      : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+                      ? 'bg-blue-50 dark:bg-blue-900/50 border-blue-500 text-blue-700 dark:text-blue-300'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -139,7 +142,7 @@ export function Navigation() {
             })}
             <button
               onClick={handleSignOut}
-              className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+              className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
             >
               <div className="flex items-center">
                 <LogOut className="h-5 w-5 mr-3" />

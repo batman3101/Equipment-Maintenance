@@ -173,7 +173,7 @@ export default function BreakdownCategoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* 네비게이션 */}
       <Navigation />
       
@@ -187,8 +187,8 @@ export default function BreakdownCategoriesPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">고장 내용 설정</h1>
-              <p className="text-gray-600 text-sm mt-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">고장 내용 설정</h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                 고장 분류 체계(대분류/소분류)를 관리합니다
               </p>
             </div>
@@ -276,7 +276,7 @@ export default function BreakdownCategoriesPage() {
         </div>
 
         {/* 분류 목록 */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="p-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
@@ -311,7 +311,7 @@ export default function BreakdownCategoriesPage() {
                   const categorySubcategories = getSubcategoriesForCategory(category.id);
 
                   return (
-                    <div key={category.id} className="border border-gray-200 rounded-lg">
+                    <div key={category.id} className="border border-gray-200 dark:border-gray-700 rounded-lg card-hover transition-all duration-200 hover:shadow-lg">
                       {/* 대분류 카드 */}
                       <div className="p-4 bg-gray-50">
                         <div className="flex items-center space-x-3">

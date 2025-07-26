@@ -123,7 +123,7 @@ const TrendAnalysisCharts: React.FC<TrendAnalysisChartsProps> = ({
       {/* 월별 및 연도별 트렌드 차트 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 월별 고장 트렌드 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:scale-[1.02] dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out">
           <div className="mb-4">
             <h3 className="text-base font-medium text-gray-900">월별 고장 트렌드</h3>
             <p className="text-sm text-gray-600">최근 12개월간 고장 및 수리 현황</p>
@@ -169,7 +169,7 @@ const TrendAnalysisCharts: React.FC<TrendAnalysisChartsProps> = ({
         </div>
 
         {/* 연도별 고장 트렌드 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:scale-[1.02] dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out">
           <div className="mb-4">
             <h3 className="text-base font-medium text-gray-900">연도별 고장 트렌드</h3>
             <p className="text-sm text-gray-600">최근 5년간 고장 및 수리 현황</p>
@@ -216,7 +216,7 @@ const TrendAnalysisCharts: React.FC<TrendAnalysisChartsProps> = ({
       </div>
 
       {/* 고장 유형별 분포 도넛 차트 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:scale-[1.02] dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out">
         <div className="mb-4">
           <h3 className="text-base font-medium text-gray-900">설비 고장 유형별 분포</h3>
           <p className="text-sm text-gray-600">고장 유형별 발생 비율</p>

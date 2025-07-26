@@ -70,8 +70,24 @@
   --font-mono: ui-monospace, monospace;
 }
 
+/* 다크모드 색상 정의 */
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --input: #1e293b;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --ring: #3b82f6;
+}
+
+/* 시스템 다크모드 감지 (fallback) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #0f172a;
     --foreground: #f1f5f9;
     --muted: #1e293b;
@@ -116,9 +132,31 @@ body {
   @apply bg-green-100 text-green-800 border-green-200;
 }
 
-/* Card component styles */
+/* Card component styles with dark mode support */
 .card {
-  @apply bg-white text-gray-900 border-gray-200 rounded-lg border shadow-sm;
+  background: var(--card);
+  color: var(--card-foreground);
+  border-color: var(--border);
+  @apply rounded-lg border shadow-sm transition-colors duration-200;
+}
+
+.dark .card {
+  background: var(--card);
+  color: var(--card-foreground);
+  border-color: var(--border);
+}
+
+/* 호버 효과 */
+.card-hover {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.card-hover:hover {
+  @apply shadow-lg transform scale-[1.02];
+}
+
+.dark .card-hover:hover {
+  @apply shadow-2xl shadow-black/25;
 }
 
 .card-header {

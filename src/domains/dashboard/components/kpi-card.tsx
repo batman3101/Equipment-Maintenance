@@ -68,7 +68,7 @@ export function KPICard({ title, value, trend, icon, color }: KPICardProps) {
   };
 
   return (
-    <div className={`rounded-lg border p-6 ${classes.bg} ${classes.border}`}>
+    <div className={`rounded-lg border p-6 hover:shadow-lg hover:scale-[1.02] dark:hover:shadow-2xl dark:hover:shadow-black/25 transition-all duration-300 ease-in-out ${classes.bg} ${classes.border}`}>
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className={`text-sm font-medium ${classes.text}`}>{title}</p>
