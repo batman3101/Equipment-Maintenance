@@ -10,38 +10,119 @@ import {
   Menu,
   X,
   Wrench,
-  Cog
+  Cog,
+  Users,
+  Shield,
+  UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/domains/auth/hooks/use-auth';
 import { ThemeToggle } from '@/shared/components/ui/ThemeToggle';
+import { PermissionGuard } from '@/domains/user-management/components/PermissionGuard';
 
 const navigationItems = [
   {
     name: '대시보드',
     href: '/',
     icon: Home,
+    permissions: [], // 모든 사용자
   },
   {
     name: '고장 관리',
     href: '/breakdowns',
     icon: AlertTriangle,
+    permissions: ['breakdowns:read'],
   },
   {
     name: '설비 관리',
     href: '/equipment',
     icon: Wrench,
+    permissions: ['equipment:read'],
   },
   {
     name: '설정',
     href: '/settings',
     icon: Settings,
+    permissions: ['settings:read'],
   },
 ];
 
+const adminMenuItems = [
+  {
+    name: '사용자 관리',
+    href: '/admin/users',
+    icon: Users,
+    permissions: ['users:read'],
+  },
+  {
+    name: '등록 요청',
+    href: '/admin/user-requests',
+    icon: UserCheck,
+    permissions: ['users:approve'],
+  },
+  {
+    name: '권한 관리',
+    href: '/admin/permissions',
+    icon: Shield,
+    permissions: ['roles:read', 'permissions:assign'],
+    requireAll: false,
+  },
+];
+
+// 네비게이션 아이템 렌더링 함수
+function NavigationItem({ item, pathname, isMobile = false, onMobileClick }: {
+  item: typeof navigationItems[0] & { requireAll?: boolean };
+  pathname: string;
+  isMobile?: boolean;
+  onMobileClick?: () => void;
+}) {
+  const isActive = pathname === item.href;
+  const Icon = item.icon;
+
+  const linkContent = (
+    <Link
+      href={item.href}
+      className={
+        isMobile
+          ? `block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200 ${
+              isActive
+                ? 'bg-blue-50 dark:bg-blue-900/50 border-blue-500 text-blue-700 dark:text-blue-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
+            }`
+          : `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+              isActive
+                ? 'border-blue-500 text-gray-900 dark:text-white'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
+            }`
+      }
+      onClick={onMobileClick}
+    >
+      <div className={`flex items-center ${isMobile ? '' : ''}`}>
+        <Icon className={`${isMobile ? 'h-5 w-5 mr-3' : 'h-4 w-4 mr-2'}`} />
+        {item.name}
+      </div>
+    </Link>
+  );
+
+  // 권한이 없으면 아이템을 표시하지 않음
+  if (item.permissions && item.permissions.length > 0) {
+    return (
+      <PermissionGuard 
+        permissions={item.permissions}
+        requireAll={item.requireAll}
+        fallback={null}
+      >
+        {linkContent}
+      </PermissionGuard>
+    );
+  }
+
+  return linkContent;
+}
+
 export function Navigation() {
   const pathname = usePathname();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -51,6 +132,10 @@ export function Navigation() {
     } catch (error) {
       console.error('로그아웃 실패:', error);
     }
+  };
+
+  const handleMobileItemClick = () => {
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -63,25 +148,31 @@ export function Navigation() {
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">CNC 설비 관리</h1>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navigationItems.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
-                      isActive
-                        ? 'border-blue-500 text-gray-900 dark:text-white'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 mr-2" />
-                    {item.name}
-                  </Link>
-                );
-              })}
+              {/* 일반 메뉴 */}
+              {navigationItems.map((item) => (
+                <NavigationItem
+                  key={item.name}
+                  item={item}
+                  pathname={pathname}
+                />
+              ))}
+              
+              {/* 관리자 메뉴 구분선 */}
+              <PermissionGuard 
+                permissions={['users:read', 'users:approve', 'roles:read']} 
+                requireAll={false}
+              >
+                <div className="border-l border-gray-300 dark:border-gray-600 h-6 self-center mx-2" />
+              </PermissionGuard>
+              
+              {/* 관리자 메뉴 */}
+              {adminMenuItems.map((item) => (
+                <NavigationItem
+                  key={item.name}
+                  item={item}
+                  pathname={pathname}
+                />
+              ))}
             </div>
           </div>
 
@@ -118,28 +209,41 @@ export function Navigation() {
       {isMobileMenuOpen && (
         <div className="sm:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <div className="pt-2 pb-3 space-y-1">
-            {navigationItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200 ${
-                    isActive
-                      ? 'bg-blue-50 dark:bg-blue-900/50 border-blue-500 text-blue-700 dark:text-blue-300'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <div className="flex items-center">
-                    <Icon className="h-5 w-5 mr-3" />
-                    {item.name}
-                  </div>
-                </Link>
-              );
-            })}
+            {/* 일반 메뉴 */}
+            {navigationItems.map((item) => (
+              <NavigationItem
+                key={item.name}
+                item={item}
+                pathname={pathname}
+                isMobile={true}
+                onMobileClick={handleMobileItemClick}
+              />
+            ))}
+            
+            {/* 관리자 메뉴 구분선 */}
+            <PermissionGuard 
+              permissions={['users:read', 'users:approve', 'roles:read']} 
+              requireAll={false}
+            >
+              <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+              <div className="pl-3 pr-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                관리자 메뉴
+              </div>
+            </PermissionGuard>
+            
+            {/* 관리자 메뉴 */}
+            {adminMenuItems.map((item) => (
+              <NavigationItem
+                key={item.name}
+                item={item}
+                pathname={pathname}
+                isMobile={true}
+                onMobileClick={handleMobileItemClick}
+              />
+            ))}
+            
+            {/* 로그아웃 버튼 */}
+            <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
             <button
               onClick={handleSignOut}
               className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"

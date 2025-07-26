@@ -128,3 +128,9 @@ export type { DividerProps } from './Divider';
 // 페이지네이션 컴포넌트들
 export { Pagination } from './Pagination';
 export type { PaginationProps } from './Pagination';
+
+// 데이터 테이블 컴포넌트들  
+export { DataTable } from './DataTable';
+
+// 테마 토글 컴포넌트들
+export { ThemeToggle } from './ThemeToggle';

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { authCache } from '@/lib/auth-cache';
-import type { AuthService, LoginCredentials, User, SessionManager, UserRepository } from '../types';
+import type { AuthService, LoginCredentials, User, SessionManager, UserRepository, UserPermissions } from '../types';
 
 // Concrete implementation of SessionManager (SRP)
 export class SupabaseSessionManager implements SessionManager {
@@ -346,6 +346,72 @@ export class SupabaseAuthService implements AuthService {
     } catch (error) {
       console.error('Session refresh failed:', error);
       return null;
+    }
+  }
+
+  async checkPermission(permission: string): Promise<boolean> {
+    try {
+      const session = await this.sessionManager.getSession();
+      if (!session?.user) {
+        return false;
+      }
+
+      // DB에서 직접 권한 확인
+      const { data, error } = await supabase.rpc('check_user_permission', {
+        user_uuid: session.user.id,
+        required_permission: permission
+      });
+
+      if (error) {
+        console.error('권한 확인 실패:', error);
+        return false;
+      }
+
+      return data || false;
+    } catch (error) {
+      console.error('checkPermission error:', error);
+      return false;
+    }
+  }
+
+  async getUserPermissions(): Promise<UserPermissions> {
+    try {
+      const session = await this.sessionManager.getSession();
+      if (!session?.user) {
+        return {};
+      }
+
+      // 캐시된 권한 확인
+      const cacheKey = `user-permissions-${session.user.id}`;
+      const cached = authCache.get<UserPermissions>(cacheKey);
+      if (cached) {
+        console.log('권한 캐시 히트:', session.user.id);
+        return cached;
+      }
+
+      // DB에서 사용자의 모든 권한 조회
+      const { data, error } = await supabase.rpc('get_user_permissions', {
+        user_uuid: session.user.id
+      });
+
+      if (error) {
+        console.error('사용자 권한 조회 실패:', error);
+        return {};
+      }
+
+      // 권한 객체로 변환
+      const permissions: UserPermissions = {};
+      data?.forEach((perm: any) => {
+        permissions[perm.permission_name] = true;
+      });
+
+      // 2분간 캐시
+      authCache.set(cacheKey, permissions, 2 * 60 * 1000);
+
+      return permissions;
+    } catch (error) {
+      console.error('getUserPermissions error:', error);
+      return {};
     }
   }
 }

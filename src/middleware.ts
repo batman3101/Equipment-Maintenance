@@ -6,12 +6,44 @@ const protectedPaths = [
   '/',
   '/breakdowns',
   '/equipment',
+  '/admin',
   '/api'
+];
+
+// 권한이 필요한 경로와 필요한 권한 정의
+const permissionPaths = [
+  {
+    path: '/admin/users',
+    permissions: ['users:read']
+  },
+  {
+    path: '/admin/user-requests',
+    permissions: ['users:approve']
+  },
+  {
+    path: '/admin/permissions',
+    permissions: ['roles:read', 'permissions:assign']
+  },
+  {
+    path: '/breakdowns',
+    permissions: ['breakdowns:read']
+  },
+  {
+    path: '/equipment',
+    permissions: ['equipment:read']
+  },
+  {
+    path: '/settings',
+    permissions: ['settings:read']
+  }
 ];
 
 // 공개 경로 목록
 const publicPaths = [
   '/login',
+  '/register',
+  '/verify-email',
+  '/resend-verification',
   '/unauthorized'
 ];
 
@@ -44,6 +76,25 @@ export function middleware(request: NextRequest) {
 
   // 프로덕션 환경에서의 Supabase 인증 체크
   return handleProdAuth(request);
+}
+
+/**
+ * 경로별 필요한 권한 확인
+ */
+function getRequiredPermissions(pathname: string): string[] {
+  // 정확한 경로 매칭
+  const exactMatch = permissionPaths.find(p => p.path === pathname);
+  if (exactMatch) {
+    return exactMatch.permissions;
+  }
+
+  // 경로 시작 부분 매칭 (하위 경로 포함)
+  const pathMatch = permissionPaths.find(p => pathname.startsWith(p.path + '/') || pathname.startsWith(p.path));
+  if (pathMatch) {
+    return pathMatch.permissions;
+  }
+
+  return [];
 }
 
 /**

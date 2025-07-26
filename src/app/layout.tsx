@@ -5,6 +5,7 @@ import './globals.css';
 import { Analytics } from '@/components/Analytics';
 import { AuthProvider } from '@/domains/auth/hooks/use-auth';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { RouteGuard } from '@/domains/user-management/components/RouteGuard';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -47,7 +48,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider defaultTheme="system" storageKey="cnc-theme">
           <AuthProvider>
-            {children}
+            <RouteGuard>
+              {children}
+            </RouteGuard>
             <Analytics />
           </AuthProvider>
         </ThemeProvider>
