@@ -29,9 +29,9 @@ export const LoadingSpinner = React.forwardRef<HTMLDivElement, LoadingSpinnerPro
 
     // 색상별 스타일
     const colorClasses = {
-      primary: 'text-blue-600',
+      primary: 'text-blue-600 dark:text-blue-400',
       white: 'text-white',
-      gray: 'text-gray-400'
+      gray: 'text-gray-400 dark:text-gray-500'
     };
 
     return (
@@ -85,7 +85,7 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       <div
         ref={ref}
         className={cn(
-          'animate-pulse rounded-md bg-gray-200',
+          'animate-pulse rounded-md bg-gray-200 dark:bg-gray-700',
           className
         )}
         {...props}
@@ -101,7 +101,7 @@ Skeleton.displayName = 'Skeleton';
  */
 export const CardSkeleton = () => {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
       <div className="flex items-center space-x-3">
         <Skeleton className="h-10 w-10 rounded-full" />
         <div className="space-y-2 flex-1">
@@ -151,7 +151,7 @@ export const TableSkeleton = ({
   return (
     <div className="space-y-3">
       {/* 헤더 */}
-      <div className="flex space-x-4 p-3 border-b">
+      <div className="flex space-x-4 p-3 border-b border-gray-200 dark:border-gray-700">
         {Array.from({ length: columns }).map((_, index) => (
           <Skeleton key={index} className="h-4 flex-1" />
         ))}

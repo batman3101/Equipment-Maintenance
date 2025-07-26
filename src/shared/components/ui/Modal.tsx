@@ -130,7 +130,7 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       >
         {/* 오버레이 */}
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 transition-opacity"
           onClick={handleOverlayClick}
           aria-hidden="true"
         />
@@ -139,7 +139,7 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         <div
           ref={modalRef}
           className={cn(
-            'relative bg-white rounded-lg shadow-xl w-full',
+            'relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full',
             'max-h-[90vh] overflow-y-auto',
             sizeClasses[size],
             'transform transition-all',
@@ -149,20 +149,20 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         >
           {/* 헤더 */}
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               {title && (
-                <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
+                <h2 id="modal-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {title}
                 </h2>
               )}
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                   aria-label="모달 닫기"
                 >
                   <svg
-                    className="h-5 w-5 text-gray-400"
+                    className="h-5 w-5 text-gray-400 dark:text-gray-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -199,7 +199,7 @@ export const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
     return (
       <div
         ref={ref}
-        className={cn('pb-4 border-b border-gray-200', className)}
+        className={cn('pb-4 border-b border-gray-200 dark:border-gray-700', className)}
         {...props}
       >
         {children}
@@ -237,7 +237,7 @@ export const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
     return (
       <div
         ref={ref}
-        className={cn('pt-4 border-t border-gray-200 flex justify-end space-x-2', className)}
+        className={cn('pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2', className)}
         {...props}
       >
         {children}
@@ -277,7 +277,7 @@ export const ConfirmModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <ModalBody>
-        <p className="text-gray-600">{message}</p>
+        <p className="text-gray-600 dark:text-gray-400">{message}</p>
       </ModalBody>
       <ModalFooter>
         <Button

@@ -54,22 +54,22 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
     // 셀렉트 스타일
     const selectClasses = cn(
-      'flex h-12 w-full rounded-lg border border-gray-300 bg-white px-3 py-2',
-      'text-base text-gray-900',
-      'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-      'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50',
+      'flex h-12 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2',
+      'text-base text-gray-900 dark:text-gray-100',
+      'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent',
+      'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 dark:disabled:bg-gray-700',
       'min-h-[48px]', // 48px 최소 터치 영역
       'appearance-none bg-no-repeat bg-right',
       'pr-10', // 화살표 아이콘 공간
-      error && 'border-red-500 focus:ring-red-500',
+      error && 'border-red-500 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400',
       !fullWidth && 'w-auto',
       className
     );
 
     // 라벨 스타일
     const labelClasses = cn(
-      'block text-sm font-medium text-gray-700 mb-1',
-      error && 'text-red-700'
+      'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1',
+      error && 'text-red-700 dark:text-red-400'
     );
 
     return (
@@ -77,7 +77,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label htmlFor={selectId} className={labelClasses}>
             {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
+            {props.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
           </label>
         )}
         
@@ -113,7 +113,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           {/* 커스텀 화살표 아이콘 */}
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
             <svg
-              className="h-5 w-5 text-gray-400"
+              className="h-5 w-5 text-gray-400 dark:text-gray-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -130,7 +130,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         </div>
 
         {error && (
-          <p id={errorId} className="text-sm text-red-600 flex items-center" role="alert">
+          <p id={errorId} className="text-sm text-red-600 dark:text-red-400 flex items-center" role="alert">
             <svg
               className="h-4 w-4 mr-1 flex-shrink-0"
               fill="currentColor"
@@ -148,7 +148,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         )}
         
         {helperText && !error && (
-          <p id={helperId} className="text-sm text-gray-500">
+          <p id={helperId} className="text-sm text-gray-500 dark:text-gray-400">
             {helperText}
           </p>
         )}

@@ -128,13 +128,13 @@ function LoginFormContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
             CNC 설비 관리 시스템
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             로그인하여 시스템에 접속하세요
           </p>
         </div>
@@ -142,7 +142,7 @@ function LoginFormContent() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 이메일
               </label>
               <input
@@ -152,20 +152,20 @@ function LoginFormContent() {
                 autoComplete="email"
                 required
                 className={`mt-1 appearance-none relative block w-full px-3 py-3 border ${
-                  validationErrors.email ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-base`}
+                  validationErrors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-base`}
                 placeholder="이메일을 입력하세요"
                 value={credentials.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 style={{ minHeight: '44px' }} // Mobile touch target
               />
               {validationErrors.email && (
-                <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.email}</p>
               )}
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 비밀번호
               </label>
               <input
@@ -175,27 +175,27 @@ function LoginFormContent() {
                 autoComplete="current-password"
                 required
                 className={`mt-1 appearance-none relative block w-full px-3 py-3 border ${
-                  validationErrors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-base`}
+                  validationErrors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-base`}
                 placeholder="비밀번호를 입력하세요"
                 value={credentials.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 style={{ minHeight: '44px' }} // Mobile touch target
               />
               {validationErrors.password && (
-                <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.password}</p>
               )}
             </div>
           </div>
 
           {/* 일반 에러 메시지 표시 */}
           {validationErrors.general && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
               <div className="flex items-center">
-                <svg className="h-5 w-5 text-red-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5 text-red-400 dark:text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-sm text-red-600 font-medium">{validationErrors.general}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{validationErrors.general}</p>
               </div>
             </div>
           )}
@@ -204,7 +204,7 @@ function LoginFormContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ minHeight: '44px' }} // Mobile touch target
             >
               {isSubmitting ? (
@@ -230,9 +230,9 @@ function LoginFormContent() {
 export function LoginForm() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          <div className="text-center">로딩 중...</div>
+          <div className="text-center text-gray-900 dark:text-gray-100">로딩 중...</div>
         </div>
       </div>}>
         <LoginFormContent />

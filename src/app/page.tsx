@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <Suspense fallback={<div className="p-4 text-center">로딩 중...</div>}>
       <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           {/* 네비게이션 */}
           <Navigation />
           

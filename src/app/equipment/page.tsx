@@ -196,15 +196,15 @@ export default function EquipmentPage() {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* 네비게이션 */}
       <Navigation />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* 헤더 */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">설비 관리</h1>
-          <p className="text-gray-600">설비 정보를 등록하고 관리할 수 있습니다.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">설비 관리</h1>
+          <p className="text-gray-600 dark:text-gray-400">설비 정보를 등록하고 관리할 수 있습니다.</p>
         </div>
 
         {/* 검색 및 액션 버튼 */}
@@ -216,7 +216,7 @@ export default function EquipmentPage() {
                 placeholder="설비 번호, 종류로 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -227,7 +227,7 @@ export default function EquipmentPage() {
                   const [field, direction] = e.target.value.split('-') as [EquipmentSort['field'], EquipmentSort['direction']];
                   setSortOption({ field, direction });
                 }}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="created_at-desc">최신 등록순</option>
                 <option value="created_at-asc">오래된 등록순</option>
@@ -260,13 +260,13 @@ export default function EquipmentPage() {
         </div>
 
         {/* 설비 통계 정보 */}
-        <div className="mb-6 bg-white rounded-lg shadow p-4">
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              전체 <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>개의 설비
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              전체 <span className="font-semibold text-gray-900 dark:text-gray-100">{totalCount.toLocaleString()}</span>개의 설비
             </div>
             {isListLoading && (
-              <div className="flex items-center text-sm text-gray-500">
+              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
                 로딩 중...
               </div>
@@ -275,14 +275,14 @@ export default function EquipmentPage() {
         </div>
 
         {/* 설비 목록 컨테이너 */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="p-6">
             {isListLoading ? (
               // 로딩 상태
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">설비 목록을 불러오는 중...</p>
+                  <p className="text-gray-600 dark:text-gray-400">설비 목록을 불러오는 중...</p>
                 </div>
               </div>
             ) : equipmentList.length === 0 ? (
@@ -291,10 +291,10 @@ export default function EquipmentPage() {
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                   {searchQuery ? '검색 결과가 없습니다' : '설비가 없습니다'}
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {searchQuery ? '다른 검색어를 사용해보세요.' : '새 설비를 등록하여 시작하세요.'}
                 </p>
                 {!searchQuery && (
@@ -360,13 +360,13 @@ export default function EquipmentPage() {
       {/* 개별 설비 등록 모달 */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">새 설비 등록</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">새 설비 등록</h2>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -387,13 +387,13 @@ export default function EquipmentPage() {
       {/* 설비 수정 모달 */}
       {isEditModalOpen && editingEquipment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">설비 수정</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">설비 수정</h2>
                 <button
                   onClick={closeEditModal}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
