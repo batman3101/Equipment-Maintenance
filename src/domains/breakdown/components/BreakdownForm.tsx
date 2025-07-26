@@ -8,6 +8,7 @@ import { EquipmentNumberInput, validateEquipmentNumber } from './EquipmentNumber
 import { SymptomsInput } from './SymptomsInput';
 import { OccurredAtInput } from './OccurredAtInput';
 import { BreakdownFileUpload } from './BreakdownFileUpload';
+import { BreakdownCategorySelect } from './BreakdownCategorySelect';
 import { useBreakdown } from '../hooks/useBreakdown';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 import type { CreateBreakdownRequest } from '../types';
@@ -26,6 +27,8 @@ interface FormData {
   symptoms: string;
   occurred_at: string;
   cause?: string;
+  breakdown_main_category_id?: string;
+  breakdown_sub_category_id?: string;
   attachments: File[];
 }
 
@@ -35,6 +38,8 @@ interface FormErrors {
   symptoms?: string;
   occurred_at?: string;
   cause?: string;
+  breakdown_main_category_id?: string;
+  breakdown_sub_category_id?: string;
   attachments?: string;
   submit?: string;
 }
@@ -62,6 +67,8 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
     symptoms: '',
     occurred_at: new Date().toISOString(),
     cause: '',
+    breakdown_main_category_id: '',
+    breakdown_sub_category_id: '',
     attachments: []
   });
 
@@ -182,6 +189,11 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
       newErrors.occurred_at = '고장 발생 시각을 선택해주세요.';
     }
 
+    // 고장 분류 검사 (선택사항이지만 대분류 선택 시 소분류도 필수)
+    if (formData.breakdown_main_category_id && !formData.breakdown_sub_category_id) {
+      newErrors.breakdown_sub_category_id = '대분류를 선택했다면 소분류도 선택해주세요.';
+    }
+
     // 설비 번호 유효성 검사
     if (formData.equipment_type && formData.equipment_number && !newErrors.equipment_number) {
       try {
@@ -211,7 +223,9 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
       equipment_number: true,
       symptoms: true,
       occurred_at: true,
-      cause: true
+      cause: true,
+      breakdown_main_category_id: true,
+      breakdown_sub_category_id: true
     });
 
     // 유효성 검사
@@ -227,6 +241,8 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
         symptoms: formData.symptoms,
         occurred_at: formData.occurred_at,
         cause: formData.cause || undefined,
+        breakdown_main_category_id: formData.breakdown_main_category_id || undefined,
+        breakdown_sub_category_id: formData.breakdown_sub_category_id || undefined,
         attachments: formData.attachments.length > 0 ? formData.attachments : undefined
       };
 
@@ -317,6 +333,23 @@ export const BreakdownForm: React.FC<BreakdownFormProps> = ({
         equipmentType={formData.equipment_type}
         error={touched.equipment_number ? errors.equipment_number : undefined}
         required
+      />
+
+      {/* 고장 대분류/소분류 선택 */}
+      <BreakdownCategorySelect
+        mainCategoryValue={formData.breakdown_main_category_id || ''}
+        subCategoryValue={formData.breakdown_sub_category_id || ''}
+        onMainCategoryChange={(value) => {
+          handleFieldChange('breakdown_main_category_id', value);
+          setTouched(prev => ({ ...prev, breakdown_main_category_id: true }));
+        }}
+        onSubCategoryChange={(value) => {
+          handleFieldChange('breakdown_sub_category_id', value);
+          setTouched(prev => ({ ...prev, breakdown_sub_category_id: true }));
+        }}
+        mainCategoryError={touched.breakdown_main_category_id ? errors.breakdown_main_category_id : undefined}
+        subCategoryError={touched.breakdown_sub_category_id ? errors.breakdown_sub_category_id : undefined}
+        disabled={creating || isValidating || externalLoading}
       />
 
       {/* 고장 발생 시각 */}
