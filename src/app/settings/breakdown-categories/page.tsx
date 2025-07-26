@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/navigation';
+import { ProtectedRoute } from '@/domains/auth/components/protected-route';
 import { Button } from '@/shared/components/ui/Button';
 import { Input } from '@/shared/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/Card';
@@ -173,9 +174,10 @@ export default function BreakdownCategoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* 네비게이션 */}
-      <Navigation />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        {/* 네비게이션 */}
+        <Navigation />
       
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* 헤더 */}
@@ -485,6 +487,6 @@ export default function BreakdownCategoriesPage() {
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

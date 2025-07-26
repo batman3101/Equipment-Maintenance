@@ -5,43 +5,53 @@ import { Card } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
 import { useBreakdownCategories } from '@/domains/settings';
 import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
+import { Navigation } from '@/components/navigation';
+import { ProtectedRoute } from '@/domains/auth/components/protected-route';
 
 const BreakdownMainCategoriesPage = () => {
   const { mainCategories, loading, error } = useBreakdownCategories();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto p-4">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <LoadingSpinner size="lg" />
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Navigation />
+          <div className="container mx-auto p-4">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <LoadingSpinner size="lg" />
+            </div>
           </div>
         </div>
-      </div>
+      </ProtectedRoute>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto p-4">
-          <div className="text-center py-8">
-            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              다시 시도
-            </button>
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Navigation />
+          <div className="container mx-auto p-4">
+            <div className="text-center py-8">
+              <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              >
+                다시 시도
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto p-4 max-w-6xl">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navigation />
+        <div className="container mx-auto p-4 max-w-6xl">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">고장 대분류 설정</h1>
@@ -96,8 +106,9 @@ const BreakdownMainCategoriesPage = () => {
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">첫 번째 고장 대분류 추가</Button>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

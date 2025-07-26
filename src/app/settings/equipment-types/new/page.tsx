@@ -7,6 +7,8 @@ import { Button } from '@/shared/components/ui/Button';
 import { Input } from '@/shared/components/ui/Input';
 import { Textarea } from '@/shared/components/ui/Textarea';
 import { useEquipmentTypes, CreateEquipmentTypeRequest } from '@/domains/settings';
+import { Navigation } from '@/components/navigation';
+import { ProtectedRoute } from '@/domains/auth/components/protected-route';
 
 export default function NewEquipmentTypePage() {
   const router = useRouter();
@@ -58,11 +60,14 @@ export default function NewEquipmentTypePage() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">새 설비 종류 추가</h1>
-        <p className="text-gray-600 mt-1">새로운 설비 종류를 생성합니다.</p>
-      </div>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navigation />
+        <div className="container mx-auto p-4 max-w-2xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">새 설비 종류 추가</h1>
+            <p className="text-gray-600 mt-1">새로운 설비 종류를 생성합니다.</p>
+          </div>
 
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -128,8 +133,10 @@ export default function NewEquipmentTypePage() {
               {loading ? '생성 중...' : '생성'}
             </Button>
           </div>
-        </form>
-      </Card>
-    </div>
+          </form>
+        </Card>
+        </div>
+      </div>
+    </ProtectedRoute>
   );
 }

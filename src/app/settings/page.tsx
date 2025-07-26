@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Card } from '@/shared/components/ui/Card';
 import { useSettingsStats } from '@/domains/settings';
 import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
+import { Navigation } from '@/components/navigation';
+import { ProtectedRoute } from '@/domains/auth/components/protected-route';
 
 const SettingsPage = () => {
   const { stats, loading, error } = useSettingsStats();
@@ -42,32 +44,46 @@ const SettingsPage = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner size="lg" />
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Navigation />
+          <div className="container mx-auto p-4">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <LoadingSpinner size="lg" />
+            </div>
+          </div>
         </div>
-      </div>
+      </ProtectedRoute>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center py-8">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            다시 시도
-          </button>
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Navigation />
+          <div className="container mx-auto p-4">
+            <div className="text-center py-8">
+              <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              >
+                다시 시도
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navigation />
+        
+        <div className="container mx-auto p-4 max-w-6xl">
       {/* 헤더 */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -192,7 +208,9 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
-    </div>
+        </div>
+      </div>
+    </ProtectedRoute>
   );
 };
 
