@@ -16,7 +16,6 @@ extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-enabled = true
 # Port to use for the local database URL.
 port = 54322
 # Port used by db diff command to initialize the shadow database.
@@ -90,12 +89,9 @@ enable_confirmations = false
 enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
-# Template for sending a confirmation message
-test_otp = "123456"
-
 # Use pre-defined map of phone number to OTP for testing.
-# [auth.sms.test_otp]
-# 4152127777 = "123456"
+[auth.sms.test_otp]
+"4152127777" = "123456"
 
 # Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
 # [auth.sms.twilio]
@@ -284,8 +280,6 @@ backend = "postgres"
 [experimental]
 # Configures Postgres storage-engine with S3 as the file storage backend.
 s3_host = "localhost"
-s3_port = 54329
-s3_protocol = "http"
 s3_access_key = "625729a08b95bf1b7ff351a663f3a23c"
 s3_secret_key = "850181e4652dd023b7a98c58ae0ce8e4676e50d5148dab4d5d5c816b83f01eae"
 s3_region = "local"

@@ -351,23 +351,8 @@ export class SupabaseAuthService implements AuthService {
 
   async checkPermission(permission: string): Promise<boolean> {
     try {
-      const session = await this.sessionManager.getSession();
-      if (!session?.user) {
-        return false;
-      }
-
-      // DB에서 직접 권한 확인
-      const { data, error } = await supabase.rpc('check_user_permission', {
-        user_uuid: session.user.id,
-        required_permission: permission
-      });
-
-      if (error) {
-        console.error('권한 확인 실패:', error);
-        return false;
-      }
-
-      return data || false;
+      const permissions = await this.getUserPermissions();
+      return permissions[permission] === true;
     } catch (error) {
       console.error('checkPermission error:', error);
       return false;
@@ -389,25 +374,81 @@ export class SupabaseAuthService implements AuthService {
         return cached;
       }
 
-      // DB에서 사용자의 모든 권한 조회
-      const { data, error } = await supabase.rpc('get_user_permissions', {
-        user_uuid: session.user.id
-      });
-
-      if (error) {
-        console.error('사용자 권한 조회 실패:', error);
-        return {};
-      }
-
-      // 권한 객체로 변환
+      // 사용자 프로필 조회로 기본 권한 설정
+      const userProfile = await this.userRepository.getUserProfile(session.user.id);
       const permissions: UserPermissions = {};
-      data?.forEach((perm: any) => {
-        permissions[perm.permission_name] = true;
-      });
+
+      // 기본 권한을 역할에 따라 설정 (임시로 하드코딩)
+      if (userProfile?.role === 'admin') {
+        // 관리자는 모든 권한
+        permissions['equipment:read'] = true;
+        permissions['equipment:write'] = true;
+        permissions['equipment:delete'] = true;
+        permissions['equipment:manage'] = true;
+        permissions['breakdown:read'] = true;
+        permissions['breakdown:write'] = true;
+        permissions['breakdown:delete'] = true;
+        permissions['breakdown:assign'] = true;
+        permissions['breakdown:approve'] = true;
+        permissions['repair:read'] = true;
+        permissions['repair:write'] = true;
+        permissions['repair:complete'] = true;
+        permissions['user:read'] = true;
+        permissions['user:write'] = true;
+        permissions['user:delete'] = true;
+        permissions['user:approve'] = true;
+        permissions['user:assign_role'] = true;
+        permissions['permission:read'] = true;
+        permissions['permission:write'] = true;
+        permissions['permission:assign'] = true;
+        permissions['system:admin'] = true;
+        permissions['system:settings'] = true;
+        permissions['system:logs'] = true;
+      } else if (userProfile?.role === 'manager') {
+        // 매니저는 시스템 관리 제외한 권한
+        permissions['equipment:read'] = true;
+        permissions['equipment:write'] = true;
+        permissions['equipment:delete'] = true;
+        permissions['equipment:manage'] = true;
+        permissions['breakdown:read'] = true;
+        permissions['breakdown:write'] = true;
+        permissions['breakdown:delete'] = true;
+        permissions['breakdown:assign'] = true;
+        permissions['breakdown:approve'] = true;
+        permissions['repair:read'] = true;
+        permissions['repair:write'] = true;
+        permissions['repair:complete'] = true;
+        permissions['user:read'] = true;
+        permissions['user:write'] = true;
+        permissions['user:approve'] = true;
+        permissions['user:assign_role'] = true;
+      } else if (userProfile?.role === 'engineer') {
+        // 엔지니어는 설비, 고장, 수리 관리
+        permissions['equipment:read'] = true;
+        permissions['equipment:write'] = true;
+        permissions['breakdown:read'] = true;
+        permissions['breakdown:write'] = true;
+        permissions['breakdown:assign'] = true;
+        permissions['repair:read'] = true;
+        permissions['repair:write'] = true;
+        permissions['repair:complete'] = true;
+      } else if (userProfile?.role === 'operator') {
+        // 운영자는 조회 및 기본 등록
+        permissions['equipment:read'] = true;
+        permissions['breakdown:read'] = true;
+        permissions['breakdown:write'] = true;
+        permissions['repair:read'] = true;
+      } else {
+        // 기본 사용자는 조회만
+        permissions['equipment:read'] = true;
+        permissions['breakdown:read'] = true;
+        permissions['repair:read'] = true;
+      }
 
       // 2분간 캐시
       authCache.set(cacheKey, permissions, 2 * 60 * 1000);
 
+      console.log('사용자 권한 설정:', permissions);
       return permissions;
     } catch (error) {
       console.error('getUserPermissions error:', error);
