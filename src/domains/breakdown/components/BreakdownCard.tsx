@@ -21,37 +21,37 @@ export function BreakdownCard({ breakdown, onClick }: BreakdownCardProps) {
         return {
           icon: AlertCircle,
           label: '진행 중',
-          bgColor: 'bg-red-50',
-          borderColor: 'border-red-200',
-          textColor: 'text-red-700',
-          iconColor: 'text-red-500'
+          bgColor: 'bg-red-50 dark:bg-red-900/20',
+          borderColor: 'border-red-200 dark:border-red-700',
+          textColor: 'text-red-700 dark:text-red-300',
+          iconColor: 'text-red-500 dark:text-red-400'
         };
       case 'under_repair':
         return {
           icon: Wrench,
           label: '수리 중',
-          bgColor: 'bg-yellow-50',
-          borderColor: 'border-yellow-200',
-          textColor: 'text-yellow-700',
-          iconColor: 'text-yellow-500'
+          bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+          borderColor: 'border-yellow-200 dark:border-yellow-700',
+          textColor: 'text-yellow-700 dark:text-yellow-300',
+          iconColor: 'text-yellow-500 dark:text-yellow-400'
         };
       case 'completed':
         return {
           icon: CheckCircle,
           label: '완료',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
-          textColor: 'text-green-700',
-          iconColor: 'text-green-500'
+          bgColor: 'bg-green-50 dark:bg-green-900/20',
+          borderColor: 'border-green-200 dark:border-green-700',
+          textColor: 'text-green-700 dark:text-green-300',
+          iconColor: 'text-green-500 dark:text-green-400'
         };
       default:
         return {
           icon: AlertCircle,
           label: '알 수 없음',
-          bgColor: 'bg-gray-50',
-          borderColor: 'border-gray-200',
-          textColor: 'text-gray-700',
-          iconColor: 'text-gray-500'
+          bgColor: 'bg-gray-50 dark:bg-gray-800/50',
+          borderColor: 'border-gray-200 dark:border-gray-600',
+          textColor: 'text-gray-700 dark:text-gray-300',
+          iconColor: 'text-gray-500 dark:text-gray-400'
         };
     }
   };
@@ -97,7 +97,7 @@ export function BreakdownCard({ breakdown, onClick }: BreakdownCardProps) {
       {/* 헤더: 설비 정보와 상태 */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-lg truncate">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-lg truncate">
             {breakdown.equipment_type} - {breakdown.equipment_number}
           </h3>
         </div>
@@ -112,7 +112,7 @@ export function BreakdownCard({ breakdown, onClick }: BreakdownCardProps) {
 
       {/* 증상 */}
       <div className="mb-3">
-        <p className="text-gray-700 text-sm leading-relaxed overflow-hidden" 
+        <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed overflow-hidden" 
            style={{
              display: '-webkit-box',
              WebkitLineClamp: 2,
@@ -123,7 +123,7 @@ export function BreakdownCard({ breakdown, onClick }: BreakdownCardProps) {
       </div>
 
       {/* 메타 정보 */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -139,7 +139,7 @@ export function BreakdownCard({ breakdown, onClick }: BreakdownCardProps) {
         
         {/* 첨부파일 개수 */}
         {breakdown.attachments && breakdown.attachments.length > 0 && (
-          <div className="flex items-center gap-1 text-blue-600">
+          <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
             <span className="text-xs">📎 {breakdown.attachments.length}</span>
           </div>
         )}

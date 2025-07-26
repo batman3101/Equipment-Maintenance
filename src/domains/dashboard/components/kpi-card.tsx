@@ -9,32 +9,32 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const colorClasses = {
   blue: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    icon: 'text-blue-600',
-    text: 'text-blue-900',
-    trend: 'text-blue-600',
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    border: 'border-blue-200 dark:border-blue-700',
+    icon: 'text-blue-600 dark:text-blue-400',
+    text: 'text-blue-900 dark:text-blue-100',
+    trend: 'text-blue-600 dark:text-blue-400',
   },
   orange: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    icon: 'text-orange-600',
-    text: 'text-orange-900',
-    trend: 'text-orange-600',
+    bg: 'bg-orange-50 dark:bg-orange-900/20',
+    border: 'border-orange-200 dark:border-orange-700',
+    icon: 'text-orange-600 dark:text-orange-400',
+    text: 'text-orange-900 dark:text-orange-100',
+    trend: 'text-orange-600 dark:text-orange-400',
   },
   green: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    icon: 'text-green-600',
-    text: 'text-green-900',
-    trend: 'text-green-600',
+    bg: 'bg-green-50 dark:bg-green-900/20',
+    border: 'border-green-200 dark:border-green-700',
+    icon: 'text-green-600 dark:text-green-400',
+    text: 'text-green-900 dark:text-green-100',
+    trend: 'text-green-600 dark:text-green-400',
   },
   red: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    icon: 'text-red-600',
-    text: 'text-red-900',
-    trend: 'text-red-600',
+    bg: 'bg-red-50 dark:bg-red-900/20',
+    border: 'border-red-200 dark:border-red-700',
+    icon: 'text-red-600 dark:text-red-400',
+    text: 'text-red-900 dark:text-red-100',
+    trend: 'text-red-600 dark:text-red-400',
   },
 };
 
@@ -59,11 +59,11 @@ export function KPICard({ title, value, trend, icon, color }: KPICardProps) {
     
     switch (trend.changeType) {
       case 'increase':
-        return 'text-red-600'; // 증가는 일반적으로 부정적 (고장 증가)
+        return 'text-red-600 dark:text-red-400'; // 증가는 일반적으로 부정적 (고장 증가)
       case 'decrease':
-        return 'text-green-600'; // 감소는 일반적으로 긍정적 (고장 감소)
+        return 'text-green-600 dark:text-green-400'; // 감소는 일반적으로 긍정적 (고장 감소)
       default:
-        return 'text-gray-500';
+        return 'text-gray-500 dark:text-gray-400';
     }
   };
 
@@ -86,7 +86,7 @@ export function KPICard({ title, value, trend, icon, color }: KPICardProps) {
             )}
           </div>
           {trend && (
-            <p className="mt-1 text-xs text-gray-600">
+            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
               전일 대비
             </p>
           )}
@@ -104,17 +104,17 @@ export function KPICard({ title, value, trend, icon, color }: KPICardProps) {
  */
 export function KPICardSkeleton() {
   return (
-    <div className="rounded-lg border bg-gray-50 p-6">
+    <div className="rounded-lg border bg-gray-50 dark:bg-gray-800 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
+          <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
           <div className="mt-2 flex items-baseline">
-            <div className="h-8 w-16 animate-pulse rounded bg-gray-200"></div>
-            <div className="ml-2 h-4 w-8 animate-pulse rounded bg-gray-200"></div>
+            <div className="h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+            <div className="ml-2 h-4 w-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
           </div>
-          <div className="mt-1 h-3 w-16 animate-pulse rounded bg-gray-200"></div>
+          <div className="mt-1 h-3 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
         </div>
-        <div className="h-8 w-8 animate-pulse rounded bg-gray-200"></div>
+        <div className="h-8 w-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
       </div>
     </div>
   );

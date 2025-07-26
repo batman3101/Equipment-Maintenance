@@ -85,7 +85,7 @@ export function TechnicianSelect({
 
   return (
     <div className="technician-select relative">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         담당자 {required && <span className="text-red-500">*</span>}
       </label>
 
@@ -98,12 +98,12 @@ export function TechnicianSelect({
           w-full px-3 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
           disabled:bg-gray-100 disabled:cursor-not-allowed
-          ${!selectedTechnician ? 'text-gray-400' : 'text-gray-900'}
+          ${!selectedTechnician ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}
         `}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <User className="w-4 h-4 mr-2 text-gray-400" />
+            <User className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500" />
             {selectedTechnician ? (
               <div>
                 <span className="font-medium">{selectedTechnician.name}</span>
@@ -112,27 +112,27 @@ export function TechnicianSelect({
                     나
                   </span>
                 )}
-                <div className="text-xs text-gray-500">{selectedTechnician.email}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{selectedTechnician.email}</div>
               </div>
             ) : (
               <span>담당자를 선택하세요</span>
             )}
           </div>
-          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </button>
 
       {/* 드롭다운 메뉴 */}
       {isOpen && !disabled && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-64 overflow-hidden">
+        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-64 overflow-hidden">
           {/* 검색 입력 */}
-          <div className="p-2 border-b border-gray-200">
+          <div className="p-2 border-b border-gray-200 dark:border-gray-600">
             <input
               type="text"
               placeholder="담당자 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               onClick={(e) => e.stopPropagation()}
             />
           </div>
@@ -140,7 +140,7 @@ export function TechnicianSelect({
           {/* 담당자 목록 */}
           <div className="max-h-48 overflow-y-auto">
             {filteredTechnicians.length === 0 ? (
-              <div className="px-3 py-4 text-sm text-gray-500 text-center">
+              <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
                 {searchQuery ? '검색 결과가 없습니다.' : '담당자가 없습니다.'}
               </div>
             ) : (
@@ -150,23 +150,23 @@ export function TechnicianSelect({
                   type="button"
                   onClick={() => selectTechnician(technician.id)}
                   className={`
-                    w-full px-3 py-3 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none
-                    ${value === technician.id ? 'bg-blue-50' : ''}
+                    w-full px-3 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none
+                    ${value === technician.id ? 'bg-blue-50 dark:bg-blue-900/30' : ''}
                   `}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <User className="w-4 h-4 mr-3 text-gray-400" />
+                      <User className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500" />
                       <div>
                         <div className="flex items-center">
-                          <span className="font-medium text-gray-900">{technician.name}</span>
+                          <span className="font-medium text-gray-900 dark:text-gray-100">{technician.name}</span>
                           {technician.id === currentUserId && (
                             <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                               나
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500">{technician.email}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{technician.email}</div>
                       </div>
                     </div>
                     {value === technician.id && (

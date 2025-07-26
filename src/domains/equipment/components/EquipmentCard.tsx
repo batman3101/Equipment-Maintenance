@@ -107,10 +107,10 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
           {/* 헤더 */}
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-medium text-gray-900 truncate">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {equipment.equipment_number}
               </h3>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {getEquipmentTypeLabel(equipment.equipment_type)}
               </p>
             </div>
@@ -124,7 +124,7 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
 
           {/* 메타 정보 */}
           {!compact && (
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
               <div>생성일: {new Date(equipment.created_at).toLocaleDateString()}</div>
               <div>수정일: {new Date(equipment.updated_at).toLocaleDateString()}</div>
             </div>
@@ -132,7 +132,7 @@ export const EquipmentCard = React.forwardRef<HTMLDivElement, EquipmentCardProps
 
           {/* 액션 버튼들 */}
           {showActions && (
-            <div className="flex space-x-2 pt-2 border-t border-gray-100">
+            <div className="flex space-x-2 pt-2 border-t border-gray-100 dark:border-gray-700">
               {onEdit && (
                 <Button
                   variant="secondary"

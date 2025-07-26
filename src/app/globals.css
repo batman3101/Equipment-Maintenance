@@ -74,15 +74,35 @@
 .dark {
   --background: #0f172a;
   --foreground: #f1f5f9;
+  
+  /* Brand colors for dark mode */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #6b7280;
+  --secondary-foreground: #ffffff;
+
+  /* Status colors for dark mode */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #1f2937;
+  --error: #ef4444;
+  --error-foreground: #ffffff;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+
+  /* UI colors for dark mode */
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
   --border: #334155;
   --input: #1e293b;
+  --ring: #3b82f6;
+  
+  /* Card and surface colors for dark mode */
   --card: #1e293b;
   --card-foreground: #f1f5f9;
   --popover: #1e293b;
   --popover-foreground: #f1f5f9;
-  --ring: #3b82f6;
 }
 
 /* 시스템 다크모드 감지 (fallback) */
@@ -90,10 +110,31 @@
   :root:not(.light) {
     --background: #0f172a;
     --foreground: #f1f5f9;
+    
+    /* Brand colors for system dark mode */
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: #6b7280;
+    --secondary-foreground: #ffffff;
+
+    /* Status colors for system dark mode */
+    --success: #10b981;
+    --success-foreground: #ffffff;
+    --warning: #f59e0b;
+    --warning-foreground: #1f2937;
+    --error: #ef4444;
+    --error-foreground: #ffffff;
+    --info: #3b82f6;
+    --info-foreground: #ffffff;
+
+    /* UI colors for system dark mode */
     --muted: #1e293b;
     --muted-foreground: #94a3b8;
     --border: #334155;
     --input: #1e293b;
+    --ring: #3b82f6;
+    
+    /* Card and surface colors for system dark mode */
     --card: #1e293b;
     --card-foreground: #f1f5f9;
     --popover: #1e293b;
@@ -124,12 +165,24 @@ body {
   @apply bg-yellow-100 text-yellow-800 border-yellow-200;
 }
 
+.dark .status-in-progress {
+  @apply bg-yellow-900/30 text-yellow-300 border-yellow-700;
+}
+
 .status-under-repair {
   @apply bg-blue-100 text-blue-800 border-blue-200;
 }
 
+.dark .status-under-repair {
+  @apply bg-blue-900/30 text-blue-300 border-blue-700;
+}
+
 .status-completed {
   @apply bg-green-100 text-green-800 border-green-200;
+}
+
+.dark .status-completed {
+  @apply bg-green-900/30 text-green-300 border-green-700;
 }
 
 /* Card component styles with dark mode support */
