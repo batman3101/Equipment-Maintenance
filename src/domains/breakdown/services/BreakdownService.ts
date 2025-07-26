@@ -117,7 +117,9 @@ export class BreakdownService {
       cause: request.cause,
       status: 'in_progress',
       reporter_id: user.id,
-      plant_id: userData.plant_id
+      plant_id: userData.plant_id,
+      breakdown_main_category_id: request.breakdown_main_category_id,
+      breakdown_sub_category_id: request.breakdown_sub_category_id
     };
 
     // 고장 등록
@@ -169,6 +171,8 @@ export class BreakdownService {
       status: 'in_progress',
       reporter_id: user.id,
       plant_id: plantId, // 캐시된 정보에서 가져온 plant_id 또는 빈 문자열
+      breakdown_main_category_id: request.breakdown_main_category_id,
+      breakdown_sub_category_id: request.breakdown_sub_category_id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       // 오프라인 플래그 (Breakdown 타입에 없는 속성은 타입 단언 후 추가)
@@ -250,7 +254,9 @@ export class BreakdownService {
       const breakdown = await this.breakdownRepository.update(request.id, {
         symptoms: request.symptoms,
         cause: request.cause,
-        status: request.status
+        status: request.status,
+        breakdown_main_category_id: request.breakdown_main_category_id,
+        breakdown_sub_category_id: request.breakdown_sub_category_id
       });
 
       return breakdown;

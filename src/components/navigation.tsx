@@ -8,7 +8,9 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Wrench,
+  Cog
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/domains/auth/hooks/use-auth';
@@ -27,6 +29,11 @@ const navigationItems = [
   {
     name: '설비 관리',
     href: '/equipment',
+    icon: Wrench,
+  },
+  {
+    name: '설정',
+    href: '/settings',
     icon: Settings,
   },
 ];

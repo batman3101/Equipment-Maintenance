@@ -13,6 +13,8 @@ export interface Breakdown {
   status: BreakdownStatus;
   reporter_id: string;
   plant_id: string;
+  breakdown_main_category_id?: string;
+  breakdown_sub_category_id?: string;
   attachments?: BreakdownAttachment[];
   created_at: string;
   updated_at: string;
@@ -36,6 +38,8 @@ export interface CreateBreakdownRequest {
   occurred_at: string;
   symptoms: string;
   cause?: string;
+  breakdown_main_category_id?: string;
+  breakdown_sub_category_id?: string;
   attachments?: File[];
 }
 
@@ -44,6 +48,8 @@ export interface UpdateBreakdownRequest {
   symptoms?: string;
   cause?: string;
   status?: BreakdownStatus;
+  breakdown_main_category_id?: string;
+  breakdown_sub_category_id?: string;
 }
 
 export interface BreakdownFilter {

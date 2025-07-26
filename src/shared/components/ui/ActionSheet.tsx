@@ -4,9 +4,19 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ActionSheetAction {
+  id: string;
   label: string;
   onClick: () => void;
-  icon?: React.ReactNode;
+  icon?: React.ComponentType<any>;
+  variant?: 'default' | 'danger';
+  disabled?: boolean;
+}
+
+export interface ActionSheetOption {
+  id: string;
+  label: string;
+  onClick: () => void;
+  icon?: React.ComponentType<any>;
   variant?: 'default' | 'danger';
   disabled?: boolean;
 }
@@ -16,7 +26,8 @@ export interface ActionSheetProps {
   onClose: () => void;
   title?: string;
   description?: string;
-  actions: ActionSheetAction[];
+  actions?: ActionSheetAction[];
+  options?: ActionSheetOption[];
   showCancelButton?: boolean;
   cancelText?: string;
   className?: string;
@@ -35,7 +46,8 @@ export const ActionSheet = React.forwardRef<HTMLDivElement, ActionSheetProps>(
     onClose,
     title,
     description,
-    actions,
+    actions = [],
+    options = [],
     showCancelButton = true,
     cancelText = '취소',
     className,
@@ -173,29 +185,32 @@ export const ActionSheet = React.forwardRef<HTMLDivElement, ActionSheetProps>(
 
           {/* 액션 목록 */}
           <div className="py-2">
-            {actions.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => handleActionClick(action)}
-                disabled={action.disabled}
-                className={cn(
-                  'w-full px-4 py-4 flex items-center space-x-3',
-                  'text-left transition-colors min-h-[56px]',
-                  'hover:bg-gray-50 active:bg-gray-100',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                  action.variant === 'danger' 
-                    ? 'text-red-600 hover:bg-red-50 active:bg-red-100' 
-                    : 'text-gray-900'
-                )}
-              >
-                {action.icon && (
-                  <div className="flex-shrink-0 w-5 h-5">
-                    {action.icon}
-                  </div>
-                )}
-                <span className="font-medium">{action.label}</span>
-              </button>
-            ))}
+            {[...actions, ...options].map((action) => {
+              const IconComponent = action.icon;
+              return (
+                <button
+                  key={action.id}
+                  onClick={() => handleActionClick(action)}
+                  disabled={action.disabled}
+                  className={cn(
+                    'w-full px-4 py-4 flex items-center space-x-3',
+                    'text-left transition-colors min-h-[56px]',
+                    'hover:bg-gray-50 active:bg-gray-100',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                    action.variant === 'danger' 
+                      ? 'text-red-600 hover:bg-red-50 active:bg-red-100' 
+                      : 'text-gray-900'
+                  )}
+                >
+                  {IconComponent && (
+                    <div className="flex-shrink-0 w-5 h-5">
+                      <IconComponent className="w-5 h-5" />
+                    </div>
+                  )}
+                  <span className="font-medium">{action.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* 취소 버튼 */}
