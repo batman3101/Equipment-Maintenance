@@ -315,7 +315,7 @@ export default function BreakdownCategoriesPage() {
                   return (
                     <div key={category.id} className="border border-gray-200 dark:border-gray-700 rounded-lg card-hover transition-all duration-200 hover:shadow-lg">
                       {/* 대분류 카드 */}
-                      <div className="p-4 bg-gray-50">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-700">
                         <div className="flex items-center space-x-3">
                           {/* 확장/축소 버튼 */}
                           <Button
@@ -486,6 +486,7 @@ export default function BreakdownCategoriesPage() {
             )}
           </div>
         </div>
+      </div>
       </div>
     </ProtectedRoute>
   );
