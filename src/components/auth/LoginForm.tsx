@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button, Input, Card } from '@/components/ui'
 
 export function LoginForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('admin')  // 개발용 기본값
+  const [password, setPassword] = useState('1234')  // 개발용 기본값
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
@@ -38,6 +38,27 @@ export function LoginForm() {
           </p>
         </div>
         
+        {/* 개발용 안내 */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-blue-400 text-lg">ℹ️</span>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                개발 모드
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>개발용 로그인 정보:</p>
+                <p className="font-mono bg-blue-100 px-2 py-1 rounded mt-1">
+                  이메일: admin<br />
+                  비밀번호: 1234
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <Card>
           <Card.Content>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -49,7 +70,7 @@ export function LoginForm() {
               
               <Input
                 label="이메일"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="이메일을 입력하세요"
@@ -78,7 +99,7 @@ export function LoginForm() {
         
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            계정이 없으신가요? 관리자에게 문의하세요.
+            개발 환경에서는 admin/1234로 로그인 가능합니다.
           </p>
         </div>
       </div>
