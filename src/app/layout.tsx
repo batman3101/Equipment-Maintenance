@@ -29,8 +29,33 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${inter.variable} ${notoSansKR.variable}`}>
-      <body className="antialiased font-korean">
+    <html 
+      lang="ko" 
+      className={`${inter.variable} ${notoSansKR.variable}`}
+      suppressHydrationWarning={true}
+    >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('cnc-theme') || 'light';
+                  document.documentElement.setAttribute('data-theme', theme);
+                  document.documentElement.style.colorScheme = theme;
+                  // FOUC 방지를 위한 기본 스타일만 적용
+                  document.documentElement.style.backgroundColor = theme === 'dark' ? '#0f172a' : '#f8fafc';
+                } catch (e) {
+                  document.documentElement.setAttribute('data-theme', 'light');
+                  document.documentElement.style.colorScheme = 'light';
+                  document.documentElement.style.backgroundColor = '#f8fafc';
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="antialiased font-korean bg-background text-foreground">
         <ThemeProvider>
           <AuthProvider>
             {children}

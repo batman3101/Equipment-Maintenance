@@ -21,43 +21,59 @@ interface ThemeProviderProps {
 // [SRP] Rule: 테마 상태 관리와 로컬 스토리지 동기화만 담당
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>('light')
-  const [isInitialized, setIsInitialized] = useState(false)
 
-  // 초기 테마 설정 - 로컬 스토리지에서 읽기 또는 시스템 설정 감지
+  // 초기 테마 설정
   useEffect(() => {
-    const savedTheme = localStorage.getItem('cnc-theme') as Theme
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    
-    const initialTheme = savedTheme || systemTheme
-    setTheme(initialTheme)
-    setIsInitialized(true)
+    try {
+      const savedTheme = localStorage.getItem('cnc-theme') as Theme
+      const initialTheme = savedTheme || 'light'
+      console.log('ThemeContext: Setting initial theme to', initialTheme)
+      setTheme(initialTheme)
+    } catch (error) {
+      console.error('ThemeContext: Error setting initial theme', error)
+      setTheme('light')
+    }
   }, [])
 
   // 테마 변경 시 DOM과 로컬 스토리지 업데이트
   useEffect(() => {
-    if (!isInitialized) return
-
-    // DOM에 클래스 적용
+    console.log('ThemeContext: Applying theme', theme)
+    
     const root = document.documentElement
+    
+    // 기존 테마 관련 클래스 모두 제거
     root.classList.remove('light', 'dark')
+    
+    // 새 테마 클래스 추가
     root.classList.add(theme)
+    
+    // 속성 설정
+    root.setAttribute('data-theme', theme)
+    root.style.colorScheme = theme
+    
+    // 배경색 즉시 적용 (FOUC 방지)
+    root.style.backgroundColor = theme === 'dark' ? '#0f172a' : '#f8fafc'
 
-    // 로컬 스토리지에 저장
-    localStorage.setItem('cnc-theme', theme)
-  }, [theme, isInitialized])
+    try {
+      localStorage.setItem('cnc-theme', theme)
+      console.log('ThemeContext: Saved theme to localStorage', theme)
+    } catch (error) {
+      console.error('ThemeContext: Error saving theme to localStorage', error)
+    }
+  }, [theme])
 
   // [OCP] Rule: 새로운 테마 전환 로직이 추가되어도 기존 코드 수정 불필요
   const handleSetTheme = (newTheme: Theme) => {
+    console.log('ThemeContext: Setting theme to', newTheme)
     setTheme(newTheme)
   }
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light')
-  }
-
-  // 초기화 완료까지 렌더링 방지 (FOUC 방지)
-  if (!isInitialized) {
-    return null
+    setTheme(prevTheme => {
+      const newTheme = prevTheme === 'light' ? 'dark' : 'light'
+      console.log('ThemeContext: Toggling theme from', prevTheme, 'to', newTheme)
+      return newTheme
+    })
   }
 
   return (

@@ -1,22 +1,19 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
+import type { User } from '@supabase/supabase-js'
 
 export interface Profile {
   id: string
   email: string
-  role: 'admin' | 'manager' | 'user'
+  role: 'system_admin' | 'manager' | 'user'
   full_name: string | null
   phone: string | null
   department: string | null
   is_active: boolean
   created_at: string
   updated_at: string
-}
-
-interface User {
-  id: string
-  email: string
 }
 
 interface AuthContextType {
@@ -30,32 +27,34 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// 개발용 하드코딩된 사용자 데이터
-const DEV_USERS = {
-  'admin': {
-    password: '1234',
-    user: {
-      id: 'dev-admin-001',
-      email: 'admin'
-    },
-    profile: {
-      id: 'dev-admin-001',
-      email: 'admin',
-      role: 'admin' as const,
-      full_name: '시스템 관리자',
-      phone: '010-1234-5678',
-      department: 'IT팀',
-      is_active: true,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
-    }
-  }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // 개발 모드에서 빠른 시작을 위한 설정
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  const isOfflineMode = process.env.NEXT_PUBLIC_OFFLINE_MODE === 'true'
+
+  // 만료된 토큰 정리 유틸리티 함수
+  const clearExpiredTokens = () => {
+    try {
+      // Supabase 관련 localStorage 항목들 정리
+      const keys = Object.keys(localStorage)
+      const supabaseKeys = keys.filter(key => 
+        key.startsWith('supabase.auth.') || 
+        key.includes('refresh_token') ||
+        key.includes('access_token')
+      )
+      
+      supabaseKeys.forEach(key => {
+        localStorage.removeItem(key)
+        console.log('AuthContext: Cleared expired token:', key)
+      })
+    } catch (error) {
+      console.error('AuthContext: Error clearing expired tokens:', error)
+    }
+  }
 
   const refreshProfile = useCallback(async () => {
     if (!user) {
@@ -63,35 +62,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    // 개발 모드에서는 로컬 스토리지에서 프로필 정보를 가져옴
-    const storedProfile = localStorage.getItem('dev_profile')
-    if (storedProfile) {
-      setProfile(JSON.parse(storedProfile))
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Error fetching profile:', error)
+        return
+      }
+
+      setProfile(profile)
+    } catch (error) {
+      console.error('Error refreshing profile:', error)
     }
   }, [user])
 
   useEffect(() => {
-    // 페이지 로드 시 로컬 스토리지에서 로그인 상태 확인
-    const checkAuth = () => {
+    // 오프라인 모드에서는 빠른 로딩
+    if (isOfflineMode) {
+      console.log('AuthContext: Running in offline mode, skipping Supabase auth')
+      setLoading(false)
+      return
+    }
+
+    // 초기 세션 확인 - 타임아웃을 짧게 설정
+    const checkInitialSession = async () => {
       try {
-        const storedUser = localStorage.getItem('dev_user')
-        const storedProfile = localStorage.getItem('dev_profile')
+        // 빠른 타임아웃으로 설정 (1초)
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session check timeout')), 1000)
+        )
         
-        if (storedUser && storedProfile) {
-          setUser(JSON.parse(storedUser))
-          setProfile(JSON.parse(storedProfile))
+        const sessionPromise = supabase.auth.getSession()
+        
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any
+        
+        if (error) {
+          // refresh token 에러는 일반적이므로 경고 레벨로 처리
+          if (error.message.includes('refresh token') || error.message.includes('Invalid Refresh Token')) {
+            console.warn('AuthContext: Refresh token expired, user needs to login again')
+            clearExpiredTokens() // 만료된 토큰 정리
+          } else {
+            console.error('AuthContext: Error getting session:', error)
+          }
+          return
+        }
+
+        if (session?.user) {
+          setUser(session.user)
         }
       } catch (error) {
-        console.error('Error checking auth state:', error)
-        localStorage.removeItem('dev_user')
-        localStorage.removeItem('dev_profile')
+        if (error.message === 'Session check timeout') {
+          console.warn('AuthContext: Session check timed out, proceeding with no user')
+        } else {
+          console.error('AuthContext: Error checking initial session:', error)
+        }
       } finally {
         setLoading(false)
       }
     }
 
-    checkAuth()
-  }, [])
+    checkInitialSession()
+
+    // 오프라인 모드가 아닐 때만 인증 상태 변경 리스너 설정
+    if (!isOfflineMode) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log('AuthContext: Auth state changed:', event, session?.user?.email)
+          
+          if (session?.user) {
+            setUser(session.user)
+          } else {
+            setUser(null)
+            setProfile(null)
+          }
+          
+          setLoading(false)
+        }
+      )
+
+      return () => subscription.unsubscribe()
+    }
+  }, [isOfflineMode])
 
   useEffect(() => {
     refreshProfile()
@@ -99,18 +157,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const userData = DEV_USERS[email as keyof typeof DEV_USERS]
-      
-      if (!userData || userData.password !== password) {
-        throw new Error('잘못된 이메일 또는 비밀번호입니다.')
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        throw error
       }
 
-      // 로컬 스토리지에 사용자 정보 저장
-      localStorage.setItem('dev_user', JSON.stringify(userData.user))
-      localStorage.setItem('dev_profile', JSON.stringify(userData.profile))
-      
-      setUser(userData.user)
-      setProfile(userData.profile)
+      // 사용자는 onAuthStateChange에서 자동으로 설정됨
     } catch (error) {
       console.error('Error signing in:', error)
       throw error
@@ -119,14 +175,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // 로컬 스토리지에서 사용자 정보 제거
-      localStorage.removeItem('dev_user')
-      localStorage.removeItem('dev_profile')
+      const { error } = await supabase.auth.signOut()
       
+      if (error) {
+        throw error
+      }
+
+      // 사용자 상태는 onAuthStateChange에서 자동으로 null로 설정됨
+    } catch (error) {
+      console.error('AuthContext: Error signing out:', error)
+      // 로그아웃 에러가 발생해도 로컬 상태는 정리
       setUser(null)
       setProfile(null)
-    } catch (error) {
-      console.error('Error signing out:', error)
       throw error
     }
   }

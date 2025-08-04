@@ -120,7 +120,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-green-600">
               {statusCounts.running || 0}
             </div>
-            <div className="text-sm text-black dark:text-black">가동중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">가동중</div>
           </Card.Content>
         </Card>
         
@@ -129,7 +129,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-red-600">
               {statusCounts.breakdown || 0}
             </div>
-            <div className="text-sm text-black dark:text-black">고장중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">고장중</div>
           </Card.Content>
         </Card>
         
@@ -138,7 +138,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-yellow-600">
               {statusCounts.maintenance || 0}
             </div>
-            <div className="text-sm text-black dark:text-black">정비중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">정비중</div>
           </Card.Content>
         </Card>
         
@@ -147,7 +147,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-blue-600">
               {statusCounts.standby || 0}
             </div>
-            <div className="text-sm text-black dark:text-black">대기중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">대기중</div>
           </Card.Content>
         </Card>
         
@@ -156,7 +156,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">
               {statusCounts.stopped || 0}
             </div>
-            <div className="text-sm text-black dark:text-black">정지</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">정지</div>
           </Card.Content>
         </Card>
       </div>
@@ -166,14 +166,14 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
         <Card.Header>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">설비 현황 모니터링</h3>
-              <p className="text-sm text-black dark:text-black">최종 업데이트: {lastUpdated}</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">설비 현황 모니터링</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">최종 업데이트: {lastUpdated}</p>
             </div>
             <div className="mt-4 sm:mt-0">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="block w-full sm:w-auto rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="block w-full sm:w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="all">모든 카테고리</option>
                 {categories.slice(1).map(category => (
@@ -192,19 +192,19 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
               <div
                 key={eq.id}
                 onClick={() => onEquipmentClick?.(eq)}
-                className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white"
+                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="font-bold text-black dark:text-black">{eq.equipment_name}</h4>
-                    <p className="text-sm font-bold text-black dark:text-black">{eq.equipment_number}</p>
+                    <h4 className="font-bold text-gray-900 dark:text-white">{eq.equipment_name}</h4>
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{eq.equipment_number}</p>
                   </div>
                   <StatusBadge variant={getStatusColor(eq.status)}>
                     {getStatusText(eq.status)}
                   </StatusBadge>
                 </div>
                 
-                <div className="space-y-1 text-sm text-black dark:text-black">
+                <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex justify-between">
                     <span>카테고리:</span>
                     <span>{eq.category}</span>

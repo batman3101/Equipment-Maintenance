@@ -6,11 +6,14 @@ import { LoginForm } from './LoginForm'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requiredRole?: 'admin' | 'manager' | 'user'
+  requiredRole?: 'system_admin' | 'manager' | 'user'
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, profile, loading } = useAuth()
+
+  // 오프라인 모드 체크
+  const isOfflineMode = process.env.NEXT_PUBLIC_OFFLINE_MODE === 'true'
 
   if (loading) {
     return (
@@ -20,13 +23,20 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     )
   }
 
+  // 오프라인 모드에서는 인증 체크를 건너뛰고 바로 대시보드로
+  if (isOfflineMode) {
+    console.log('ProtectedRoute: Running in offline mode, bypassing authentication')
+    return <>{children}</>
+  }
+
   if (!user || !profile) {
     return <LoginForm />
   }
 
   if (requiredRole) {
     const roleHierarchy = {
-      admin: 3,
+      system_admin: 3,
+      admin: 3, // 호환성을 위해 추가
       manager: 2,
       user: 1
     }

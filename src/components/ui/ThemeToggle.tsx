@@ -18,12 +18,12 @@ export function ThemeToggle({ className = '', size = 'md' }: ThemeToggleProps) {
     lg: 'w-12 h-12 text-lg',
   }
 
-  const baseClasses = 'inline-flex items-center justify-center rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 touch-target'
+  const baseClasses = 'inline-flex items-center justify-center rounded-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 touch-target transform hover:scale-105 active:scale-95'
   
-  // 테마별 스타일링
+  // 테마별 스타일링 - 더 부드러운 전환을 위한 개선된 색상
   const themeClasses = theme === 'dark'
-    ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400 focus:ring-yellow-500'
-    : 'bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-blue-500'
+    ? 'bg-gray-800 hover:bg-gray-700 text-yellow-400 focus:ring-yellow-500 shadow-lg'
+    : 'bg-white hover:bg-gray-50 text-gray-600 focus:ring-blue-500 shadow-md border border-gray-200'
 
   const classes = `${baseClasses} ${themeClasses} ${sizeClasses[size]} ${className}`
 

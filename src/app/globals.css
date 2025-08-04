@@ -74,6 +74,41 @@
   --font-mono: ui-monospace, monospace;
 }
 
+/* 라이트모드: 명시적 정의 */
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  /* Brand colors for light mode */
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #64748b;
+  --secondary-foreground: #ffffff;
+
+  /* Status colors for light mode */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --error: #ef4444;
+  --error-foreground: #ffffff;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+
+  /* UI colors for light mode */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --input: #ffffff;
+  --ring: #2563eb;
+
+  /* Card and surface colors for light mode - 흰색 컴포넌트/컨테이너/카드 */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+}
+
 /* 다크모드: 진한 청색 바탕 + 검정색 컴포넌트/컨테이너/카드 */
 .dark {
   --background: #0f172a;
