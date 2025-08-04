@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card, ThemeToggle } from '@/components/ui'
 import { Navigation } from '@/components/Navigation'
-import { EquipmentStatusMonitor } from '@/components/equipment/EquipmentStatusMonitor'
+import { EquipmentStatusMonitor, EquipmentManagement } from '@/components/equipment'
 import { UserManagement } from '@/components/admin/UserManagement'
 import { BreakdownPage } from '@/components/breakdown'
 import { RepairPage } from '@/components/repair'
@@ -308,19 +308,7 @@ export function Dashboard() {
         )
       
       case 'equipment':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">설비 관리</h2>
-            <Card>
-              <Card.Content className="text-center py-12">
-                <div className="text-4xl mb-4">⚙️</div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">설비 관리 페이지</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">설비 정보 관리 기능이 여기에 표시됩니다</p>
-                <Button>설비 추가</Button>
-              </Card.Content>
-            </Card>
-          </div>
-        )
+        return <EquipmentManagement />
       
       case 'breakdown':
         return <BreakdownPage />
