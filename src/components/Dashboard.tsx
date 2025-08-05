@@ -37,68 +37,7 @@ export function Dashboard() {
             {/* Trend Analysis Chart */}
             <TrendChart className="mb-8" />
 
-            {/* Quick Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card hover className="cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg border-l-4 border-l-red-500">
-                <Card.Content className="text-center py-8" onClick={() => setCurrentPage('breakdown')}>
-                  <div className="text-5xl mb-4 animate-pulse">🚨</div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    고장 신고
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    설비 고장을 즉시 신고하고<br/>빠른 조치를 요청하세요
-                  </p>
-                  <Button size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors">
-                    ⚡ 긴급 신고
-                  </Button>
-                </Card.Content>
-              </Card>
 
-              <Card hover className="cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg border-l-4 border-l-green-500">
-                <Card.Content className="text-center py-8" onClick={() => setCurrentPage('repair')}>
-                  <div className="text-5xl mb-4">🔧</div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    수리 완료
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    완료된 수리 작업을<br/>시스템에 등록하세요
-                  </p>
-                  <Button variant="secondary" size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors">
-                    ✅ 완료 등록
-                  </Button>
-                </Card.Content>
-              </Card>
-
-              <Card hover className="cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg border-l-4 border-l-blue-500">
-                <Card.Content className="text-center py-8" onClick={() => setCurrentPage('equipment')}>
-                  <div className="text-5xl mb-4">⚙️</div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    설비 관리
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    전체 설비 현황을<br/>한눈에 확인하세요
-                  </p>
-                  <Button variant="info" size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors">
-                    📋 현황 보기
-                  </Button>
-                </Card.Content>
-              </Card>
-
-              <Card hover className="cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg border-l-4 border-l-purple-500">
-                <Card.Content className="text-center py-8" onClick={() => setCurrentPage('statistics')}>
-                  <div className="text-5xl mb-4">📊</div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    통계 분석
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    설비 가동률과 성능을<br/>데이터로 분석하세요
-                  </p>
-                  <Button variant="warning" size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors">
-                    📈 분석 보기
-                  </Button>
-                </Card.Content>
-              </Card>
-            </div>
 
             {/* Performance Metrics - 개선된 버전 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -124,6 +63,11 @@ export function Dashboard() {
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                     <div>• 목표: 150h (달성)</div>
                     <div>• 최고: CNC-LT-001 (245h)</div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      💡 <strong>MTBF</strong>는 설비가 고장 없이 연속 운전할 수 있는 평균 시간을 나타냅니다. 높을수록 설비 신뢰성이 우수함을 의미합니다.
+                    </p>
                   </div>
                 </Card.Content>
               </Card>
@@ -151,6 +95,11 @@ export function Dashboard() {
                     <div>• 목표: 3.0h (달성)</div>
                     <div>• 최단: CNC-LT-001 (1.8h)</div>
                   </div>
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      💡 <strong>MTTR</strong>은 고장 발생 후 수리 완료까지 걸리는 평균 시간입니다. 낮을수록 신속한 복구 능력을 의미합니다.
+                    </p>
+                  </div>
                 </Card.Content>
               </Card>
 
@@ -176,6 +125,11 @@ export function Dashboard() {
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                     <div>• 완료: 22건 / 계획: 24건</div>
                     <div>• 예방정비 비율: 75%</div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      💡 <strong>정비 완료율</strong>은 계획된 정비 작업 중 실제 완료된 작업의 비율입니다. 높을수록 정비 계획 이행률이 우수함을 의미합니다.
+                    </p>
                   </div>
                 </Card.Content>
               </Card>
