@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
 import { CreateUserForm } from './CreateUserForm'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/contexts/ToastContext'
 
 interface User {
   id: string
@@ -19,6 +20,7 @@ interface User {
 
 export function UserManagement() {
   const { profile } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -170,10 +172,16 @@ export function UserManagement() {
         // 목록 새로고침
         await fetchUsers()
         setEditingUser(null)
-        alert('사용자 정보가 성공적으로 업데이트되었습니다.')
+        showSuccess(
+          '사용자 정보 업데이트',
+          '사용자 정보가 성공적으로 업데이트되었습니다.'
+        )
       } catch (err) {
         console.error('Update user error:', err)
-        alert('사용자 정보 업데이트에 실패했습니다.')
+        showError(
+          '업데이트 실패',
+          '사용자 정보 업데이트에 실패했습니다.'
+        )
       } finally {
         setSaving(false)
       }
@@ -310,10 +318,16 @@ export function UserManagement() {
 
         // 목록 새로고침
         fetchUsers()
-        alert('사용자가 성공적으로 삭제되었습니다.')
+        showSuccess(
+          '사용자 삭제',
+          '사용자가 성공적으로 삭제되었습니다.'
+        )
       } catch (err) {
         console.error('Delete user error:', err)
-        alert('사용자 삭제에 실패했습니다.')
+        showError(
+          '삭제 실패',
+          '사용자 삭제에 실패했습니다.'
+        )
       }
     }
   }

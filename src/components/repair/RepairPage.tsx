@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui'
 import { RepairReportForm } from './RepairReportForm'
 import { RepairList } from './RepairList'
+import { useToast } from '@/contexts/ToastContext'
 
 interface RepairReport {
   id: string
@@ -30,6 +31,7 @@ interface RepairReport {
 type ViewMode = 'list' | 'form' | 'detail'
 
 export function RepairPage() {
+  const { showSuccess } = useToast()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedRepair, setSelectedRepair] = useState<RepairReport | null>(null)
 
@@ -38,12 +40,15 @@ export function RepairPage() {
     setSelectedRepair(null)
   }
 
-  const handleRepairSubmit = (repair: any) => {
+  const handleRepairSubmit = (repair: Omit<RepairReport, 'id' | 'completedAt'>) => {
     console.log('새 수리 완료 보고 제출:', repair)
     // 여기서 실제 API 호출이나 상태 업데이트
     
-    // 성공 메시지 표시 (실제로는 toast나 notification 사용)
-    alert('수리 완료 보고가 성공적으로 등록되었습니다!')
+    // 성공 메시지 표시
+    showSuccess(
+      '수리 완료 보고',
+      '수리 완료 보고가 성공적으로 등록되었습니다!'
+    )
     
     // 목록으로 돌아가기
     setViewMode('list')
@@ -184,7 +189,7 @@ export function RepairPage() {
 }
 
 // 수리 완료 상세 보기 컴포넌트
-function RepairDetailView({ repair, onBack }: { repair: RepairReport; onBack: () => void }) {
+function RepairDetailView({ repair, onBack: _onBack }: { repair: RepairReport; onBack: () => void }) {
   const getRepairTypeColor = (type: string) => {
     switch (type) {
       case 'preventive': return 'text-green-600 bg-green-50 dark:bg-green-900/20'

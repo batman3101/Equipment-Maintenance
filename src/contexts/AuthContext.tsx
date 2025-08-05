@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   
   // 개발 모드에서 빠른 시작을 위한 설정
-  const isDevelopment = process.env.NODE_ENV === 'development'
+  // const isDevelopment = process.env.NODE_ENV === 'development'
   const isOfflineMode = process.env.NEXT_PUBLIC_OFFLINE_MODE === 'true'
 
   // 만료된 토큰 정리 유틸리티 함수
@@ -98,10 +98,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const sessionPromise = supabase.auth.getSession()
         
-        const { data: { session }, error } = await Promise.race([
+        const result = await Promise.race([
           sessionPromise,
           timeoutPromise
-        ]) as any
+        ])
+        
+        // TimeScript type guard
+        if (!result || typeof result !== 'object' || !('data' in result)) {
+          throw new Error('Invalid session response')
+        }
+        
+        const { data: { session }, error } = result as Awaited<typeof sessionPromise>
         
         if (error) {
           // refresh token 에러는 일반적이므로 경고 레벨로 처리
@@ -118,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(session.user)
         }
       } catch (error) {
-        if (error.message === 'Session check timeout') {
+        if (error instanceof Error && error.message === 'Session check timeout') {
           console.warn('AuthContext: Session check timed out, proceeding with no user')
         } else {
           console.error('AuthContext: Error checking initial session:', error)

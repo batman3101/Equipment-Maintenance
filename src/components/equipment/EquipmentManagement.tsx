@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { Button, Card } from '@/components/ui'
+import { useToast } from '@/contexts/ToastContext'
 
 interface Equipment {
   id: string
@@ -91,13 +92,22 @@ const getStatusText = (status: string) => {
 }
 
 export function EquipmentManagement() {
+  const { showSuccess, showError, showWarning } = useToast()
   const [equipments, setEquipments] = useState<Equipment[]>(mockEquipments)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadResult, setUploadResult] = useState<{
-    success: boolean
-    message: string
-    addedCount?: number
-  } | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
+    equipmentNumber: '',
+    equipmentName: '',
+    model: '',
+    manufacturer: '',
+    location: '',
+    department: '',
+    installDate: new Date().toISOString().split('T')[0],
+    status: 'operational',
+    operatingHours: 0,
+    notes: ''
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Excel 템플릿 다운로드
@@ -150,7 +160,6 @@ export function EquipmentManagement() {
     if (!file) return
 
     setIsUploading(true)
-    setUploadResult(null)
 
     try {
       const data = await file.arrayBuffer()
@@ -159,78 +168,78 @@ export function EquipmentManagement() {
       const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
       const newEquipments: Equipment[] = []
-      let errors: string[] = []
+      const validationErrors = [] as string[]
 
-      jsonData.forEach((row: any, index) => {
+      (jsonData as Record<string, unknown>[]).forEach((row: Record<string, unknown>, index: number) => {
         try {
           // 필수 필드 검증
           if (!row['설비번호'] || !row['설비명']) {
-            errors.push(`행 ${index + 2}: 설비번호와 설비명은 필수입니다.`)
+            validationErrors.push(`행 ${index + 2}: 설비번호와 설비명은 필수입니다.`)
             return
           }
 
           // 중복 설비번호 검증
           const existingEquipment = equipments.find(eq => eq.equipmentNumber === row['설비번호'])
           if (existingEquipment) {
-            errors.push(`행 ${index + 2}: 설비번호 '${row['설비번호']}'는 이미 존재합니다.`)
+            validationErrors.push(`행 ${index + 2}: 설비번호 '${row['설비번호']}'는 이미 존재합니다.`)
             return
           }
 
           // 상태 값 검증
           const validStatuses = ['operational', 'maintenance', 'broken', 'idle']
-          const status = row['상태'] || 'operational'
+          const status = String(row['상태'] || 'operational')
           if (!validStatuses.includes(status)) {
-            errors.push(`행 ${index + 2}: 상태값은 'operational', 'maintenance', 'broken', 'idle' 중 하나여야 합니다.`)
+            validationErrors.push(`행 ${index + 2}: 상태값은 'operational', 'maintenance', 'broken', 'idle' 중 하나여야 합니다.`)
             return
           }
 
           const equipment: Equipment = {
             id: Date.now().toString() + index,
-            equipmentNumber: row['설비번호'],
-            equipmentName: row['설비명'],
-            model: row['모델명'] || '',
-            manufacturer: row['제조사'] || '',
-            location: row['위치'] || '',
-            department: row['담당부서'] || '',
-            installDate: row['설치일자'] || new Date().toISOString().split('T')[0],
-            lastMaintenanceDate: row['최근정비일'] || undefined,
-            nextMaintenanceDate: row['다음정비일'] || undefined,
+            equipmentNumber: String(row['설비번호']),
+            equipmentName: String(row['설비명']),
+            model: String(row['모델명'] || ''),
+            manufacturer: String(row['제조사'] || ''),
+            location: String(row['위치'] || ''),
+            department: String(row['담당부서'] || ''),
+            installDate: String(row['설치일자'] || new Date().toISOString().split('T')[0]),
+            lastMaintenanceDate: row['최근정비일'] ? String(row['최근정비일']) : undefined,
+            nextMaintenanceDate: row['다음정비일'] ? String(row['다음정비일']) : undefined,
             status: status as Equipment['status'],
             operatingHours: Number(row['가동시간']) || 0,
-            notes: row['비고'] || undefined
+            notes: row['비고'] ? String(row['비고']) : undefined
           }
 
           newEquipments.push(equipment)
-        } catch (error) {
-          errors.push(`행 ${index + 2}: 데이터 처리 중 오류가 발생했습니다.`)
+        } catch (_error) {
+          validationErrors.push(`행 ${index + 2}: 데이터 처리 중 오류가 발생했습니다.`)
         }
       })
 
-      if (errors.length > 0) {
-        setUploadResult({
-          success: false,
-          message: `업로드 실패:\n${errors.join('\n')}`
-        })
+      if (validationErrors.length > 0) {
+        showError(
+          '업로드 실패',
+          validationErrors.slice(0, 3).join('\n') + (validationErrors.length > 3 ? `\n... 외 ${validationErrors.length - 3}개 오류` : ''),
+          { duration: 8000 }
+        )
       } else if (newEquipments.length === 0) {
-        setUploadResult({
-          success: false,
-          message: '추가할 설비가 없습니다. 파일 형식과 내용을 확인해주세요.'
-        })
+        showWarning(
+          '추가할 설비 없음',
+          '파일 형식과 내용을 확인해주세요.'
+        )
       } else {
         // 성공적으로 처리된 설비들을 추가
         setEquipments(prev => [...prev, ...newEquipments])
-        setUploadResult({
-          success: true,
-          message: `${newEquipments.length}개의 설비가 성공적으로 추가되었습니다.`,
-          addedCount: newEquipments.length
-        })
+        showSuccess(
+          '업로드 성공',
+          `${newEquipments.length}개의 설비가 성공적으로 추가되었습니다.`
+        )
       }
     } catch (error) {
       console.error('Excel file processing error:', error)
-      setUploadResult({
-        success: false,
-        message: 'Excel 파일 처리 중 오류가 발생했습니다. 파일 형식을 확인해주세요.'
-      })
+      showError(
+        'Excel 파일 처리 오류',
+        'Excel 파일 처리 중 오류가 발생했습니다. 파일 형식을 확인해주세요.'
+      )
     } finally {
       setIsUploading(false)
       // 파일 입력 초기화
@@ -238,6 +247,83 @@ export function EquipmentManagement() {
         fileInputRef.current.value = ''
       }
     }
+  }
+
+  // 개별 설비 등록
+  const handleAddEquipment = () => {
+    // 필수 필드 검증
+    if (!newEquipment.equipmentNumber || !newEquipment.equipmentName) {
+      showError(
+        '필수 정보 누락',
+        '설비번호와 설비명은 필수 입력 항목입니다.'
+      )
+      return
+    }
+
+    // 중복 설비번호 검증
+    const existingEquipment = equipments.find(eq => eq.equipmentNumber === newEquipment.equipmentNumber)
+    if (existingEquipment) {
+      showError(
+        '중복된 설비번호',
+        `설비번호 '${newEquipment.equipmentNumber}'는 이미 존재합니다.`
+      )
+      return
+    }
+
+    // 새 설비 추가
+    const equipment: Equipment = {
+      id: Date.now().toString(),
+      equipmentNumber: newEquipment.equipmentNumber!,
+      equipmentName: newEquipment.equipmentName!,
+      model: newEquipment.model || '',
+      manufacturer: newEquipment.manufacturer || '',
+      location: newEquipment.location || '',
+      department: newEquipment.department || '',
+      installDate: newEquipment.installDate || new Date().toISOString().split('T')[0],
+      lastMaintenanceDate: newEquipment.lastMaintenanceDate || undefined,
+      nextMaintenanceDate: newEquipment.nextMaintenanceDate || undefined,
+      status: newEquipment.status as Equipment['status'] || 'operational',
+      operatingHours: newEquipment.operatingHours || 0,
+      notes: newEquipment.notes || undefined
+    }
+
+    setEquipments(prev => [...prev, equipment])
+    showSuccess(
+      '등록 성공',
+      `설비 '${equipment.equipmentName}'이 성공적으로 등록되었습니다.`
+    )
+
+    // 폼 초기화 및 닫기
+    setNewEquipment({
+      equipmentNumber: '',
+      equipmentName: '',
+      model: '',
+      manufacturer: '',
+      location: '',
+      department: '',
+      installDate: new Date().toISOString().split('T')[0],
+      status: 'operational',
+      operatingHours: 0,
+      notes: ''
+    })
+    setShowAddForm(false)
+  }
+
+  // 개별 등록 폼 취소
+  const handleCancelAdd = () => {
+    setShowAddForm(false)
+    setNewEquipment({
+      equipmentNumber: '',
+      equipmentName: '',
+      model: '',
+      manufacturer: '',
+      location: '',
+      department: '',
+      installDate: new Date().toISOString().split('T')[0],
+      status: 'operational',
+      operatingHours: 0,
+      notes: ''
+    })
   }
 
   // 설비 현황 통계
@@ -257,6 +343,13 @@ export function EquipmentManagement() {
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex flex-wrap gap-2">
+          <Button
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <span>➕</span>
+            <span>개별 등록</span>
+          </Button>
           <Button
             variant="secondary"
             onClick={downloadTemplate}
@@ -283,43 +376,197 @@ export function EquipmentManagement() {
         </div>
       </div>
 
-      {/* 업로드 결과 알림 */}
-      {uploadResult && (
-        <Card className={`border-l-4 ${uploadResult.success 
-          ? 'border-l-green-500 bg-green-50 dark:bg-green-900/20' 
-          : 'border-l-red-500 bg-red-50 dark:bg-red-900/20'
-        }`}>
-          <Card.Content className="py-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <span className={`text-2xl ${uploadResult.success ? 'text-green-600' : 'text-red-600'}`}>
-                  {uploadResult.success ? '✅' : '❌'}
-                </span>
+
+      {/* 개별 설비 등록 폼 */}
+      {showAddForm && (
+        <Card className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20">
+          <Card.Header>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">새 설비 등록</h3>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleCancelAdd}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                ❌ 취소
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Content>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* 필수 정보 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  설비번호 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newEquipment.equipmentNumber || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentNumber: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="예: CNC-ML-002"
+                />
               </div>
-              <div className="ml-3">
-                <h3 className={`text-sm font-medium ${uploadResult.success 
-                  ? 'text-green-800 dark:text-green-200' 
-                  : 'text-red-800 dark:text-red-200'
-                }`}>
-                  {uploadResult.success ? '업로드 성공' : '업로드 실패'}
-                </h3>
-                <pre className={`mt-1 text-sm whitespace-pre-wrap ${uploadResult.success 
-                  ? 'text-green-700 dark:text-green-300' 
-                  : 'text-red-700 dark:text-red-300'
-                }`}>
-                  {uploadResult.message}
-                </pre>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  설비명 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newEquipment.equipmentName || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="예: CNC 밀링머신 #2"
+                />
               </div>
-              <div className="ml-auto">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setUploadResult(null)}
-                  className="text-xs"
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  모델명
+                </label>
+                <input
+                  type="text"
+                  value={newEquipment.model || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, model: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="예: VMC-850E"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  제조사
+                </label>
+                <input
+                  type="text"
+                  value={newEquipment.manufacturer || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, manufacturer: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="예: DOOSAN"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  위치
+                </label>
+                <input
+                  type="text"
+                  value={newEquipment.location || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="예: 1공장 C라인"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  담당부서
+                </label>
+                <input
+                  type="text"
+                  value={newEquipment.department || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, department: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="예: 생산1팀"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  설치일자
+                </label>
+                <input
+                  type="date"
+                  value={newEquipment.installDate || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, installDate: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  상태
+                </label>
+                <select
+                  value={newEquipment.status || 'operational'}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, status: e.target.value as Equipment['status'] }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  닫기
-                </Button>
+                  <option value="operational">가동중</option>
+                  <option value="maintenance">정비중</option>
+                  <option value="broken">고장</option>
+                  <option value="idle">대기</option>
+                </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  가동시간 (시간)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newEquipment.operatingHours || 0}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, operatingHours: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  최근 정비일
+                </label>
+                <input
+                  type="date"
+                  value={newEquipment.lastMaintenanceDate || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, lastMaintenanceDate: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  다음 정비일
+                </label>
+                <input
+                  type="date"
+                  value={newEquipment.nextMaintenanceDate || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, nextMaintenanceDate: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  비고
+                </label>
+                <textarea
+                  value={newEquipment.notes || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="설비에 대한 추가 정보를 입력하세요"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <Button
+                variant="secondary"
+                onClick={handleCancelAdd}
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleAddEquipment}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                ✅ 등록하기
+              </Button>
             </div>
           </Card.Content>
         </Card>

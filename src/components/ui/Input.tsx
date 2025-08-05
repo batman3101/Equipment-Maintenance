@@ -2,7 +2,7 @@ import React from 'react'
 
 interface InputProps {
   label?: string
-  type?: 'text' | 'email' | 'password' | 'number' | 'tel'
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date'
   placeholder?: string
   value?: string
   defaultValue?: string
@@ -12,6 +12,9 @@ interface InputProps {
   error?: string
   className?: string
   id?: string
+  min?: string
+  step?: string
+  readOnly?: boolean
 }
 
 export function Input({
@@ -26,6 +29,9 @@ export function Input({
   error,
   className = '',
   id,
+  min,
+  step,
+  readOnly,
 }: InputProps) {
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
 
@@ -46,6 +52,9 @@ export function Input({
         onChange={onChange}
         required={required}
         disabled={disabled}
+        min={min}
+        step={step}
+        readOnly={readOnly}
         className={`
           w-full px-3 py-2 border rounded-lg 
           text-gray-900 dark:text-gray-100

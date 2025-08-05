@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Card, StatusBadge, Button } from '@/components/ui'
+import { Card, StatusBadge } from '@/components/ui'
 
 interface RepairReport {
   id: string
@@ -181,10 +181,10 @@ export function RepairList({ onRepairClick }: RepairListProps) {
       }
     })
 
-  const typeCounts = reports.reduce((acc, report) => {
-    acc[report.repairType] = (acc[report.repairType] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  // const typeCounts = reports.reduce((acc, report) => {
+  //   acc[report.repairType] = (acc[report.repairType] || 0) + 1
+  //   return acc
+  // }, {} as Record<string, number>)
 
   const statusCounts = reports.reduce((acc, report) => {
     acc[report.completionStatus] = (acc[report.completionStatus] || 0) + 1

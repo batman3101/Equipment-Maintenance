@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Card, StatusBadge, Button } from '@/components/ui'
+import { Card, StatusBadge } from '@/components/ui'
 
 interface BreakdownReport {
   id: string

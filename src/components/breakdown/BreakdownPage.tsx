@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui'
 import { BreakdownReportForm } from './BreakdownReportForm'
 import { BreakdownList } from './BreakdownList'
+import { useToast } from '@/contexts/ToastContext'
 
 interface BreakdownReport {
   id: string
@@ -26,6 +27,7 @@ interface BreakdownReport {
 type ViewMode = 'list' | 'form' | 'detail'
 
 export function BreakdownPage() {
+  const { showSuccess } = useToast()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedReport, setSelectedReport] = useState<BreakdownReport | null>(null)
 
@@ -34,12 +36,15 @@ export function BreakdownPage() {
     setSelectedReport(null)
   }
 
-  const handleReportSubmit = (report: any) => {
+  const handleReportSubmit = (report: Omit<BreakdownReport, 'id' | 'status' | 'reportedAt' | 'updatedAt'>) => {
     console.log('새 고장 신고 제출:', report)
     // 여기서 실제 API 호출이나 상태 업데이트
     
-    // 성공 메시지 표시 (실제로는 toast나 notification 사용)
-    alert('고장 신고가 성공적으로 제출되었습니다!')
+    // 성공 메시지 표시
+    showSuccess(
+      '고장 신고 완료',
+      '고장 신고가 성공적으로 제출되었습니다!'
+    )
     
     // 목록으로 돌아가기
     setViewMode('list')
@@ -180,7 +185,7 @@ export function BreakdownPage() {
 }
 
 // 고장 신고 상세 보기 컴포넌트
-function BreakdownDetailView({ report, onBack }: { report: BreakdownReport; onBack: () => void }) {
+function BreakdownDetailView({ report, onBack: _onBack }: { report: BreakdownReport; onBack: () => void }) {
   const getUrgencyColor = (level: string) => {
     switch (level) {
       case 'low': return 'text-green-600 bg-green-50 dark:bg-green-900/20'

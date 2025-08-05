@@ -91,7 +91,7 @@ export function TrendChart({ className = '' }: TrendChartProps) {
 
           {/* 차트 */}
           <div className="space-y-4">
-            {currentData.map((data, index) => (
+            {currentData.map((data) => (
               <div key={data.period} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-gray-900 dark:text-white min-w-[80px]">

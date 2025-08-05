@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button, Input, Card, Select } from '@/components/ui'
+import { Button, Input, Card } from '@/components/ui'
+import { useToast } from '@/contexts/ToastContext'
 
 interface BreakdownReport {
   equipmentId: string
@@ -88,6 +89,7 @@ interface BreakdownReportFormProps {
 }
 
 export function BreakdownReportForm({ onSubmit, onCancel, preSelectedEquipmentId }: BreakdownReportFormProps) {
+  const { showSuccess, showError } = useToast()
   const [formData, setFormData] = useState<Partial<BreakdownReport>>({
     equipmentId: preSelectedEquipmentId || '',
     urgencyLevel: 'medium',
@@ -153,6 +155,11 @@ export function BreakdownReportForm({ onSubmit, onCancel, preSelectedEquipmentId
       
       onSubmit?.(reportData)
       
+      showSuccess(
+        '고장 신고 완료',
+        `${selectedEquipment?.equipment_name}의 고장이 성공적으로 신고되었습니다.`
+      )
+      
       // 폼 초기화
       setFormData({
         equipmentId: '',
@@ -167,6 +174,10 @@ export function BreakdownReportForm({ onSubmit, onCancel, preSelectedEquipmentId
       
     } catch (error) {
       console.error('고장 신고 제출 실패:', error)
+      showError(
+        '신고 실패',
+        '고장 신고 처리 중 오류가 발생했습니다. 다시 시도해주세요.'
+      )
     } finally {
       setLoading(false)
     }
@@ -261,7 +272,7 @@ export function BreakdownReportForm({ onSubmit, onCancel, preSelectedEquipmentId
                 </label>
                 <select
                   value={formData.urgencyLevel || 'medium'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, urgencyLevel: e.target.value as any }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, urgencyLevel: e.target.value as 'low' | 'medium' | 'high' | 'critical' }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   {urgencyLevels.map((level) => (
@@ -278,7 +289,7 @@ export function BreakdownReportForm({ onSubmit, onCancel, preSelectedEquipmentId
                 </label>
                 <select
                   value={formData.issueType || 'mechanical'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, issueType: e.target.value as any }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, issueType: e.target.value as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other' }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   {issueTypes.map((type) => (

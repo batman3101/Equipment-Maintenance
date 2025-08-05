@@ -3,6 +3,7 @@ import { Inter, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 // 영어와 베트남어용 Inter 폰트
 const inter = Inter({
@@ -58,7 +59,9 @@ export default function RootLayout({
       <body className="antialiased font-korean bg-background text-foreground">
         <ThemeProvider>
           <AuthProvider>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

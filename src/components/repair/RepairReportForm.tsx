@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Button, Input, Card } from '@/components/ui'
+import { useToast } from '@/contexts/ToastContext'
 
 interface RepairReport {
   breakdownReportId?: string
@@ -94,6 +95,7 @@ interface RepairReportFormProps {
 }
 
 export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, relatedBreakdownId }: RepairReportFormProps) {
+  const { showSuccess, showError } = useToast()
   const [formData, setFormData] = useState<Partial<RepairReport>>({
     equipmentId: preSelectedEquipmentId || '',
     breakdownReportId: relatedBreakdownId || '',
@@ -125,7 +127,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
     if (totalCost !== formData.totalCost) {
       setFormData(prev => ({ ...prev, totalCost }))
     }
-  }, [formData.laborCost, formData.partsCost])
+  }, [formData.laborCost, formData.partsCost, formData.totalCost])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -180,8 +182,17 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
       
       onSubmit?.(reportData)
       
+      showSuccess(
+        '수리 완료 보고',
+        `${selectedEquipment?.equipment_name}의 수리 완료가 성공적으로 등록되었습니다.`
+      )
+      
     } catch (error) {
       console.error('수리 완료 보고 제출 실패:', error)
+      showError(
+        '등록 실패',
+        '수리 완료 보고 처리 중 오류가 발생했습니다. 다시 시도해주세요.'
+      )
     } finally {
       setLoading(false)
     }
@@ -276,7 +287,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
                 </label>
                 <select
                   value={formData.repairType || 'corrective'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, repairType: e.target.value as any }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, repairType: e.target.value as 'preventive' | 'corrective' | 'emergency' | 'upgrade' }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   {repairTypes.map((type) => (
@@ -293,7 +304,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
                 </label>
                 <select
                   value={formData.completionStatus || 'completed'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, completionStatus: e.target.value as any }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, completionStatus: e.target.value as 'completed' | 'partial' | 'failed' }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   {completionStatuses.map((status) => (
@@ -343,7 +354,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               <Input
                 label="작업 시간 (시간)"
                 type="number"
-                value={formData.timeSpent || ''}
+                value={formData.timeSpent?.toString() || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, timeSpent: parseFloat(e.target.value) || 0 }))}
                 placeholder="0.5"
                 required
@@ -355,7 +366,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               <Input
                 label="인건비 (원)"
                 type="number"
-                value={formData.laborCost || ''}
+                value={formData.laborCost?.toString() || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, laborCost: parseFloat(e.target.value) || 0 }))}
                 placeholder="0"
                 min="0"
@@ -364,7 +375,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               <Input
                 label="부품비 (원)"
                 type="number"
-                value={formData.partsCost || ''}
+                value={formData.partsCost?.toString() || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, partsCost: parseFloat(e.target.value) || 0 }))}
                 placeholder="0"
                 min="0"
@@ -373,7 +384,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               <Input
                 label="총 비용 (원)"
                 type="number"
-                value={formData.totalCost || ''}
+                value={formData.totalCost?.toString() || ''}
                 readOnly
                 className="bg-gray-50 dark:bg-gray-900"
               />

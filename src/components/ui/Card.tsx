@@ -14,6 +14,7 @@ interface CardHeaderProps {
 interface CardContentProps {
   children: React.ReactNode
   className?: string
+  onClick?: () => void
 }
 
 interface CardFooterProps {
@@ -37,9 +38,12 @@ export function CardHeader({ children, className = '' }: CardHeaderProps) {
   )
 }
 
-export function CardContent({ children, className = '' }: CardContentProps) {
+export function CardContent({ children, className = '', onClick }: CardContentProps) {
   return (
-    <div className={`px-6 py-4 text-gray-900 dark:text-gray-100 ${className}`}>
+    <div 
+      className={`px-6 py-4 text-gray-900 dark:text-gray-100 ${onClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''} ${className}`}
+      onClick={onClick}
+    >
       {children}
     </div>
   )

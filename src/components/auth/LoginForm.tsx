@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
 import { Button, Input, Card, ThemeToggle } from '@/components/ui'
 
 export function LoginForm() {
