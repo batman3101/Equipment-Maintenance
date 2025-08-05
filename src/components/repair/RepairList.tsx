@@ -5,85 +5,50 @@ import { Card, StatusBadge } from '@/components/ui'
 
 interface RepairReport {
   id: string
-  equipmentNumber: string
-  equipmentName: string
-  location: string
+  equipmentId: string
   technicianName: string
-  technicianPhone: string
-  department: string
   repairType: 'preventive' | 'corrective' | 'emergency' | 'upgrade'
-  workDescription: string
-  partsUsed: string
-  timeSpent: number
-  laborCost: number
-  partsCost: number
-  totalCost: number
   completionStatus: 'completed' | 'partial' | 'failed'
+  workDescription: string
+  timeSpent: number
   testResults: string
-  completedAt: string
-  nextMaintenanceDate?: string
   notes?: string
+  completedAt: string
 }
 
 // Mock repair reports data
 const mockRepairReports: RepairReport[] = [
   {
     id: '1',
-    equipmentNumber: 'CNC-ML-001',
-    equipmentName: 'CNC 밀링머신 #1',
-    location: '1공장 A라인',
+    equipmentId: 'CNC-ML-001',
     technicianName: '김안전관리사',
-    technicianPhone: '010-1111-2222',
-    department: '안전관리팀',
     repairType: 'emergency',
     workDescription: '안전 커버 센서 교체 및 안전 시스템 점검. 기존 센서가 오작동하여 새 센서로 완전 교체하고 전체 안전 시스템을 재보정했습니다.',
-    partsUsed: '안전 센서 (모델: S-400) x1, 연결 케이블 2m, 고정 브라켓 x2',
     timeSpent: 3.5,
-    laborCost: 175000,
-    partsCost: 95000,
-    totalCost: 270000,
     completionStatus: 'completed',
     testResults: '안전 커버 개폐 테스트 정상, 센서 감지 정확도 100%, 비상정지 기능 정상 작동 확인',
     completedAt: '2024-01-15 09:15:00',
-    nextMaintenanceDate: '2024-04-15',
     notes: '안전 센서는 3개월마다 정기 점검 필요. 습도가 높은 환경에서 부식 주의'
   },
   {
     id: '2',
-    equipmentNumber: 'CNC-LT-001',
-    equipmentName: 'CNC 선반 #1',
-    location: '1공장 B라인',
+    equipmentId: 'CNC-LT-001',
     technicianName: '박정비사',
-    technicianPhone: '010-2222-3333',
-    department: '정비팀',
     repairType: 'corrective',
     workDescription: '스핀들 베어링 교체 및 정렬 조정. 고주파 소음과 진동 원인인 손상된 베어링을 교체하고 스핀들 정렬을 재조정했습니다.',
-    partsUsed: '스핀들 베어링 (7020C) x2, 그리스 500g, 실런트 100ml',
     timeSpent: 6.0,
-    laborCost: 300000,
-    partsCost: 180000,
-    totalCost: 480000,
     completionStatus: 'completed',
     testResults: '스핀들 회전 테스트 정상, 진동 수준 0.2mm/s (기준값 이하), 소음 수준 정상',
     completedAt: '2024-01-15 16:30:00',
-    nextMaintenanceDate: '2024-07-15',
     notes: '베어링 교체 후 500시간 운전 후 재점검 권장'
   },
   {
     id: '3',
-    equipmentNumber: 'CNC-DR-001',
-    equipmentName: 'CNC 드릴링머신 #1',
-    location: '2공장 A라인',
+    equipmentId: 'CNC-DR-001',
     technicianName: '이수리기사',
-    technicianPhone: '010-3333-4444',
-    department: '정비팀',
     repairType: 'corrective',
     workDescription: '드릴 척 교체 및 제어 시스템 소프트웨어 업데이트',
-    partsUsed: '드릴 척 (13mm) x1, 척 키 x1',
     timeSpent: 2.5,
-    laborCost: 125000,
-    partsCost: 85000,
-    totalCost: 210000,
     completionStatus: 'partial',
     testResults: '드릴링 정확도 개선되었으나 간헐적 에러 코드 E-203 지속. 추가 점검 필요',
     completedAt: '2024-01-15 14:45:00',
@@ -91,23 +56,14 @@ const mockRepairReports: RepairReport[] = [
   },
   {
     id: '4',
-    equipmentNumber: 'CNC-GR-001',
-    equipmentName: 'CNC 그라인딩머신 #1',
-    location: '2공장 B라인',
+    equipmentId: 'CNC-GR-001',
     technicianName: '최정비사',
-    technicianPhone: '010-4444-5555',
-    department: '정비팀',
     repairType: 'preventive',
     workDescription: '정기 예방 정비 - 오일 교체, 필터 청소, 벨트 장력 조정',
-    partsUsed: '유압 오일 20L, 에어 필터 x2, 청소용 솔벤트 2L',
     timeSpent: 4.0,
-    laborCost: 200000,
-    partsCost: 120000,
-    totalCost: 320000,
     completionStatus: 'completed',
     testResults: '모든 시스템 정상 작동, 유압 압력 안정, 정밀도 테스트 통과',
     completedAt: '2024-01-14 15:00:00',
-    nextMaintenanceDate: '2024-04-14',
     notes: '다음 정기 정비 시 쿨런트 시스템 점검 권장'
   }
 ]
@@ -172,10 +128,10 @@ export function RepairList({ onRepairClick }: RepairListProps) {
           return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
         case 'date_asc':
           return new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime()
-        case 'cost_desc':
-          return b.totalCost - a.totalCost
-        case 'cost_asc':
-          return a.totalCost - b.totalCost
+        case 'time_desc':
+          return b.timeSpent - a.timeSpent
+        case 'time_asc':
+          return a.timeSpent - b.timeSpent
         default:
           return 0
       }
@@ -191,7 +147,7 @@ export function RepairList({ onRepairClick }: RepairListProps) {
     return acc
   }, {} as Record<string, number>)
 
-  const totalCost = reports.reduce((sum, report) => sum + report.totalCost, 0)
+  const totalTimeSpent = reports.reduce((sum, report) => sum + report.timeSpent, 0)
   const avgTimeSpent = reports.reduce((sum, report) => sum + report.timeSpent, 0) / reports.length
 
   return (
@@ -219,9 +175,9 @@ export function RepairList({ onRepairClick }: RepairListProps) {
         <Card>
           <Card.Content className="text-center py-4">
             <div className="text-2xl font-bold text-blue-600">
-              {totalCost.toLocaleString()}원
+              {totalTimeSpent.toFixed(1)}시간
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">총 수리비용</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">총 작업시간</div>
           </Card.Content>
         </Card>
         
@@ -276,8 +232,8 @@ export function RepairList({ onRepairClick }: RepairListProps) {
               >
                 <option value="date_desc">최신순</option>
                 <option value="date_asc">오래된순</option>
-                <option value="cost_desc">비용 높은순</option>
-                <option value="cost_asc">비용 낮은순</option>
+                <option value="time_desc">작업시간 긴순</option>
+                <option value="time_asc">작업시간 짧은순</option>
               </select>
             </div>
           </div>
@@ -295,11 +251,9 @@ export function RepairList({ onRepairClick }: RepairListProps) {
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
                       <h4 className="font-bold text-gray-900 dark:text-white">
-                        {report.equipmentName}
+                        설비 ID: {report.equipmentId}
                       </h4>
-                      <span className="text-sm text-gray-500">({report.equipmentNumber})</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{report.location}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <StatusBadge variant={getRepairTypeColor(report.repairType)}>
@@ -315,24 +269,15 @@ export function RepairList({ onRepairClick }: RepairListProps) {
                   <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
                     <strong>작업 내용:</strong> {report.workDescription}
                   </p>
-                  {report.partsUsed && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                      <strong>사용 부품:</strong> {report.partsUsed}
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center space-x-4">
-                    <span><strong>기술자:</strong> {report.technicianName} ({report.department})</span>
+                    <span><strong>기술자:</strong> {report.technicianName}</span>
                     <span><strong>작업시간:</strong> {report.timeSpent}시간</span>
-                    <span><strong>총비용:</strong> {report.totalCost.toLocaleString()}원</span>
                   </div>
                   <div className="text-right">
                     <div>완료: {new Date(report.completedAt).toLocaleString()}</div>
-                    {report.nextMaintenanceDate && (
-                      <div>다음 정비: {new Date(report.nextMaintenanceDate).toLocaleDateString()}</div>
-                    )}
                   </div>
                 </div>
               </div>

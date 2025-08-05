@@ -8,24 +8,15 @@ import { useToast } from '@/contexts/ToastContext'
 
 interface RepairReport {
   id: string
-  equipmentNumber: string
-  equipmentName: string
-  location: string
+  equipmentId: string
   technicianName: string
-  technicianPhone: string
-  department: string
   repairType: 'preventive' | 'corrective' | 'emergency' | 'upgrade'
-  workDescription: string
-  partsUsed: string
-  timeSpent: number
-  laborCost: number
-  partsCost: number
-  totalCost: number
   completionStatus: 'completed' | 'partial' | 'failed'
+  workDescription: string
+  timeSpent: number
   testResults: string
-  completedAt: string
-  nextMaintenanceDate?: string
   notes?: string
+  completedAt: string
 }
 
 type ViewMode = 'list' | 'form' | 'detail'
@@ -40,7 +31,7 @@ export function RepairPage() {
     setSelectedRepair(null)
   }
 
-  const handleRepairSubmit = (repair: Omit<RepairReport, 'id' | 'completedAt'>) => {
+  const handleRepairSubmit = (repair: { equipmentId: string; technicianName: string; repairType: 'preventive' | 'corrective' | 'emergency' | 'upgrade'; completionStatus: 'completed' | 'partial' | 'failed'; workDescription: string; timeSpent: number; testResults: string; notes?: string }) => {
     console.log('새 수리 완료 보고 제출:', repair)
     // 여기서 실제 API 호출이나 상태 업데이트
     
@@ -103,7 +94,7 @@ export function RepairPage() {
                 <div className="flex items-center">
                   <span className="mx-2 text-gray-400">/</span>
                   <span className="text-gray-500 dark:text-gray-400">
-                    {selectedRepair?.equipmentName} 상세
+                    설비 ID: {selectedRepair?.equipmentId} 상세
                   </span>
                 </div>
               </li>
@@ -141,7 +132,7 @@ export function RepairPage() {
                 수리 완료 상세 정보
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                {selectedRepair?.equipmentName} ({selectedRepair?.equipmentNumber})
+                설비 ID: {selectedRepair?.equipmentId}
               </p>
             </div>
             <div className="flex space-x-2">
@@ -189,7 +180,7 @@ export function RepairPage() {
 }
 
 // 수리 완료 상세 보기 컴포넌트
-function RepairDetailView({ repair, onBack: _onBack }: { repair: RepairReport; onBack: () => void }) {
+function RepairDetailView({ repair }: { repair: RepairReport; onBack: () => void }) {
   const getRepairTypeColor = (type: string) => {
     switch (type) {
       case 'preventive': return 'text-green-600 bg-green-50 dark:bg-green-900/20'
@@ -218,15 +209,7 @@ function RepairDetailView({ repair, onBack: _onBack }: { repair: RepairReport; o
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">설비명:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{repair.equipmentName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">설비번호:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{repair.equipmentNumber}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">위치:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{repair.location}</span>
+              <span className="font-medium text-gray-900 dark:text-white">설비 ID: {repair.equipmentId}</span>
             </div>
           </div>
         </div>
@@ -237,14 +220,6 @@ function RepairDetailView({ repair, onBack: _onBack }: { repair: RepairReport; o
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">이름:</span>
               <span className="font-medium text-gray-900 dark:text-white">{repair.technicianName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">연락처:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{repair.technicianPhone}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">부서:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{repair.department}</span>
             </div>
           </div>
         </div>
@@ -283,14 +258,6 @@ function RepairDetailView({ repair, onBack: _onBack }: { repair: RepairReport; o
             </p>
           </div>
           
-          {repair.partsUsed && (
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">사용 부품/소모품</h4>
-              <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/20 p-4 rounded-lg">
-                {repair.partsUsed}
-              </p>
-            </div>
-          )}
           
           <div>
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">테스트 결과</h4>
@@ -309,18 +276,6 @@ function RepairDetailView({ repair, onBack: _onBack }: { repair: RepairReport; o
             <div className="text-2xl font-bold text-blue-600">{repair.timeSpent}h</div>
             <div className="text-sm text-gray-600 dark:text-gray-400">작업 시간</div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{repair.laborCost.toLocaleString()}원</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">인건비</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">{repair.partsCost.toLocaleString()}원</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">부품비</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{repair.totalCost.toLocaleString()}원</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">총 비용</div>
-          </div>
         </div>
       </div>
 
@@ -334,14 +289,6 @@ function RepairDetailView({ repair, onBack: _onBack }: { repair: RepairReport; o
               {new Date(repair.completedAt).toLocaleString()}
             </span>
           </div>
-          {repair.nextMaintenanceDate && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-gray-400">다음 정비 예정일:</span>
-              <span className="font-medium text-gray-900 dark:text-white">
-                {new Date(repair.nextMaintenanceDate).toLocaleDateString()}
-              </span>
-            </div>
-          )}
           {repair.notes && (
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white mb-2">추가 참고사항</h4>

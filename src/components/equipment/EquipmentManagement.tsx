@@ -176,7 +176,8 @@ export function EquipmentManagement() {
           }
 
           newEquipments.push(equipment)
-        } catch (_error) {
+        } catch (error) {
+          console.error('Equipment validation error:', error)
           validationErrors.push(`행 ${index + 2}: 데이터 처리 중 오류가 발생했습니다.`)
         }
       })

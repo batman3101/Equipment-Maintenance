@@ -8,12 +8,9 @@ import { useToast } from '@/contexts/ToastContext'
 
 interface BreakdownReport {
   id: string
+  equipmentCategory: string
   equipmentNumber: string
-  equipmentName: string
-  location: string
   reporterName: string
-  reporterPhone: string
-  department: string
   urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
   issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
   description: string
@@ -36,7 +33,7 @@ export function BreakdownPage() {
     setSelectedReport(null)
   }
 
-  const handleReportSubmit = (report: Omit<BreakdownReport, 'id' | 'status' | 'reportedAt' | 'updatedAt'>) => {
+  const handleReportSubmit = (report: { equipmentCategory: string; equipmentNumber: string; reporterName: string; urgencyLevel: 'low' | 'medium' | 'high' | 'critical'; issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'; description: string; symptoms: string }) => {
     console.log('새 고장 신고 제출:', report)
     // 여기서 실제 API 호출이나 상태 업데이트
     
@@ -99,7 +96,7 @@ export function BreakdownPage() {
                 <div className="flex items-center">
                   <span className="mx-2 text-gray-400">/</span>
                   <span className="text-gray-500 dark:text-gray-400">
-                    {selectedReport?.equipmentName} 상세
+                    {selectedReport?.equipmentNumber} 상세
                   </span>
                 </div>
               </li>
@@ -137,7 +134,7 @@ export function BreakdownPage() {
                 고장 신고 상세 정보
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                {selectedReport?.equipmentName} ({selectedReport?.equipmentNumber})
+                설비번호: {selectedReport?.equipmentNumber}
               </p>
             </div>
             <div className="flex space-x-2">
@@ -185,7 +182,7 @@ export function BreakdownPage() {
 }
 
 // 고장 신고 상세 보기 컴포넌트
-function BreakdownDetailView({ report, onBack: _onBack }: { report: BreakdownReport; onBack: () => void }) {
+function BreakdownDetailView({ report }: { report: BreakdownReport; onBack: () => void }) {
   const getUrgencyColor = (level: string) => {
     switch (level) {
       case 'low': return 'text-green-600 bg-green-50 dark:bg-green-900/20'
@@ -215,16 +212,12 @@ function BreakdownDetailView({ report, onBack: _onBack }: { report: BreakdownRep
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">설비 정보</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">설비명:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{report.equipmentName}</span>
+              <span className="text-gray-600 dark:text-gray-400">설비 종류:</span>
+              <span className="font-medium text-gray-900 dark:text-white">{report.equipmentCategory}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">설비번호:</span>
               <span className="font-medium text-gray-900 dark:text-white">{report.equipmentNumber}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">위치:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{report.location}</span>
             </div>
           </div>
         </div>
@@ -233,16 +226,8 @@ function BreakdownDetailView({ report, onBack: _onBack }: { report: BreakdownRep
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">신고자 정보</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">이름:</span>
+              <span className="text-gray-600 dark:text-gray-400">신고자 이름:</span>
               <span className="font-medium text-gray-900 dark:text-white">{report.reporterName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">연락처:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{report.reporterPhone}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">부서:</span>
-              <span className="font-medium text-gray-900 dark:text-white">{report.department}</span>
             </div>
           </div>
         </div>

@@ -5,12 +5,9 @@ import { Card, StatusBadge } from '@/components/ui'
 
 interface BreakdownReport {
   id: string
+  equipmentCategory: string
   equipmentNumber: string
-  equipmentName: string
-  location: string
   reporterName: string
-  reporterPhone: string
-  department: string
   urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
   issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
   description: string
@@ -25,12 +22,9 @@ interface BreakdownReport {
 const mockBreakdownReports: BreakdownReport[] = [
   {
     id: '1',
+    equipmentCategory: '선반',
     equipmentNumber: 'CNC-LT-001',
-    equipmentName: 'CNC 선반 #1',
-    location: '1공장 B라인',
     reporterName: '김기술자',
-    reporterPhone: '010-1234-5678',
-    department: '생산1팀',
     urgencyLevel: 'high',
     issueType: 'mechanical',
     description: '스핀들에서 이상한 소음이 발생하며 진동이 심합니다. 가공 정확도에 영향을 주고 있어 즉시 점검이 필요합니다.',
@@ -42,12 +36,9 @@ const mockBreakdownReports: BreakdownReport[] = [
   },
   {
     id: '2',
+    equipmentCategory: '드릴링머신',
     equipmentNumber: 'CNC-DR-001',
-    equipmentName: 'CNC 드릴링머신 #1',
-    location: '2공장 A라인',
     reporterName: '이현장',
-    reporterPhone: '010-2345-6789',
-    department: '생산2팀',
     urgencyLevel: 'medium',
     issueType: 'electrical',
     description: '제어판에 에러 코드 E-203이 간헐적으로 표시됩니다. 작업은 계속 가능하지만 점검이 필요해 보입니다.',
@@ -59,12 +50,9 @@ const mockBreakdownReports: BreakdownReport[] = [
   },
   {
     id: '3',
+    equipmentCategory: '밀링머신',
     equipmentNumber: 'CNC-ML-001',
-    equipmentName: 'CNC 밀링머신 #1',
-    location: '1공장 A라인',
     reporterName: '정기술자',
-    reporterPhone: '010-3456-7890',
-    department: '생산1팀',
     urgencyLevel: 'critical',
     issueType: 'safety',
     description: '안전 커버가 완전히 닫히지 않아 안전 센서가 작동하지 않습니다. 작업자 안전을 위해 즉시 사용 중단했습니다.',
@@ -250,11 +238,9 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
                       <h4 className="font-bold text-gray-900 dark:text-white">
-                        {report.equipmentName}
+                        {report.equipmentCategory} ({report.equipmentNumber})
                       </h4>
-                      <span className="text-sm text-gray-500">({report.equipmentNumber})</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{report.location}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <StatusBadge variant={getUrgencyColor(report.urgencyLevel)}>
@@ -277,7 +263,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
 
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center space-x-4">
-                    <span><strong>신고자:</strong> {report.reporterName} ({report.department})</span>
+                    <span><strong>신고자:</strong> {report.reporterName}</span>
                     <span><strong>유형:</strong> {getIssueTypeText(report.issueType)}</span>
                     {report.assignedTo && (
                       <span><strong>담당자:</strong> {report.assignedTo}</span>
