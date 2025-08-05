@@ -5,25 +5,13 @@ import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 
 interface RepairReport {
-  breakdownReportId?: string
   equipmentId: string
-  equipmentNumber: string
-  equipmentName: string
-  category: string
-  location: string
   technicianName: string
-  technicianPhone: string
-  department: string
   repairType: 'preventive' | 'corrective' | 'emergency' | 'upgrade'
-  workDescription: string
-  partsUsed: string
-  timeSpent: number
-  laborCost: number
-  partsCost: number
-  totalCost: number
   completionStatus: 'completed' | 'partial' | 'failed'
+  workDescription: string
+  timeSpent: number
   testResults: string
-  nextMaintenanceDate?: string
   notes?: string
 }
 
@@ -90,26 +78,17 @@ const completionStatuses = [
 interface RepairReportFormProps {
   onSubmit?: (report: RepairReport) => void
   onCancel?: () => void
-  preSelectedEquipmentId?: string
-  relatedBreakdownId?: string
 }
 
-export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, relatedBreakdownId }: RepairReportFormProps) {
+export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) {
   const { showSuccess, showError } = useToast()
   const [formData, setFormData] = useState<Partial<RepairReport>>({
-    equipmentId: preSelectedEquipmentId || '',
-    breakdownReportId: relatedBreakdownId || '',
+    equipmentId: '',
+    technicianName: '',
     repairType: 'corrective',
     completionStatus: 'completed',
-    technicianName: '',
-    technicianPhone: '',
-    department: '',
     workDescription: '',
-    partsUsed: '',
     timeSpent: 0,
-    laborCost: 0,
-    partsCost: 0,
-    totalCost: 0,
     testResults: '',
     notes: ''
   })
@@ -117,17 +96,6 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const selectedEquipment = mockEquipmentOptions.find(eq => eq.id === formData.equipmentId)
-
-  // 총 비용 자동 계산
-  React.useEffect(() => {
-    const laborCost = formData.laborCost || 0
-    const partsCost = formData.partsCost || 0
-    const totalCost = laborCost + partsCost
-    
-    if (totalCost !== formData.totalCost) {
-      setFormData(prev => ({ ...prev, totalCost }))
-    }
-  }, [formData.laborCost, formData.partsCost, formData.totalCost])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -138,17 +106,11 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
     if (!formData.technicianName?.trim()) {
       newErrors.technicianName = '기술자 이름을 입력해주세요'
     }
-    if (!formData.technicianPhone?.trim()) {
-      newErrors.technicianPhone = '연락처를 입력해주세요'
-    }
-    if (!formData.department?.trim()) {
-      newErrors.department = '부서를 입력해주세요'
-    }
     if (!formData.workDescription?.trim()) {
-      newErrors.workDescription = '작업 내용을 입력해주세요'
+      newErrors.workDescription = '수행한 작업 내용을 입력해주세요'
     }
     if (!formData.testResults?.trim()) {
-      newErrors.testResults = '테스트 결과를 입력해주세요'
+      newErrors.testResults = '테스트 및 검증 결과를 입력해주세요'
     }
     if (!formData.timeSpent || formData.timeSpent <= 0) {
       newErrors.timeSpent = '작업 시간을 입력해주세요'
@@ -166,13 +128,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
     setLoading(true)
     
     try {
-      const reportData: RepairReport = {
-        ...formData,
-        equipmentNumber: selectedEquipment?.equipment_number || '',
-        equipmentName: selectedEquipment?.equipment_name || '',
-        category: selectedEquipment?.category || '',
-        location: selectedEquipment?.location || ''
-      } as RepairReport
+      const reportData: RepairReport = formData as RepairReport
 
       // 여기서 실제 API 호출이나 상태 업데이트
       console.log('수리 완료 보고 데이터:', reportData)
@@ -184,7 +140,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
       
       showSuccess(
         '수리 완료 보고',
-        `${selectedEquipment?.equipment_name}의 수리 완료가 성공적으로 등록되었습니다.`
+        `${selectedEquipment?.equipment_name || '선택된 설비'}의 수리 완료가 성공적으로 등록되었습니다.`
       )
       
     } catch (error) {
@@ -210,76 +166,56 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
         
         <Card.Content>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 설비 선택 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="lg:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  수리 설비 <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.equipmentId || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, equipmentId: e.target.value }))}
-                  className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
-                    errors.equipmentId 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                      : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
-                  } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
-                >
-                  <option value="">설비를 선택하세요</option>
-                  {mockEquipmentOptions.map((equipment) => (
-                    <option key={equipment.id} value={equipment.id}>
-                      {equipment.equipment_number} - {equipment.equipment_name} ({equipment.location})
-                    </option>
-                  ))}
-                </select>
-                {errors.equipmentId && <p className="mt-1 text-sm text-red-600">{errors.equipmentId}</p>}
-              </div>
-
-              {/* 선택된 설비 정보 표시 */}
-              {selectedEquipment && (
-                <div className="lg:col-span-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <h3 className="font-medium text-green-900 dark:text-green-300 mb-2">수리 완료 설비</h3>
-                  <div className="text-sm text-green-800 dark:text-green-200 space-y-1">
-                    <p><strong>설비명:</strong> {selectedEquipment.equipment_name}</p>
-                    <p><strong>설비번호:</strong> {selectedEquipment.equipment_number}</p>
-                    <p><strong>카테고리:</strong> {selectedEquipment.category}</p>
-                    <p><strong>위치:</strong> {selectedEquipment.location}</p>
-                  </div>
-                </div>
-              )}
+            {/* 1. 설비를 선택하세요 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                설비를 선택하세요 <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.equipmentId || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, equipmentId: e.target.value }))}
+                className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                  errors.equipmentId 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
+                } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
+              >
+                <option value="">설비를 선택하세요</option>
+                {mockEquipmentOptions.map((equipment) => (
+                  <option key={equipment.id} value={equipment.id}>
+                    {equipment.equipment_number} - {equipment.equipment_name} ({equipment.location})
+                  </option>
+                ))}
+              </select>
+              {errors.equipmentId && <p className="mt-1 text-sm text-red-600">{errors.equipmentId}</p>}
             </div>
 
-            {/* 기술자 정보 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* 선택된 설비 정보 표시 */}
+            {selectedEquipment && (
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <h3 className="font-medium text-green-900 dark:text-green-300 mb-2">선택된 설비 정보</h3>
+                <div className="text-sm text-green-800 dark:text-green-200 space-y-1">
+                  <p><strong>설비명:</strong> {selectedEquipment.equipment_name}</p>
+                  <p><strong>설비번호:</strong> {selectedEquipment.equipment_number}</p>
+                  <p><strong>카테고리:</strong> {selectedEquipment.category}</p>
+                  <p><strong>위치:</strong> {selectedEquipment.location}</p>
+                </div>
+              </div>
+            )}
+
+            {/* 2. 기술자 이름 */}
+            <div>
               <Input
                 label="기술자 이름"
                 value={formData.technicianName || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, technicianName: e.target.value }))}
-                placeholder="수리 담당자 이름"
+                placeholder="수리 담당자 이름을 입력하세요"
                 required
                 error={errors.technicianName}
               />
-              
-              <Input
-                label="연락처"
-                value={formData.technicianPhone || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, technicianPhone: e.target.value }))}
-                placeholder="기술자 연락처"
-                required
-                error={errors.technicianPhone}
-              />
-              
-              <Input
-                label="소속 부서"
-                value={formData.department || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                placeholder="정비팀, 기술팀 등"
-                required
-                error={errors.department}
-              />
             </div>
 
-            {/* 수리 유형 및 완료 상태 */}
+            {/* 3. 수리유형 및 4. 완료상태 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -316,7 +252,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               </div>
             </div>
 
-            {/* 작업 내용 */}
+            {/* 5. 수행한 작업 내용 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 수행한 작업 내용 <span className="text-red-500">*</span>
@@ -335,62 +271,22 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               {errors.workDescription && <p className="mt-1 text-sm text-red-600">{errors.workDescription}</p>}
             </div>
 
-            {/* 사용 부품 */}
+            {/* 6. 작업시간 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                사용 부품/소모품
-              </label>
-              <textarea
-                value={formData.partsUsed || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, partsUsed: e.target.value }))}
-                placeholder="교체한 부품, 사용한 소모품 목록 (부품명, 수량, 규격 등)"
-                rows={3}
-                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-              />
-            </div>
-
-            {/* 시간 및 비용 */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <Input
                 label="작업 시간 (시간)"
                 type="number"
                 value={formData.timeSpent?.toString() || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, timeSpent: parseFloat(e.target.value) || 0 }))}
-                placeholder="0.5"
+                placeholder="예: 2.5"
                 required
                 error={errors.timeSpent}
                 min="0"
                 step="0.5"
               />
-              
-              <Input
-                label="인건비 (원)"
-                type="number"
-                value={formData.laborCost?.toString() || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, laborCost: parseFloat(e.target.value) || 0 }))}
-                placeholder="0"
-                min="0"
-              />
-              
-              <Input
-                label="부품비 (원)"
-                type="number"
-                value={formData.partsCost?.toString() || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, partsCost: parseFloat(e.target.value) || 0 }))}
-                placeholder="0"
-                min="0"
-              />
-              
-              <Input
-                label="총 비용 (원)"
-                type="number"
-                value={formData.totalCost?.toString() || ''}
-                readOnly
-                className="bg-gray-50 dark:bg-gray-900"
-              />
             </div>
 
-            {/* 테스트 결과 */}
+            {/* 7. 테스트 및 검증 결과 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 테스트 및 검증 결과 <span className="text-red-500">*</span>
@@ -398,7 +294,7 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               <textarea
                 value={formData.testResults || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, testResults: e.target.value }))}
-                placeholder="수리 후 동작 테스트 결과, 성능 확인 내용 등"
+                placeholder="수리 후 동작 테스트 결과, 성능 확인 내용 등을 상세히 기술해주세요"
                 rows={3}
                 className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 resize-none ${
                   errors.testResults 
@@ -409,27 +305,18 @@ export function RepairReportForm({ onSubmit, onCancel, preSelectedEquipmentId, r
               {errors.testResults && <p className="mt-1 text-sm text-red-600">{errors.testResults}</p>}
             </div>
 
-            {/* 다음 정비 일정 및 참고사항 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Input
-                label="다음 정비 예정일"
-                type="date"
-                value={formData.nextMaintenanceDate || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, nextMaintenanceDate: e.target.value }))}
+            {/* 8. 추가 참고사항 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                추가 참고사항
+              </label>
+              <textarea
+                value={formData.notes || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="향후 유지보수 시 참고할 내용이나 주의사항이 있으면 기술해주세요"
+                rows={3}
+                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
               />
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  추가 참고사항
-                </label>
-                <textarea
-                  value={formData.notes || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="향후 유지보수 시 참고할 내용이나 주의사항"
-                  rows={2}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-              </div>
             </div>
 
             {/* 제출 버튼 */}

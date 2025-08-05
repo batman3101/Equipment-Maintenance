@@ -8,66 +8,56 @@ import { useToast } from '@/contexts/ToastContext'
 
 interface Equipment {
   id: string
+  equipmentType: string
   equipmentNumber: string
-  equipmentName: string
-  model: string
-  manufacturer: string
   location: string
-  department: string
   installDate: string
-  lastMaintenanceDate?: string
-  nextMaintenanceDate?: string
-  status: 'operational' | 'maintenance' | 'broken' | 'idle'
-  operatingHours: number
-  notes?: string
+  status: 'operational' | 'maintenance' | 'broken' | 'test' | 'idle'
 }
+
+const equipmentTypes = [
+  { value: 'CNC', label: 'CNC' },
+  { value: 'CLEANING', label: 'CLEANING' },
+  { value: 'DEBURRING', label: 'DEBURRING' },
+  { value: 'TRI', label: 'TRI' },
+  { value: 'AIR_DRYER', label: 'AIR DRYER' },
+  { value: 'BOILER', label: 'BOILER' },
+  { value: 'RO_WATER_MAKER', label: 'RO WATER MAKER' },
+  { value: 'COOLANT_MIXING_UNIT', label: 'COOLANT MIXING UNIT' },
+  { value: 'SCRAP_COMPACTOR', label: 'SCRAP COMPACTOR' },
+  { value: 'SCRAP_WASHING_MACHINE', label: 'SCRAP WASHING MACHINE' }
+]
+
+const equipmentLocations = [
+  { value: 'BUILD_A', label: 'BUILD A' },
+  { value: 'BUILD_B', label: 'BUILD B' }
+]
 
 // Mock equipment data
 const mockEquipments: Equipment[] = [
   {
     id: '1',
-    equipmentNumber: 'CNC-ML-001',
-    equipmentName: 'CNC 밀링머신 #1',
-    model: 'VMC-850E',
-    manufacturer: 'DOOSAN',
-    location: '1공장 A라인',
-    department: '생산1팀',
+    equipmentType: 'CNC',
+    equipmentNumber: 'CNC-001',
+    location: 'BUILD_A',
     installDate: '2020-03-15',
-    lastMaintenanceDate: '2024-01-10',
-    nextMaintenanceDate: '2024-04-10',
-    status: 'operational',
-    operatingHours: 12480,
-    notes: '정상 가동 중'
+    status: 'operational'
   },
   {
     id: '2',
-    equipmentNumber: 'CNC-LT-001',
-    equipmentName: 'CNC 선반 #1',
-    model: 'PUMA-280Y',
-    manufacturer: 'DOOSAN',
-    location: '1공장 B라인',
-    department: '생산1팀',
+    equipmentType: 'CLEANING',
+    equipmentNumber: 'CLEAN-001',
+    location: 'BUILD_A',
     installDate: '2019-11-20',
-    lastMaintenanceDate: '2024-01-05',
-    nextMaintenanceDate: '2024-04-05',
-    status: 'maintenance',
-    operatingHours: 15680,
-    notes: '스핀들 베어링 교체 중'
+    status: 'maintenance'
   },
   {
     id: '3',
-    equipmentNumber: 'CNC-DR-001',
-    equipmentName: 'CNC 드릴링머신 #1',
-    model: 'D-650',
-    manufacturer: 'KITECH',
-    location: '2공장 A라인',
-    department: '생산2팀',
+    equipmentType: 'DEBURRING',
+    equipmentNumber: 'DEBUR-001',
+    location: 'BUILD_B',
     installDate: '2021-08-10',
-    lastMaintenanceDate: '2023-12-20',
-    nextMaintenanceDate: '2024-03-20',
-    status: 'operational',
-    operatingHours: 8940,
-    notes: '정상 가동 중'
+    status: 'operational'
   }
 ]
 
@@ -76,6 +66,7 @@ const getStatusColor = (status: string) => {
     case 'operational': return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
     case 'maintenance': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200'
     case 'broken': return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200'
+    case 'test': return 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
     case 'idle': return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
     default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
   }
@@ -86,7 +77,8 @@ const getStatusText = (status: string) => {
     case 'operational': return '가동중'
     case 'maintenance': return '정비중'
     case 'broken': return '고장'
-    case 'idle': return '대기'
+    case 'test': return 'TEST'
+    case 'idle': return '대기중'
     default: return '알 수 없음'
   }
 }
@@ -97,16 +89,11 @@ export function EquipmentManagement() {
   const [isUploading, setIsUploading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
+    equipmentType: '',
     equipmentNumber: '',
-    equipmentName: '',
-    model: '',
-    manufacturer: '',
     location: '',
-    department: '',
     installDate: new Date().toISOString().split('T')[0],
-    status: 'operational',
-    operatingHours: 0,
-    notes: ''
+    status: 'operational'
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -114,18 +101,11 @@ export function EquipmentManagement() {
   const downloadTemplate = () => {
     const templateData = [
       {
-        '설비번호': 'CNC-ML-002',
-        '설비명': 'CNC 밀링머신 #2',
-        '모델명': 'VMC-850E',
-        '제조사': 'DOOSAN',
-        '위치': '1공장 C라인',
-        '담당부서': '생산1팀',
+        '설비종류': 'CNC',
+        '설비번호': 'CNC-002',
+        '설비위치': 'BUILD_A',
         '설치일자': '2024-01-15',
-        '최근정비일': '2024-01-10',
-        '다음정비일': '2024-04-10',
-        '상태': 'operational',
-        '가동시간': 0,
-        '비고': '신규 설비'
+        '상태': 'operational'
       }
     ]
 
@@ -135,18 +115,11 @@ export function EquipmentManagement() {
 
     // 컬럼 너비 조정
     ws['!cols'] = [
+      { wch: 15 }, // 설비종류
       { wch: 15 }, // 설비번호
-      { wch: 20 }, // 설비명
-      { wch: 15 }, // 모델명
-      { wch: 12 }, // 제조사
-      { wch: 15 }, // 위치
-      { wch: 12 }, // 담당부서
+      { wch: 15 }, // 설비위치
       { wch: 12 }, // 설치일자
-      { wch: 12 }, // 최근정비일
-      { wch: 12 }, // 다음정비일
-      { wch: 10 }, // 상태
-      { wch: 10 }, // 가동시간
-      { wch: 20 }  // 비고
+      { wch: 10 }  // 상태
     ]
 
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
@@ -173,8 +146,8 @@ export function EquipmentManagement() {
       (jsonData as Record<string, unknown>[]).forEach((row: Record<string, unknown>, index: number) => {
         try {
           // 필수 필드 검증
-          if (!row['설비번호'] || !row['설비명']) {
-            validationErrors.push(`행 ${index + 2}: 설비번호와 설비명은 필수입니다.`)
+          if (!row['설비종류'] || !row['설비번호']) {
+            validationErrors.push(`행 ${index + 2}: 설비종류와 설비번호는 필수입니다.`)
             return
           }
 
@@ -186,27 +159,20 @@ export function EquipmentManagement() {
           }
 
           // 상태 값 검증
-          const validStatuses = ['operational', 'maintenance', 'broken', 'idle']
+          const validStatuses = ['operational', 'maintenance', 'broken', 'test', 'idle']
           const status = String(row['상태'] || 'operational')
           if (!validStatuses.includes(status)) {
-            validationErrors.push(`행 ${index + 2}: 상태값은 'operational', 'maintenance', 'broken', 'idle' 중 하나여야 합니다.`)
+            validationErrors.push(`행 ${index + 2}: 상태값은 'operational', 'maintenance', 'broken', 'test', 'idle' 중 하나여야 합니다.`)
             return
           }
 
           const equipment: Equipment = {
             id: Date.now().toString() + index,
+            equipmentType: String(row['설비종류']),
             equipmentNumber: String(row['설비번호']),
-            equipmentName: String(row['설비명']),
-            model: String(row['모델명'] || ''),
-            manufacturer: String(row['제조사'] || ''),
-            location: String(row['위치'] || ''),
-            department: String(row['담당부서'] || ''),
+            location: String(row['설비위치'] || 'BUILD_A'),
             installDate: String(row['설치일자'] || new Date().toISOString().split('T')[0]),
-            lastMaintenanceDate: row['최근정비일'] ? String(row['최근정비일']) : undefined,
-            nextMaintenanceDate: row['다음정비일'] ? String(row['다음정비일']) : undefined,
-            status: status as Equipment['status'],
-            operatingHours: Number(row['가동시간']) || 0,
-            notes: row['비고'] ? String(row['비고']) : undefined
+            status: status as Equipment['status']
           }
 
           newEquipments.push(equipment)
@@ -252,10 +218,10 @@ export function EquipmentManagement() {
   // 개별 설비 등록
   const handleAddEquipment = () => {
     // 필수 필드 검증
-    if (!newEquipment.equipmentNumber || !newEquipment.equipmentName) {
+    if (!newEquipment.equipmentType || !newEquipment.equipmentNumber) {
       showError(
         '필수 정보 누락',
-        '설비번호와 설비명은 필수 입력 항목입니다.'
+        '설비종류와 설비번호는 필수 입력 항목입니다.'
       )
       return
     }
@@ -273,38 +239,26 @@ export function EquipmentManagement() {
     // 새 설비 추가
     const equipment: Equipment = {
       id: Date.now().toString(),
+      equipmentType: newEquipment.equipmentType!,
       equipmentNumber: newEquipment.equipmentNumber!,
-      equipmentName: newEquipment.equipmentName!,
-      model: newEquipment.model || '',
-      manufacturer: newEquipment.manufacturer || '',
-      location: newEquipment.location || '',
-      department: newEquipment.department || '',
+      location: newEquipment.location || 'BUILD_A',
       installDate: newEquipment.installDate || new Date().toISOString().split('T')[0],
-      lastMaintenanceDate: newEquipment.lastMaintenanceDate || undefined,
-      nextMaintenanceDate: newEquipment.nextMaintenanceDate || undefined,
-      status: newEquipment.status as Equipment['status'] || 'operational',
-      operatingHours: newEquipment.operatingHours || 0,
-      notes: newEquipment.notes || undefined
+      status: newEquipment.status as Equipment['status'] || 'operational'
     }
 
     setEquipments(prev => [...prev, equipment])
     showSuccess(
       '등록 성공',
-      `설비 '${equipment.equipmentName}'이 성공적으로 등록되었습니다.`
+      `설비 '${equipment.equipmentNumber}'이 성공적으로 등록되었습니다.`
     )
 
     // 폼 초기화 및 닫기
     setNewEquipment({
+      equipmentType: '',
       equipmentNumber: '',
-      equipmentName: '',
-      model: '',
-      manufacturer: '',
       location: '',
-      department: '',
       installDate: new Date().toISOString().split('T')[0],
-      status: 'operational',
-      operatingHours: 0,
-      notes: ''
+      status: 'operational'
     })
     setShowAddForm(false)
   }
@@ -313,16 +267,11 @@ export function EquipmentManagement() {
   const handleCancelAdd = () => {
     setShowAddForm(false)
     setNewEquipment({
+      equipmentType: '',
       equipmentNumber: '',
-      equipmentName: '',
-      model: '',
-      manufacturer: '',
       location: '',
-      department: '',
       installDate: new Date().toISOString().split('T')[0],
-      status: 'operational',
-      operatingHours: 0,
-      notes: ''
+      status: 'operational'
     })
   }
 
@@ -394,89 +343,63 @@ export function EquipmentManagement() {
             </div>
           </Card.Header>
           <Card.Content>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* 필수 정보 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 1. 설비 종류 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설비번호 <span className="text-red-500">*</span>
+                  설비 종류 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={newEquipment.equipmentType || ''}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentType: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">설비 종류를 선택하세요</option>
+                  {equipmentTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. 설비 번호 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  설비 번호 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newEquipment.equipmentNumber || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentNumber: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: CNC-ML-002"
+                  placeholder="예: CNC-001"
                 />
               </div>
 
+              {/* 3. 설비 위치 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설비명 <span className="text-red-500">*</span>
+                  설비 위치 <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={newEquipment.equipmentName || ''}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: CNC 밀링머신 #2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  모델명
-                </label>
-                <input
-                  type="text"
-                  value={newEquipment.model || ''}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, model: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: VMC-850E"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  제조사
-                </label>
-                <input
-                  type="text"
-                  value={newEquipment.manufacturer || ''}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, manufacturer: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: DOOSAN"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  위치
-                </label>
-                <input
-                  type="text"
+                <select
                   value={newEquipment.location || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, location: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: 1공장 C라인"
-                />
+                >
+                  <option value="">위치를 선택하세요</option>
+                  {equipmentLocations.map((location) => (
+                    <option key={location.value} value={location.value}>
+                      {location.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
+              {/* 4. 설치 일자 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  담당부서
-                </label>
-                <input
-                  type="text"
-                  value={newEquipment.department || ''}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, department: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: 생산1팀"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설치일자
+                  설치 일자 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -486,9 +409,10 @@ export function EquipmentManagement() {
                 />
               </div>
 
-              <div>
+              {/* 5. 상태 */}
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  상태
+                  상태 <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newEquipment.status || 'operational'}
@@ -498,59 +422,9 @@ export function EquipmentManagement() {
                   <option value="operational">가동중</option>
                   <option value="maintenance">정비중</option>
                   <option value="broken">고장</option>
-                  <option value="idle">대기</option>
+                  <option value="test">TEST</option>
+                  <option value="idle">대기중</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  가동시간 (시간)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={newEquipment.operatingHours || 0}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, operatingHours: Number(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  최근 정비일
-                </label>
-                <input
-                  type="date"
-                  value={newEquipment.lastMaintenanceDate || ''}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, lastMaintenanceDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  다음 정비일
-                </label>
-                <input
-                  type="date"
-                  value={newEquipment.nextMaintenanceDate || ''}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, nextMaintenanceDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  비고
-                </label>
-                <textarea
-                  value={newEquipment.notes || ''}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="설비에 대한 추가 정보를 입력하세요"
-                />
               </div>
             </div>
 
@@ -625,19 +499,19 @@ export function EquipmentManagement() {
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    설비 정보
+                    설비 종류
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    위치/부서
+                    설비 번호
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    위치
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    설치일자
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     상태
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    가동시간
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    다음 정비일
                   </th>
                 </tr>
               </thead>
@@ -645,32 +519,27 @@ export function EquipmentManagement() {
                 {equipments.map((equipment) => (
                   <tr key={equipment.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {equipment.equipmentName}
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {equipment.equipmentNumber} · {equipment.model} ({equipment.manufacturer})
-                        </div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {equipmentTypes.find(type => type.value === equipment.equipmentType)?.label || equipment.equipmentType}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{equipment.location}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{equipment.department}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {equipment.equipmentNumber}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {equipmentLocations.find(loc => loc.value === equipment.location)?.label || equipment.location}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {new Date(equipment.installDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(equipment.status)}`}>
                         {getStatusText(equipment.status)}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {equipment.operatingHours.toLocaleString()}시간
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {equipment.nextMaintenanceDate 
-                        ? new Date(equipment.nextMaintenanceDate).toLocaleDateString() 
-                        : '-'
-                      }
                     </td>
                   </tr>
                 ))}
