@@ -1,0 +1,5 @@
+export { StatisticsPage } from './StatisticsPage'
+export { RealTimeMonitoring } from './RealTimeMonitoring'
+export { PerformanceAnalysis } from './PerformanceAnalysis'
+export { MaintenanceAnalysis } from './MaintenanceAnalysis'
+export { ComprehensiveReport } from './ComprehensiveReport'

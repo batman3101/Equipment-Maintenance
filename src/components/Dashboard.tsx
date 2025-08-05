@@ -8,6 +8,8 @@ import { EquipmentStatusMonitor, EquipmentManagement } from '@/components/equipm
 import { UserManagement } from '@/components/admin/UserManagement'
 import { BreakdownPage } from '@/components/breakdown'
 import { RepairPage } from '@/components/repair'
+import { StatisticsPage } from '@/components/statistics'
+import { TrendChart, DailyStatusCards } from '@/components/dashboard-widgets'
 
 export function Dashboard() {
   const { user, profile, signOut } = useAuth()
@@ -29,6 +31,12 @@ export function Dashboard() {
       case 'dashboard':
         return (
           <>
+            {/* Daily Status Cards */}
+            <DailyStatusCards className="mb-8" />
+
+            {/* Trend Analysis Chart */}
+            <TrendChart className="mb-8" />
+
             {/* Quick Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card hover className="cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg border-l-4 border-l-red-500">
@@ -92,81 +100,82 @@ export function Dashboard() {
               </Card>
             </div>
 
-            {/* Performance Metrics */}
+            {/* Performance Metrics - 개선된 버전 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700 shadow-lg">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
-                        <span className="text-white text-xl">📈</span>
+                      <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mr-4 shadow-md">
+                        <span className="text-white text-xl">📊</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">가동률</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">오늘 평균</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">평균 MTBF</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">이번 달</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">87.5%</div>
+                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">168h</div>
                       <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↗️ +2.3%
+                        ↗️ +12h
                       </div>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '87.5%' }}></div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                    <div>• 목표: 150h (달성)</div>
+                    <div>• 최고: CNC-LT-001 (245h)</div>
                   </div>
                 </Card.Content>
               </Card>
 
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700">
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700 shadow-lg">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
+                      <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mr-4 shadow-md">
                         <span className="text-white text-xl">⚡</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">효율성</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">품질 지수</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">평균 MTTR</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">수리 시간</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">94.2%</div>
+                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">2.4h</div>
                       <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↗️ +1.8%
+                        ↘️ -0.3h
                       </div>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '94.2%' }}></div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                    <div>• 목표: 3.0h (달성)</div>
+                    <div>• 최단: CNC-LT-001 (1.8h)</div>
                   </div>
                 </Card.Content>
               </Card>
 
-              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-700">
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-700 shadow-lg">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mr-4">
-                        <span className="text-white text-xl">🛠️</span>
+                      <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mr-4 shadow-md">
+                        <span className="text-white text-xl">🎯</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">정비율</h3>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">정비 완료율</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">이번 주</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">12건</div>
-                      <div className="text-sm text-red-600 dark:text-red-400 flex items-center">
-                        ↗️ +4건
+                      <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">91.7%</div>
+                      <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
+                        ↗️ +3.2%
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                    <span>예방: 8건</span>
-                    <span>사후: 3건</span>
-                    <span>긴급: 1건</span>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                    <div>• 완료: 22건 / 계획: 24건</div>
+                    <div>• 예방정비 비율: 75%</div>
                   </div>
                 </Card.Content>
               </Card>
@@ -317,19 +326,7 @@ export function Dashboard() {
         return <RepairPage />
       
       case 'statistics':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">통계</h2>
-            <Card>
-              <Card.Content className="text-center py-12">
-                <div className="text-4xl mb-4">📈</div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">통계 페이지</h3>
-                <p className="text-muted-foreground mb-4">각종 통계 및 분석 정보가 여기에 표시됩니다</p>
-                <Button>리포트 생성</Button>
-              </Card.Content>
-            </Card>
-          </div>
-        )
+        return <StatisticsPage />
       
       case 'users':
         return <UserManagement />
