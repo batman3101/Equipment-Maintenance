@@ -175,29 +175,4 @@ export function ToastContainer({ toasts, onClose }: {
   )
 }
 
-// CSS animations (이 부분은 globals.css에 추가해야 합니다)
-// const styles = `
-// @keyframes slide-in-right {
-//   from {
-//     transform: translateX(100%);
-//     opacity: 0;
-//   }
-//   to {
-//     transform: translateX(0);
-//     opacity: 1;
-//   }
-// }
-
-// @keyframes toast-progress {
-//   from {
-//     width: 100%;
-//   }
-//   to {
-//     width: 0%;
-//   }
-// }
-
-// .animate-slide-in-right {
-//   animation: slide-in-right 0.3s ease-out;
-// }
-// `
+// CSS animations are defined in globals.css
