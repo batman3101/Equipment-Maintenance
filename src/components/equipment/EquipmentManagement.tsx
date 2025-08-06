@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { Button, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
+import { useSystemSettings } from '@/contexts/SystemSettingsContext'
 
 interface Equipment {
   id: string
@@ -15,23 +16,6 @@ interface Equipment {
   status: 'operational' | 'maintenance' | 'broken' | 'test' | 'idle'
 }
 
-const equipmentTypes = [
-  { value: 'CNC', label: 'CNC' },
-  { value: 'CLEANING', label: 'CLEANING' },
-  { value: 'DEBURRING', label: 'DEBURRING' },
-  { value: 'TRI', label: 'TRI' },
-  { value: 'AIR_DRYER', label: 'AIR DRYER' },
-  { value: 'BOILER', label: 'BOILER' },
-  { value: 'RO_WATER_MAKER', label: 'RO WATER MAKER' },
-  { value: 'COOLANT_MIXING_UNIT', label: 'COOLANT MIXING UNIT' },
-  { value: 'SCRAP_COMPACTOR', label: 'SCRAP COMPACTOR' },
-  { value: 'SCRAP_WASHING_MACHINE', label: 'SCRAP WASHING MACHINE' }
-]
-
-const equipmentLocations = [
-  { value: 'BUILD_A', label: 'BUILD A' },
-  { value: 'BUILD_B', label: 'BUILD B' }
-]
 
 // Mock equipment data
 const mockEquipments: Equipment[] = [
@@ -61,30 +45,29 @@ const mockEquipments: Equipment[] = [
   }
 ]
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'operational': return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
-    case 'maintenance': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200'
-    case 'broken': return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200'
-    case 'test': return 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
-    case 'idle': return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-    default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+const getStatusColor = (status: string, settings: { equipment: { statuses: Array<{ value: string; label: string; color: string }> } }) => {
+  const statusConfig = settings.equipment.statuses.find((s) => s.value === status)
+  if (!statusConfig) return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  
+  const colorMap: Record<string, string> = {
+    green: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
+    yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200',
+    red: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200',
+    blue: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
+    gray: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
   }
+  
+  return colorMap[statusConfig.color] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
 }
 
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'operational': return '가동중'
-    case 'maintenance': return '정비중'
-    case 'broken': return '고장'
-    case 'test': return 'TEST'
-    case 'idle': return '대기중'
-    default: return '알 수 없음'
-  }
+const getStatusText = (status: string, settings: { equipment: { statuses: Array<{ value: string; label: string; color: string }> } }) => {
+  const statusConfig = settings.equipment.statuses.find((s) => s.value === status)
+  return statusConfig?.label || '알 수 없음'
 }
 
 export function EquipmentManagement() {
   const { showSuccess, showError, showWarning } = useToast()
+  const { settings } = useSystemSettings()
   const [equipments, setEquipments] = useState<Equipment[]>(mockEquipments)
   const [isUploading, setIsUploading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -93,7 +76,7 @@ export function EquipmentManagement() {
     equipmentNumber: '',
     location: '',
     installDate: new Date().toISOString().split('T')[0],
-    status: 'operational'
+    status: settings.equipment.defaultStatus as Equipment['status']
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -159,10 +142,10 @@ export function EquipmentManagement() {
           }
 
           // 상태 값 검증
-          const validStatuses = ['operational', 'maintenance', 'broken', 'test', 'idle']
-          const status = String(row['상태'] || 'operational')
+          const validStatuses = settings.equipment.statuses.map((s) => s.value)
+          const status = String(row['상태'] || settings.equipment.defaultStatus)
           if (!validStatuses.includes(status)) {
-            validationErrors.push(`행 ${index + 2}: 상태값은 'operational', 'maintenance', 'broken', 'test', 'idle' 중 하나여야 합니다.`)
+            validationErrors.push(`행 ${index + 2}: 상태값은 ${validStatuses.join(', ')} 중 하나여야 합니다.`)
             return
           }
 
@@ -170,7 +153,7 @@ export function EquipmentManagement() {
             id: Date.now().toString() + index,
             equipmentType: String(row['설비종류']),
             equipmentNumber: String(row['설비번호']),
-            location: String(row['설비위치'] || 'BUILD_A'),
+            location: String(row['설비위치'] || settings.equipment.locations[0]?.value || ''),
             installDate: String(row['설치일자'] || new Date().toISOString().split('T')[0]),
             status: status as Equipment['status']
           }
@@ -242,7 +225,7 @@ export function EquipmentManagement() {
       id: Date.now().toString(),
       equipmentType: newEquipment.equipmentType!,
       equipmentNumber: newEquipment.equipmentNumber!,
-      location: newEquipment.location || 'BUILD_A',
+      location: newEquipment.location || settings.equipment.locations[0]?.value || '',
       installDate: newEquipment.installDate || new Date().toISOString().split('T')[0],
       status: newEquipment.status as Equipment['status'] || 'operational'
     }
@@ -259,7 +242,7 @@ export function EquipmentManagement() {
       equipmentNumber: '',
       location: '',
       installDate: new Date().toISOString().split('T')[0],
-      status: 'operational'
+      status: settings.equipment.defaultStatus as Equipment['status']
     })
     setShowAddForm(false)
   }
@@ -272,7 +255,7 @@ export function EquipmentManagement() {
       equipmentNumber: '',
       location: '',
       installDate: new Date().toISOString().split('T')[0],
-      status: 'operational'
+      status: settings.equipment.defaultStatus as Equipment['status']
     })
   }
 
@@ -356,9 +339,9 @@ export function EquipmentManagement() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">설비 종류를 선택하세요</option>
-                  {equipmentTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
+                  {settings.equipment.categories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
                     </option>
                   ))}
                 </select>
@@ -389,7 +372,7 @@ export function EquipmentManagement() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">위치를 선택하세요</option>
-                  {equipmentLocations.map((location) => (
+                  {settings.equipment.locations.map((location) => (
                     <option key={location.value} value={location.value}>
                       {location.label}
                     </option>
@@ -416,15 +399,15 @@ export function EquipmentManagement() {
                   상태 <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={newEquipment.status || 'operational'}
+                  value={newEquipment.status || settings.equipment.defaultStatus}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, status: e.target.value as Equipment['status'] }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="operational">가동중</option>
-                  <option value="maintenance">정비중</option>
-                  <option value="broken">고장</option>
-                  <option value="test">TEST</option>
-                  <option value="idle">대기중</option>
+                  {settings.equipment.statuses.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -521,7 +504,7 @@ export function EquipmentManagement() {
                   <tr key={equipment.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {equipmentTypes.find(type => type.value === equipment.equipmentType)?.label || equipment.equipmentType}
+                        {settings.equipment.categories.find(category => category.value === equipment.equipmentType)?.label || equipment.equipmentType}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -531,15 +514,15 @@ export function EquipmentManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {equipmentLocations.find(loc => loc.value === equipment.location)?.label || equipment.location}
+                        {settings.equipment.locations.find(loc => loc.value === equipment.location)?.label || equipment.location}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {new Date(equipment.installDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(equipment.status)}`}>
-                        {getStatusText(equipment.status)}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(equipment.status, settings)}`}>
+                        {getStatusText(equipment.status, settings)}
                       </span>
                     </td>
                   </tr>

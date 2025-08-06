@@ -9,6 +9,7 @@ import { UserManagement } from '@/components/admin/UserManagement'
 import { BreakdownPage } from '@/components/breakdown'
 import { RepairPage } from '@/components/repair'
 import { StatisticsPage } from '@/components/statistics'
+import { SystemSettingsPage } from '@/components/settings'
 import { TrendChart, DailyStatusCards } from '@/components/dashboard-widgets'
 
 export function Dashboard() {
@@ -286,19 +287,7 @@ export function Dashboard() {
         return <UserManagement />
       
       case 'settings':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-6">시스템 설정</h2>
-            <Card>
-              <Card.Content className="text-center py-12">
-                <div className="text-4xl mb-4">⚙️</div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">시스템 설정 페이지</h3>
-                <p className="text-muted-foreground mb-4">시스템 설정 관리 기능이 여기에 표시됩니다</p>
-                <Button>설정 수정</Button>
-              </Card.Content>
-            </Card>
-          </div>
-        )
+        return <SystemSettingsPage />
       
       default:
         return null

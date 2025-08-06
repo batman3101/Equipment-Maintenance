@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
+import { useSystemSettings } from '@/contexts/SystemSettingsContext'
 
 interface BreakdownReport {
   equipmentCategory: string
@@ -14,31 +15,7 @@ interface BreakdownReport {
   symptoms: string
 }
 
-const equipmentCategories = [
-  { value: 'milling', label: '밀링머신' },
-  { value: 'lathe', label: '선반' },
-  { value: 'drilling', label: '드릴링머신' },
-  { value: 'grinding', label: '그라인딩머신' },
-  { value: 'laser', label: '레이저커터' },
-  { value: 'press', label: '프레스' },
-  { value: 'welding', label: '용접기' },
-  { value: 'other', label: '기타' }
-]
-
-const urgencyLevels = [
-  { value: 'low', label: '낮음 - 생산에 영향 없음', color: 'text-green-600' },
-  { value: 'medium', label: '보통 - 부분적 영향', color: 'text-yellow-600' },
-  { value: 'high', label: '높음 - 생산 중단', color: 'text-orange-600' },
-  { value: 'critical', label: '긴급 - 안전 위험', color: 'text-red-600' }
-]
-
-const issueTypes = [
-  { value: 'mechanical', label: '기계적 문제' },
-  { value: 'electrical', label: '전기적 문제' },
-  { value: 'software', label: '소프트웨어 문제' },
-  { value: 'safety', label: '안전 문제' },
-  { value: 'other', label: '기타' }
-]
+// 이제 시스템 설정에서 가져옵니다
 
 interface BreakdownReportFormProps {
   onSubmit?: (report: BreakdownReport) => void
@@ -47,11 +24,13 @@ interface BreakdownReportFormProps {
 
 export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormProps) {
   const { showSuccess, showError } = useToast()
+  const { settings } = useSystemSettings()
+  
   const [formData, setFormData] = useState<Partial<BreakdownReport>>({
     equipmentCategory: '',
     equipmentNumber: '',
     reporterName: '',
-    urgencyLevel: 'medium',
+    urgencyLevel: settings.breakdown.defaultUrgency as 'low' | 'medium' | 'high' | 'critical',
     issueType: 'mechanical',
     description: '',
     symptoms: ''
@@ -154,7 +133,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
                 } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
               >
                 <option value="">설비 종류를 선택하세요</option>
-                {equipmentCategories.map((category) => (
+                {settings.equipment.categories.map((category) => (
                   <option key={category.value} value={category.value}>
                     {category.label}
                   </option>
@@ -198,7 +177,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
                   onChange={(e) => setFormData(prev => ({ ...prev, urgencyLevel: e.target.value as 'low' | 'medium' | 'high' | 'critical' }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  {urgencyLevels.map((level) => (
+                  {settings.breakdown.urgencyLevels.map((level) => (
                     <option key={level.value} value={level.value}>
                       {level.label}
                     </option>
@@ -215,7 +194,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
                   onChange={(e) => setFormData(prev => ({ ...prev, issueType: e.target.value as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other' }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  {issueTypes.map((type) => (
+                  {settings.breakdown.issueTypes.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
