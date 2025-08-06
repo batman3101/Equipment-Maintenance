@@ -46,11 +46,11 @@ export default function RootLayout({
                   document.documentElement.setAttribute('data-theme', theme);
                   document.documentElement.style.colorScheme = theme;
                   // FOUC 방지를 위한 기본 스타일만 적용
-                  document.documentElement.style.backgroundColor = theme === 'dark' ? '#0f172a' : '#f8fafc';
+                  document.documentElement.style.backgroundColor = theme === 'dark' ? '#0f172a' : '#ffffff';
                 } catch (e) {
                   document.documentElement.setAttribute('data-theme', 'light');
                   document.documentElement.style.colorScheme = 'light';
-                  document.documentElement.style.backgroundColor = '#f8fafc';
+                  document.documentElement.style.backgroundColor = '#ffffff';
                 }
               })();
             `,

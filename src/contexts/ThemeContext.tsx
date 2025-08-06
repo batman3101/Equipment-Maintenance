@@ -21,6 +21,7 @@ interface ThemeProviderProps {
 // [SRP] Rule: 테마 상태 관리와 로컬 스토리지 동기화만 담당
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>('light')
+  const lastToggleTime = React.useRef(0)
 
   // 초기 테마 설정
   useEffect(() => {
@@ -52,7 +53,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.style.colorScheme = theme
     
     // 배경색 즉시 적용 (FOUC 방지)
-    root.style.backgroundColor = theme === 'dark' ? '#0f172a' : '#f8fafc'
+    root.style.backgroundColor = theme === 'dark' ? '#0f172a' : '#ffffff'
 
     try {
       localStorage.setItem('cnc-theme', theme)
@@ -69,6 +70,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }
 
   const toggleTheme = () => {
+    const now = Date.now()
+    
+    // 300ms 내 중복 클릭 방지
+    if (now - lastToggleTime.current < 300) {
+      console.log('ThemeContext: Duplicate toggle prevented')
+      return
+    }
+    
+    lastToggleTime.current = now
+    
     setTheme(prevTheme => {
       const newTheme = prevTheme === 'light' ? 'dark' : 'light'
       console.log('ThemeContext: Toggling theme from', prevTheme, 'to', newTheme)

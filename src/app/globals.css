@@ -1,38 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  /* 화이트 모드: 옅은 회색 바탕 + 흰색 컴포넌트/컨테이너/카드 */
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  /* 라이트 모드 기본 설정: 깔끔한 흰색 바탕 + 검정 텍스트 */
+  --background: #ffffff;
+  --foreground: #1a202c;
 
   /* Brand colors for CNC maintenance */
-  --primary: #2563eb;
+  --primary: #3182ce;
   --primary-foreground: #ffffff;
-  --secondary: #64748b;
+  --secondary: #718096;
   --secondary-foreground: #ffffff;
 
   /* Status colors */
-  --success: #10b981;
+  --success: #38a169;
   --success-foreground: #ffffff;
-  --warning: #f59e0b;
+  --warning: #d69e2e;
   --warning-foreground: #ffffff;
-  --error: #ef4444;
+  --error: #e53e3e;
   --error-foreground: #ffffff;
-  --info: #3b82f6;
+  --info: #3182ce;
   --info-foreground: #ffffff;
 
   /* UI colors */
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted: #f7fafc;
+  --muted-foreground: #718096;
   --border: #e2e8f0;
   --input: #ffffff;
-  --ring: #2563eb;
+  --ring: #3182ce;
 
-  /* Card and surface colors - 흰색 컴포넌트/컨테이너/카드 */
+  /* Card and surface colors - 깔끔한 흰색 컴포넌트/컨테이너/카드 */
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #1a202c;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover-foreground: #1a202c;
   
   /* Animation control variables */
   --enable-animations: 1;
@@ -74,39 +74,39 @@
   --font-mono: ui-monospace, monospace;
 }
 
-/* 라이트모드: 명시적 정의 */
+/* 라이트모드: 명확한 밝은 테마 */
 .light {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #ffffff;
+  --foreground: #1a202c;
 
-  /* Brand colors for light mode */
-  --primary: #2563eb;
+  /* Brand colors for light mode - 더 뚜렷한 대비 */
+  --primary: #3182ce;
   --primary-foreground: #ffffff;
-  --secondary: #64748b;
+  --secondary: #718096;
   --secondary-foreground: #ffffff;
 
   /* Status colors for light mode */
-  --success: #10b981;
+  --success: #38a169;
   --success-foreground: #ffffff;
-  --warning: #f59e0b;
+  --warning: #d69e2e;
   --warning-foreground: #ffffff;
-  --error: #ef4444;
+  --error: #e53e3e;
   --error-foreground: #ffffff;
-  --info: #3b82f6;
+  --info: #3182ce;
   --info-foreground: #ffffff;
 
-  /* UI colors for light mode */
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  /* UI colors for light mode - 밝고 깔끔한 색상 */
+  --muted: #f7fafc;
+  --muted-foreground: #718096;
   --border: #e2e8f0;
   --input: #ffffff;
-  --ring: #2563eb;
+  --ring: #3182ce;
 
-  /* Card and surface colors for light mode - 흰색 컴포넌트/컨테이너/카드 */
+  /* Card and surface colors for light mode - 깔끔한 흰색 */
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #1a202c;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover-foreground: #1a202c;
 }
 
 /* 다크모드: 진한 청색 바탕 + 검정색 컴포넌트/컨테이너/카드 */
