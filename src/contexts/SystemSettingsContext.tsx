@@ -379,23 +379,25 @@ function validateFileSize(jsonString: string): void {
 }
 
 // 스키마 검증 함수
-function validateSettingsSchema(obj: any): obj is SystemSettings {
+function validateSettingsSchema(obj: unknown): obj is SystemSettings {
   try {
     // null 또는 undefined 체크
     if (!obj || typeof obj !== 'object') {
       return false
     }
 
+    const settings = obj as Record<string, unknown>
+
     // 필수 최상위 속성 체크
     const requiredKeys = ['general', 'equipment', 'breakdown', 'repair', 'notifications', 'data', 'ui', 'security']
     for (const key of requiredKeys) {
-      if (!(key in obj) || !obj[key] || typeof obj[key] !== 'object') {
+      if (!(key in settings) || !settings[key] || typeof settings[key] !== 'object') {
         return false
       }
     }
 
     // general 섹션 검증
-    const general = obj.general
+    const general = settings.general as Record<string, unknown>
     if (!general.systemName || typeof general.systemName !== 'string' || general.systemName.length > SETTINGS_VALIDATION.MAX_STRING_LENGTH) {
       return false
     }
@@ -405,7 +407,7 @@ function validateSettingsSchema(obj: any): obj is SystemSettings {
     if (typeof general.offlineMode !== 'boolean') {
       return false
     }
-    if (!['ko', 'en', 'vi'].includes(general.language)) {
+    if (!['ko', 'en', 'vi'].includes(general.language as string)) {
       return false
     }
     if (!general.timezone || typeof general.timezone !== 'string') {
@@ -413,7 +415,7 @@ function validateSettingsSchema(obj: any): obj is SystemSettings {
     }
 
     // equipment 섹션 검증
-    const equipment = obj.equipment
+    const equipment = settings.equipment as Record<string, unknown>
     if (!Array.isArray(equipment.categories) || equipment.categories.length > SETTINGS_VALIDATION.MAX_ARRAY_LENGTH) {
       return false
     }
@@ -425,14 +427,15 @@ function validateSettingsSchema(obj: any): obj is SystemSettings {
     }
     
     // 배열 요소들의 구조 검증
-    for (const category of equipment.categories) {
+    for (const item of equipment.categories as Array<unknown>) {
+      const category = item as Record<string, unknown>
       if (!category.value || !category.label || typeof category.value !== 'string' || typeof category.label !== 'string') {
         return false
       }
     }
 
     // notifications 섹션 검증
-    const notifications = obj.notifications
+    const notifications = settings.notifications as Record<string, unknown>
     if (typeof notifications.toastDuration !== 'number' || notifications.toastDuration < 1000 || notifications.toastDuration > 60000) {
       return false
     }
@@ -445,12 +448,12 @@ function validateSettingsSchema(obj: any): obj is SystemSettings {
     if (typeof notifications.maxToasts !== 'number' || notifications.maxToasts < 1 || notifications.maxToasts > 20) {
       return false
     }
-    if (!['top-right', 'top-left', 'bottom-right', 'bottom-left'].includes(notifications.position)) {
+    if (!['top-right', 'top-left', 'bottom-right', 'bottom-left'].includes(notifications.position as string)) {
       return false
     }
 
     // security 섹션 검증
-    const security = obj.security
+    const security = settings.security as Record<string, unknown>
     if (typeof security.sessionTimeout !== 'number' || security.sessionTimeout < 5 || security.sessionTimeout > 1440) {
       return false
     }
@@ -468,7 +471,7 @@ function validateSettingsSchema(obj: any): obj is SystemSettings {
     }
 
     return true
-  } catch (error) {
+  } catch {
     return false
   }
 }
