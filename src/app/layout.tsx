@@ -59,13 +59,13 @@ export default function RootLayout({
       </head>
       <body className="antialiased font-korean bg-background text-foreground">
         <ThemeProvider>
-          <SystemSettingsProvider>
-            <AuthProvider>
-              <ToastProvider>
+          <ToastProvider>
+            <SystemSettingsProvider>
+              <AuthProvider>
                 {children}
-              </ToastProvider>
-            </AuthProvider>
-          </SystemSettingsProvider>
+              </AuthProvider>
+            </SystemSettingsProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

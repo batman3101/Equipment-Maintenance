@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useToast } from './ToastContext'
 
 // 시스템 설정 인터페이스 정의
@@ -199,18 +199,24 @@ interface SystemSettingsProviderProps {
 }
 
 export function SystemSettingsProvider({ children }: SystemSettingsProviderProps) {
-  // Safely handle toast context during SSR/SSG
-  let showSuccess: (title: string, message: string) => void = () => {}
-  let showError: (title: string, message: string) => void = () => {}
+  // Always call useToast hook to follow rules of hooks
+  const toast = useToast()
   
-  try {
-    const toast = useToast()
-    showSuccess = toast.showSuccess
-    showError = toast.showError
-  } catch (error) {
-    // useToast hook is not available during SSR/SSG
-    console.warn('Toast context not available during server-side rendering')
-  }
+  const showSuccess = useCallback((title: string, message: string) => {
+    try {
+      toast.showSuccess(title, message)
+    } catch (error) {
+      console.warn('Toast not available:', error)
+    }
+  }, [toast])
+  
+  const showError = useCallback((title: string, message: string) => {
+    try {
+      toast.showError(title, message)
+    } catch (error) {
+      console.warn('Toast not available:', error)
+    }
+  }, [toast])
 
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
@@ -237,7 +243,7 @@ export function SystemSettingsProvider({ children }: SystemSettingsProviderProps
   }, [showError])
 
   // 설정 업데이트
-  const updateSettings = (updates: Partial<SystemSettings>) => {
+  const updateSettings = useCallback((updates: Partial<SystemSettings>) => {
     try {
       const newSettings = deepMerge(settings as unknown as Record<string, unknown>, updates as unknown as Record<string, unknown>) as unknown as SystemSettings
       setSettings(newSettings)
@@ -247,10 +253,10 @@ export function SystemSettingsProvider({ children }: SystemSettingsProviderProps
       console.error('Failed to update settings:', error)
       showError('설정 저장 실패', '시스템 설정 저장 중 오류가 발생했습니다.')
     }
-  }
+  }, [settings, showSuccess, showError])
 
   // 설정 초기화
-  const resetSettings = () => {
+  const resetSettings = useCallback(() => {
     try {
       setSettings(defaultSettings)
       localStorage.setItem('cnc-system-settings', JSON.stringify(defaultSettings))
@@ -259,10 +265,10 @@ export function SystemSettingsProvider({ children }: SystemSettingsProviderProps
       console.error('Failed to reset settings:', error)
       showError('설정 초기화 실패', '시스템 설정 초기화 중 오류가 발생했습니다.')
     }
-  }
+  }, [showSuccess, showError])
 
   // 설정 내보내기
-  const exportSettings = () => {
+  const exportSettings = useCallback(() => {
     try {
       const settingsJson = JSON.stringify(settings, null, 2)
       const blob = new Blob([settingsJson], { type: 'application/json' })
@@ -279,12 +285,23 @@ export function SystemSettingsProvider({ children }: SystemSettingsProviderProps
       console.error('Failed to export settings:', error)
       showError('설정 내보내기 실패', '시스템 설정 내보내기 중 오류가 발생했습니다.')
     }
-  }
+  }, [settings, showSuccess, showError])
 
   // 설정 가져오기
-  const importSettings = (settingsJson: string): boolean => {
+  const importSettings = useCallback((settingsJson: string): boolean => {
     try {
+      // 1. 파일 크기 검증
+      validateFileSize(settingsJson)
+      
+      // 2. JSON 파싱
       const parsedSettings = JSON.parse(settingsJson)
+      
+      // 3. 스키마 검증
+      if (!validateSettingsSchema(parsedSettings)) {
+        throw new Error('잘못된 설정 파일 형식입니다. 필수 필드가 누락되었거나 유효하지 않은 값이 있습니다.')
+      }
+      
+      // 4. 기본값과 병합 및 적용
       const mergedSettings = mergeWithDefaults(parsedSettings, defaultSettings)
       setSettings(mergedSettings)
       localStorage.setItem('cnc-system-settings', JSON.stringify(mergedSettings))
@@ -292,10 +309,20 @@ export function SystemSettingsProvider({ children }: SystemSettingsProviderProps
       return true
     } catch (error) {
       console.error('Failed to import settings:', error)
-      showError('설정 가져오기 실패', '잘못된 설정 파일입니다. 파일을 확인해주세요.')
+      
+      // 구체적인 에러 메시지 제공
+      let errorMessage = '설정 파일을 가져오는 중 오류가 발생했습니다.'
+      
+      if (error instanceof SyntaxError) {
+        errorMessage = '설정 파일이 올바른 JSON 형식이 아닙니다.'
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      }
+      
+      showError('설정 가져오기 실패', errorMessage)
       return false
     }
-  }
+  }, [showSuccess, showError])
 
   const value: SystemSettingsContextType = {
     settings,
@@ -334,6 +361,116 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
   }
   
   return result
+}
+
+// 상수 정의
+const SETTINGS_VALIDATION = {
+  MAX_FILE_SIZE: 1024 * 1024, // 1MB
+  MAX_STRING_LENGTH: 1000,
+  MAX_ARRAY_LENGTH: 100
+} as const
+
+// 파일 크기 검증 함수
+function validateFileSize(jsonString: string): void {
+  const fileSizeBytes = new Blob([jsonString]).size
+  if (fileSizeBytes > SETTINGS_VALIDATION.MAX_FILE_SIZE) {
+    throw new Error(`설정 파일이 너무 큽니다. 최대 크기: ${SETTINGS_VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB`)
+  }
+}
+
+// 스키마 검증 함수
+function validateSettingsSchema(obj: any): obj is SystemSettings {
+  try {
+    // null 또는 undefined 체크
+    if (!obj || typeof obj !== 'object') {
+      return false
+    }
+
+    // 필수 최상위 속성 체크
+    const requiredKeys = ['general', 'equipment', 'breakdown', 'repair', 'notifications', 'data', 'ui', 'security']
+    for (const key of requiredKeys) {
+      if (!(key in obj) || !obj[key] || typeof obj[key] !== 'object') {
+        return false
+      }
+    }
+
+    // general 섹션 검증
+    const general = obj.general
+    if (!general.systemName || typeof general.systemName !== 'string' || general.systemName.length > SETTINGS_VALIDATION.MAX_STRING_LENGTH) {
+      return false
+    }
+    if (!general.companyName || typeof general.companyName !== 'string' || general.companyName.length > SETTINGS_VALIDATION.MAX_STRING_LENGTH) {
+      return false
+    }
+    if (typeof general.offlineMode !== 'boolean') {
+      return false
+    }
+    if (!['ko', 'en', 'vi'].includes(general.language)) {
+      return false
+    }
+    if (!general.timezone || typeof general.timezone !== 'string') {
+      return false
+    }
+
+    // equipment 섹션 검증
+    const equipment = obj.equipment
+    if (!Array.isArray(equipment.categories) || equipment.categories.length > SETTINGS_VALIDATION.MAX_ARRAY_LENGTH) {
+      return false
+    }
+    if (!Array.isArray(equipment.locations) || equipment.locations.length > SETTINGS_VALIDATION.MAX_ARRAY_LENGTH) {
+      return false
+    }
+    if (!Array.isArray(equipment.statuses) || equipment.statuses.length > SETTINGS_VALIDATION.MAX_ARRAY_LENGTH) {
+      return false
+    }
+    
+    // 배열 요소들의 구조 검증
+    for (const category of equipment.categories) {
+      if (!category.value || !category.label || typeof category.value !== 'string' || typeof category.label !== 'string') {
+        return false
+      }
+    }
+
+    // notifications 섹션 검증
+    const notifications = obj.notifications
+    if (typeof notifications.toastDuration !== 'number' || notifications.toastDuration < 1000 || notifications.toastDuration > 60000) {
+      return false
+    }
+    if (typeof notifications.enableSound !== 'boolean') {
+      return false
+    }
+    if (typeof notifications.autoHide !== 'boolean') {
+      return false
+    }
+    if (typeof notifications.maxToasts !== 'number' || notifications.maxToasts < 1 || notifications.maxToasts > 20) {
+      return false
+    }
+    if (!['top-right', 'top-left', 'bottom-right', 'bottom-left'].includes(notifications.position)) {
+      return false
+    }
+
+    // security 섹션 검증
+    const security = obj.security
+    if (typeof security.sessionTimeout !== 'number' || security.sessionTimeout < 5 || security.sessionTimeout > 1440) {
+      return false
+    }
+    if (typeof security.requireTwoFactor !== 'boolean') {
+      return false
+    }
+    if (typeof security.passwordMinLength !== 'number' || security.passwordMinLength < 6 || security.passwordMinLength > 50) {
+      return false
+    }
+    if (typeof security.maxLoginAttempts !== 'number' || security.maxLoginAttempts < 3 || security.maxLoginAttempts > 10) {
+      return false
+    }
+    if (typeof security.lockoutDuration !== 'number' || security.lockoutDuration < 5 || security.lockoutDuration > 1440) {
+      return false
+    }
+
+    return true
+  } catch (error) {
+    return false
+  }
 }
 
 function mergeWithDefaults(settings: Partial<SystemSettings>, defaults: SystemSettings): SystemSettings {
