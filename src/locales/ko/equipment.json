@@ -1,0 +1,130 @@
+{
+  "status": {
+    "operational": "정상",
+    "maintenance": "점검중",
+    "broken": "고장",
+    "test": "수리중", 
+    "idle": "폐기",
+    "running": "가동중",
+    "breakdown": "고장중", 
+    "standby": "대기중",
+    "stopped": "정지",
+    "unknown": "알 수 없음"
+  },
+  "management": {
+    "title": "설비 관리",
+    "description": "전체 설비 현황을 관리하고 Excel을 통해 일괄 등록할 수 있습니다",
+    "addEquipment": "개별 등록",
+    "downloadTemplate": "템플릿 다운로드",
+    "excelUpload": "Excel 업로드",
+    "uploading": "업로드 중...",
+    "newEquipmentForm": "새 설비 등록",
+    "cancel": "취소",
+    "register": "등록하기",
+    "save": "저장",
+    "edit": "수정",
+    "delete": "삭제",
+    "search": "검색",
+    "reset": "초기화",
+    "equipmentList": "설비 목록",
+    "equipmentListDescription": "등록된 설비 목록을 확인하고 관리할 수 있습니다",
+    "noEquipment": "등록된 설비가 없습니다",
+    "noEquipmentDescription": "Excel 템플릿을 다운로드하여 설비를 일괄 등록해보세요",
+    "totalEquipment": "전체 설비",
+    "operational": "가동중",
+    "maintenance": "정비중",
+    "broken": "고장"
+  },
+  "fields": {
+    "equipmentType": "설비 종류",
+    "equipmentNumber": "설비 번호",
+    "location": "설비 위치",
+    "installDate": "설치 일자", 
+    "status": "상태",
+    "category": "카테고리",
+    "manufacturer": "제조사",
+    "model": "모델명",
+    "purchaseDate": "구입일"
+  },
+  "placeholders": {
+    "selectEquipmentType": "설비 종류를 선택하세요",
+    "equipmentNumberExample": "예: CNC-001",
+    "selectLocation": "위치를 선택하세요"
+  },
+  "filters": {
+    "all": "전체",
+    "byCategory": "카테고리별",
+    "byStatus": "상태별",
+    "byLocation": "위치별"
+  },
+  "messages": {
+    "uploadSuccess": "업로드 성공",
+    "uploadSuccessDetail": "{{count}}개의 설비가 성공적으로 추가되었습니다.",
+    "uploadFailed": "업로드 실패",
+    "uploadWarning": "추가할 설비 없음",
+    "uploadWarningDetail": "파일 형식과 내용을 확인해주세요.",
+    "excelProcessingError": "Excel 파일 처리 오류",
+    "excelProcessingErrorDetail": "Excel 파일 처리 중 오류가 발생했습니다. 파일 형식을 확인해주세요.",
+    "registerSuccess": "등록 성공",
+    "registerSuccessDetail": "설비 '{{equipmentNumber}}'이 성공적으로 등록되었습니다.",
+    "requiredFields": "필수 정보 누락",
+    "requiredFieldsDetail": "설비종류와 설비번호는 필수 입력 항목입니다.",
+    "duplicateEquipmentNumber": "중복된 설비번호",
+    "duplicateEquipmentNumberDetail": "설비번호 '{{equipmentNumber}}'는 이미 존재합니다.",
+    "saved": "저장되었습니다",
+    "deleted": "삭제되었습니다",
+    "errorOccurred": "오류가 발생했습니다",
+    "validationError": "행 {{row}}: {{message}}",
+    "equipmentTypeAndNumberRequired": "설비종류와 설비번호는 필수입니다.",
+    "equipmentNumberExists": "설비번호 '{{equipmentNumber}}'는 이미 존재합니다.",
+    "invalidStatus": "상태값은 {{validStatuses}} 중 하나여야 합니다.",
+    "dataProcessingError": "데이터 처리 중 오류가 발생했습니다.",
+    "moreErrors": "... 외 {{count}}개 오류"
+  },
+  "excel": {
+    "templateName": "설비목록_템플릿.xlsx",
+    "sheetName": "설비목록",
+    "columns": {
+      "equipmentType": "설비종류",
+      "equipmentNumber": "설비번호", 
+      "location": "설비위치",
+      "installDate": "설치일자",
+      "status": "상태"
+    }
+  },
+  "monitor": {
+    "title": "설비 현황 모니터링",
+    "lastUpdated": "최종 업데이트: {{time}}",
+    "allCategories": "모든 카테고리",
+    "category": "카테고리:",
+    "location": "위치:",
+    "lastUpdate": "최종 업데이트:"
+  },
+  "categories": {
+    "CNC": "CNC",
+    "CLEANING": "청소기",
+    "DEBURRING": "디버링",
+    "TRI": "TRI",
+    "AIR_DRYER": "에어 드라이어",
+    "BOILER": "보일러",
+    "RO_WATER_MAKER": "RO 생수기",
+    "COOLANT_MIXING_UNIT": "쿨런트 혼합기",
+    "SCRAP_COMPACTOR": "스크랩 압축기",
+    "SCRAP_WASHING_MACHINE": "스크랩 세척기",
+    "밀링머신": "밀링머신",
+    "선반": "선반", 
+    "드릴링머신": "드릴링머신",
+    "그라인딩머신": "그라인딩머신",
+    "레이저커터": "레이저커터"
+  },
+  "locations": {
+    "BUILD_A": "A동",
+    "BUILD_B": "B동",
+    "BUILD_C": "C동",
+    "1공장 A라인": "1공장 A라인",
+    "1공장 B라인": "1공장 B라인", 
+    "2공장 A라인": "2공장 A라인",
+    "2공장 B라인": "2공장 B라인",
+    "3공장 A라인": "3공장 A라인"
+  }
+}

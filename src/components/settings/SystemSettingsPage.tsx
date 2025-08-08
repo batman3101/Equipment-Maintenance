@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button, Card, Input } from '@/components/ui'
 import { useSystemSettings, SystemSettings } from '@/contexts/SystemSettingsContext'
+// import { useI18n } from '@/contexts/I18nContext' // Available for future language switching features
 // import { useToast } from '@/contexts/ToastContext' // Available for future use
 
 type SettingsTab = 'general' | 'equipment' | 'breakdown' | 'repair' | 'notifications' | 'data' | 'ui' | 'security'
@@ -13,6 +15,9 @@ interface SettingsSectionProps {
 }
 
 export function SystemSettingsPage() {
+  const { t } = useTranslation(['settings', 'common'])
+  // Note: currentLanguage and changeLanguage from useI18n hook could be used for future language switching features
+  // const { currentLanguage, changeLanguage } = useI18n()
   const { settings, updateSettings, resetSettings, exportSettings, importSettings, loading } = useSystemSettings()
   // const { showSuccess } = useToast() // Not used yet, but available for future notifications
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
@@ -20,14 +25,14 @@ export function SystemSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const tabs = [
-    { id: 'general', label: '일반 설정', icon: '⚙️' },
-    { id: 'equipment', label: '설비 설정', icon: '🏭' },
-    { id: 'breakdown', label: '고장 신고', icon: '🚨' },
-    { id: 'repair', label: '수리 관리', icon: '🔧' },
-    { id: 'notifications', label: '알림 설정', icon: '🔔' },
-    { id: 'data', label: '데이터 설정', icon: '📊' },
-    { id: 'ui', label: 'UI 설정', icon: '🎨' },
-    { id: 'security', label: '보안 설정', icon: '🔒' }
+    { id: 'general', label: t('sections.general.title'), icon: '⚙️' },
+    { id: 'equipment', label: t('common:equipment.title', '설비 설정'), icon: '🏭' },
+    { id: 'breakdown', label: t('common:breakdown.title', '고장 신고'), icon: '🚨' },
+    { id: 'repair', label: t('common:repair.title', '수리 관리'), icon: '🔧' },
+    { id: 'notifications', label: t('sections.notifications.title'), icon: '🔔' },
+    { id: 'data', label: t('common:data.title', '데이터 설정'), icon: '📊' },
+    { id: 'ui', label: t('common:ui.title', 'UI 설정'), icon: '🎨' },
+    { id: 'security', label: t('common:security.title', '보안 설정'), icon: '🔒' }
   ] as const
 
   if (loading) {
@@ -67,9 +72,9 @@ export function SystemSettingsPage() {
       {/* 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">시스템 설정</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('title')}</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            시스템 전반의 설정을 관리하고 커스터마이징할 수 있습니다
+            {t('subtitle')}
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex flex-wrap gap-2">
@@ -79,7 +84,7 @@ export function SystemSettingsPage() {
             className="flex items-center space-x-2"
           >
             <span>📤</span>
-            <span>설정 내보내기</span>
+            <span>{t('actions.export')}</span>
           </Button>
           <Button
             variant="secondary"
@@ -87,7 +92,7 @@ export function SystemSettingsPage() {
             className="flex items-center space-x-2"
           >
             <span>📥</span>
-            <span>설정 가져오기</span>
+            <span>{t('actions.import')}</span>
           </Button>
           <Button
             variant="secondary"
@@ -95,7 +100,7 @@ export function SystemSettingsPage() {
             className="flex items-center space-x-2 text-red-600 hover:text-red-700"
           >
             <span>🔄</span>
-            <span>초기화</span>
+            <span>{t('actions.reset')}</span>
           </Button>
           <input
             ref={fileInputRef}
@@ -146,24 +151,24 @@ export function SystemSettingsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="max-w-md mx-4">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">설정 초기화 확인</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('actions.reset')} {t('common:confirm', '확인')}</h3>
             </Card.Header>
             <Card.Content>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                모든 시스템 설정이 기본값으로 초기화됩니다. 이 작업은 되돌릴 수 없습니다.
+                {t('common:resetWarning', '모든 시스템 설정이 기본값으로 초기화됩니다. 이 작업은 되돌릴 수 없습니다.')}
               </p>
               <div className="flex justify-end space-x-3">
                 <Button
                   variant="secondary"
                   onClick={() => setShowResetConfirm(false)}
                 >
-                  취소
+                  {t('common:cancel', '취소')}
                 </Button>
                 <Button
                   onClick={handleResetConfirm}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
-                  초기화
+                  {t('actions.reset')}
                 </Button>
               </div>
             </Card.Content>
@@ -176,18 +181,20 @@ export function SystemSettingsPage() {
 
 // 개별 설정 섹션 컴포넌트들
 function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">일반 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('sections.general.title')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          시스템의 기본 정보와 전반적인 설정을 관리합니다
+          {t('sections.general.description')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
-            label="시스템 이름"
+            label={t('settings.general.systemName')}
             value={settings.general.systemName}
             onChange={(e) => updateSettings({
               general: { ...settings.general, systemName: e.target.value }
@@ -195,7 +202,7 @@ function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
             placeholder="CNC 설비 관리 시스템"
           />
           <Input
-            label="회사명"
+            label={t('common:company', '회사명')}
             value={settings.general.companyName}
             onChange={(e) => updateSettings({
               general: { ...settings.general, companyName: e.target.value }
@@ -207,7 +214,7 @@ function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              언어 설정
+              {t('settings.general.language')}
             </label>
             <select
               value={settings.general.language}
@@ -216,15 +223,15 @@ function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
               })}
               className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="ko">한국어</option>
+              <option value="ko">{t('settings.general.languages.korean')}</option>
               <option value="en">English</option>
-              <option value="vi">Tiếng Việt</option>
+              <option value="vi">{t('settings.general.languages.vietnamese')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              시간대
+              {t('common:timezone', '시간대')}
             </label>
             <select
               value={settings.general.timezone}
@@ -251,7 +258,7 @@ function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="offlineMode" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-            오프라인 모드 (인터넷 연결 없이 사용)
+            {t('common:offlineMode', '오프라인 모드 (인터넷 연결 없이 사용)')}
           </label>
         </div>
       </Card.Content>
@@ -260,6 +267,7 @@ function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
 }
 
 function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const [newCategory, setNewCategory] = useState({ value: '', label: '' })
   const [newLocation, setNewLocation] = useState({ value: '', label: '' })
 
@@ -300,15 +308,15 @@ function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">설비 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:equipment.settings', '설비 설정')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          설비 종류, 위치, 상태 등의 옵션을 관리합니다
+          {t('common:equipment.settingsDesc', '설비 종류, 위치, 상태 등의 옵션을 관리합니다')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-8">
         {/* 설비 종류 */}
         <div>
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">설비 종류</h4>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('common:equipment.categories', '설비 종류')}</h4>
           <div className="space-y-3">
             {settings.equipment.categories.map((category, index: number) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -341,7 +349,7 @@ function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
                 className="flex-1"
               />
               <Button onClick={addCategory} disabled={!newCategory.value || !newCategory.label}>
-                추가
+                {t('common:add', '추가')}
               </Button>
             </div>
           </div>
@@ -349,7 +357,7 @@ function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
 
         {/* 설비 위치 */}
         <div>
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">설비 위치</h4>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('common:equipment.locations', '설비 위치')}</h4>
           <div className="space-y-3">
             {settings.equipment.locations.map((location, index: number) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -382,7 +390,7 @@ function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
                 className="flex-1"
               />
               <Button onClick={addLocation} disabled={!newLocation.value || !newLocation.label}>
-                추가
+                {t('common:add', '추가')}
               </Button>
             </div>
           </div>
@@ -391,7 +399,7 @@ function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
         {/* 기본 상태 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            기본 설비 상태
+            {t('common:equipment.defaultStatus', '기본 설비 상태')}
           </label>
           <select
             value={settings.equipment.defaultStatus}
@@ -413,18 +421,20 @@ function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
 }
 
 function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">고장 신고 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:breakdown.settings', '고장 신고 설정')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          고장 신고 폼과 관련된 설정을 관리합니다
+          {t('common:breakdown.settingsDesc', '고장 신고 폼과 관련된 설정을 관리합니다')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            기본 긴급도
+            {t('common:breakdown.defaultUrgency', '기본 긴급도')}
           </label>
           <select
             value={settings.breakdown.defaultUrgency}
@@ -453,7 +463,7 @@ function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="autoAssignment" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              자동 담당자 배정
+              {t('common:breakdown.autoAssignment', '자동 담당자 배정')}
             </label>
           </div>
 
@@ -468,7 +478,7 @@ function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="requirePhotos" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              사진 첨부 필수
+              {t('common:breakdown.requirePhotos', '사진 첨부 필수')}
             </label>
           </div>
         </div>
@@ -478,6 +488,8 @@ function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
 }
 
 function RepairSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+
   return (
     <Card>
       <Card.Header>
@@ -528,7 +540,7 @@ function RepairSettings({ settings, updateSettings }: SettingsSectionProps) {
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="requireTestResults" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-            테스트 결과 필수 입력
+            {t('common:repair.requireTestResults', '테스트 결과 필수 입력')}
           </label>
         </div>
       </Card.Content>
@@ -537,19 +549,21 @@ function RepairSettings({ settings, updateSettings }: SettingsSectionProps) {
 }
 
 function NotificationSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">알림 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('sections.notifications.title')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          토스트 알림과 관련된 설정을 관리합니다
+          {t('sections.notifications.description')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Input
-              label="토스트 표시 시간 (밀리초)"
+              label={t('common:notifications.toastDuration', '토스트 표시 시간 (밀리초)')}
               type="number"
               value={settings.notifications.toastDuration.toString()}
               onChange={(e) => updateSettings({
@@ -561,7 +575,7 @@ function NotificationSettings({ settings, updateSettings }: SettingsSectionProps
 
           <div>
             <Input
-              label="최대 토스트 개수"
+              label={t('common:notifications.maxToasts', '최대 토스트 개수')}
               type="number"
               value={settings.notifications.maxToasts.toString()}
               onChange={(e) => updateSettings({
@@ -574,7 +588,7 @@ function NotificationSettings({ settings, updateSettings }: SettingsSectionProps
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            토스트 위치
+            {t('common:notifications.position', '토스트 위치')}
           </label>
           <select
             value={settings.notifications.position}
@@ -602,7 +616,7 @@ function NotificationSettings({ settings, updateSettings }: SettingsSectionProps
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="enableSound" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              알림음 활성화
+              {t('common:notifications.enableSound', '알림음 활성화')}
             </label>
           </div>
 
@@ -617,7 +631,7 @@ function NotificationSettings({ settings, updateSettings }: SettingsSectionProps
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="autoHide" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              자동 숨김
+              {t('common:notifications.autoHide', '자동 숨김')}
             </label>
           </div>
         </div>
@@ -627,19 +641,21 @@ function NotificationSettings({ settings, updateSettings }: SettingsSectionProps
 }
 
 function DataSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">데이터 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:data.settings', '데이터 설정')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          데이터 표시, 내보내기, 보존과 관련된 설정을 관리합니다
+          {t('common:data.settingsDesc', '데이터 표시, 내보내기, 보존과 관련된 설정을 관리합니다')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Input
-              label="페이지당 항목 수"
+              label={t('common:data.itemsPerPage', '페이지당 항목 수')}
               type="number"
               value={settings.data.itemsPerPage.toString()}
               onChange={(e) => updateSettings({
@@ -651,7 +667,7 @@ function DataSettings({ settings, updateSettings }: SettingsSectionProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              기본 내보내기 형식
+              {t('common:data.exportFormat', '기본 내보내기 형식')}
             </label>
             <select
               value={settings.data.exportFormat}
@@ -670,7 +686,7 @@ function DataSettings({ settings, updateSettings }: SettingsSectionProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Input
-              label="자동 저장 간격 (분)"
+              label={t('common:data.autoSaveInterval', '자동 저장 간격 (분)')}
               type="number"
               value={settings.data.autoSaveInterval.toString()}
               onChange={(e) => updateSettings({
@@ -683,7 +699,7 @@ function DataSettings({ settings, updateSettings }: SettingsSectionProps) {
 
           <div>
             <Input
-              label="데이터 보존 기간 (일)"
+              label={t('common:data.dataRetentionDays', '데이터 보존 기간 (일)')}
               type="number"
               value={settings.data.dataRetentionDays.toString()}
               onChange={(e) => updateSettings({
@@ -705,7 +721,7 @@ function DataSettings({ settings, updateSettings }: SettingsSectionProps) {
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="autoSave" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-            자동 저장 활성화
+            {t('common:data.autoSave', '자동 저장 활성화')}
           </label>
         </div>
       </Card.Content>
@@ -714,19 +730,21 @@ function DataSettings({ settings, updateSettings }: SettingsSectionProps) {
 }
 
 function UISettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">UI 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:ui.settings', 'UI 설정')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          사용자 인터페이스와 관련된 설정을 관리합니다
+          {t('common:ui.settingsDesc', '사용자 인터페이스와 관련된 설정을 관리합니다')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              테마
+              {t('settings.general.theme')}
             </label>
             <select
               value={settings.ui.theme}
@@ -735,15 +753,15 @@ function UISettings({ settings, updateSettings }: SettingsSectionProps) {
               })}
               className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="light">라이트</option>
-              <option value="dark">다크</option>
-              <option value="auto">자동</option>
+              <option value="light">{t('settings.general.themes.light')}</option>
+              <option value="dark">{t('settings.general.themes.dark')}</option>
+              <option value="auto">{t('common:auto', '자동')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              글자 크기
+              {t('common:ui.fontSize', '글자 크기')}
             </label>
             <select
               value={settings.ui.fontSize}
@@ -771,7 +789,7 @@ function UISettings({ settings, updateSettings }: SettingsSectionProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="compactMode" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              컴팩트 모드 (밀도 높은 레이아웃)
+              {t('common:ui.compactMode', '컴팩트 모드 (밀도 높은 레이아웃)')}
             </label>
           </div>
 
@@ -786,7 +804,7 @@ function UISettings({ settings, updateSettings }: SettingsSectionProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="showHelpTexts" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              도움말 텍스트 표시
+              {t('common:ui.showHelpTexts', '도움말 텍스트 표시')}
             </label>
           </div>
 
@@ -801,7 +819,7 @@ function UISettings({ settings, updateSettings }: SettingsSectionProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="animationsEnabled" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              애니메이션 효과 활성화
+              {t('common:ui.animationsEnabled', '애니메이션 효과 활성화')}
             </label>
           </div>
         </div>
@@ -811,19 +829,21 @@ function UISettings({ settings, updateSettings }: SettingsSectionProps) {
 }
 
 function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">보안 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:security.settings', '보안 설정')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          시스템 보안과 관련된 설정을 관리합니다
+          {t('common:security.settingsDesc', '시스템 보안과 관련된 설정을 관리합니다')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Input
-              label="세션 타임아웃 (분)"
+              label={t('settings.users.sessionTimeout')}
               type="number"
               value={settings.security.sessionTimeout.toString()}
               onChange={(e) => updateSettings({
@@ -835,7 +855,7 @@ function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
 
           <div>
             <Input
-              label="최소 비밀번호 길이"
+              label={t('common:security.passwordMinLength', '최소 비밀번호 길이')}
               type="number"
               value={settings.security.passwordMinLength.toString()}
               onChange={(e) => updateSettings({
@@ -849,7 +869,7 @@ function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Input
-              label="최대 로그인 시도 횟수"
+              label={t('settings.users.maxLoginAttempts')}
               type="number"
               value={settings.security.maxLoginAttempts.toString()}
               onChange={(e) => updateSettings({
@@ -861,7 +881,7 @@ function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
 
           <div>
             <Input
-              label="계정 잠금 시간 (분)"
+              label={t('common:security.lockoutDuration', '계정 잠금 시간 (분)')}
               type="number"
               value={settings.security.lockoutDuration.toString()}
               onChange={(e) => updateSettings({
@@ -883,7 +903,7 @@ function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="requireTwoFactor" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-            2단계 인증 필수
+            {t('settings.users.twoFactorAuth')}
           </label>
         </div>
       </Card.Content>

@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
+import { useTranslation } from 'react-i18next'
 
+// [SRP] Rule: 수리 보고서 타입 정의 - 데이터 구조만 담당
 interface RepairReport {
   equipmentId: string
   technicianName: string
@@ -15,6 +17,7 @@ interface RepairReport {
   notes?: string
 }
 
+// [SRP] Rule: 설비 타입 정의 - 데이터 구조만 담당
 interface Equipment {
   id: string
   equipment_number: string
@@ -23,65 +26,59 @@ interface Equipment {
   location: string
 }
 
-// Mock equipment data
-const mockEquipmentOptions: Equipment[] = [
-  {
-    id: '1',
-    equipment_number: 'CNC-ML-001',
-    equipment_name: 'CNC 밀링머신 #1',
-    category: '밀링머신',
-    location: '1공장 A라인'
-  },
-  {
-    id: '2',
-    equipment_number: 'CNC-LT-001',
-    equipment_name: 'CNC 선반 #1',
-    category: '선반',
-    location: '1공장 B라인'
-  },
-  {
-    id: '3',
-    equipment_number: 'CNC-DR-001',
-    equipment_name: 'CNC 드릴링머신 #1',
-    category: '드릴링머신',
-    location: '2공장 A라인'
-  },
-  {
-    id: '4',
-    equipment_number: 'CNC-GR-001',
-    equipment_name: 'CNC 그라인딩머신 #1',
-    category: '그라인딩머신',
-    location: '2공장 B라인'
-  },
-  {
-    id: '5',
-    equipment_number: 'CNC-LC-001',
-    equipment_name: 'CNC 레이저커터 #1',
-    category: '레이저커터',
-    location: '3공장 A라인'
-  }
-]
-
-const repairTypes = [
-  { value: 'corrective', label: '사후 정비 (고장 수리)' },
-  { value: 'preventive', label: '예방 정비 (정기 점검)' },
-  { value: 'emergency', label: '긴급 수리' },
-  { value: 'upgrade', label: '개선/업그레이드' }
-]
-
-const completionStatuses = [
-  { value: 'completed', label: '완료', color: 'text-green-600' },
-  { value: 'partial', label: '부분 완료', color: 'text-yellow-600' },
-  { value: 'failed', label: '실패/보류', color: 'text-red-600' }
-]
-
 interface RepairReportFormProps {
   onSubmit?: (report: RepairReport) => void
   onCancel?: () => void
 }
 
+// [SRP] Rule: Mock 설비 데이터 생성 - 시연용 데이터만 담당
+const mockEquipmentOptions: Equipment[] = [
+  {
+    id: '1',
+    equipment_number: 'CNC-ML-001',
+    equipment_name: 'CNC Milling Machine #1',
+    category: 'Milling Machine',
+    location: 'Factory 1 Line A'
+  },
+  {
+    id: '2',
+    equipment_number: 'CNC-LAT-001',
+    equipment_name: 'CNC Lathe #1',
+    category: 'Lathe',
+    location: 'Factory 1 Line B'
+  },
+  {
+    id: '3',
+    equipment_number: 'CNC-DRL-001',
+    equipment_name: 'CNC Drilling Machine #1',
+    category: 'Drilling Machine',
+    location: 'Factory 2 Line A'
+  },
+  {
+    id: '4',
+    equipment_number: 'CNC-GRD-001',
+    equipment_name: 'CNC Grinding Machine #1',
+    category: 'Grinding Machine',
+    location: 'Factory 2 Line B'
+  },
+  {
+    id: '5',
+    equipment_number: 'CNC-LC-001',
+    equipment_name: 'CNC Laser Cutter #1',
+    category: 'Laser Cutter',
+    location: 'Factory 3 Line A'
+  }
+]
+
+// [SRP] Rule: 수리 완료 폼 컴포넌트 - 폼 렌더링과 검증만 담당
 export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) {
   const { showSuccess, showError } = useToast()
+  const { t } = useTranslation(['repair', 'common'])
+  // SystemSettings context available but not needed for current implementation
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // [OCP] Rule: 기본 폼 데이터를 초기화하되, 새로운 필드 추가에 열려있음
   const [formData, setFormData] = useState<Partial<RepairReport>>({
     equipmentId: '',
     technicianName: '',
@@ -92,34 +89,63 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     testResults: '',
     notes: ''
   })
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // [SRP] Rule: 수리 유형 옵션 계산 - 번역된 수리 유형만 담당
+  const repairTypeOptions = useMemo(() => [
+    { value: 'corrective', label: t('repair:repairTypes.corrective') },
+    { value: 'preventive', label: t('repair:repairTypes.preventive') },
+    { value: 'emergency', label: t('repair:repairTypes.emergency') },
+    { value: 'upgrade', label: t('repair:repairTypes.upgrade') }
+  ], [t])
+
+  // [SRP] Rule: 완료 상태 옵션 계산 - 번역된 완료 상태만 담당
+  const completionStatusOptions = useMemo(() => [
+    { 
+      value: 'completed', 
+      label: t('repair:completionStatus.completed'), 
+      color: 'text-green-600' 
+    },
+    { 
+      value: 'partial', 
+      label: t('repair:completionStatus.partial'), 
+      color: 'text-yellow-600' 
+    },
+    { 
+      value: 'failed', 
+      label: t('repair:completionStatus.failed'), 
+      color: 'text-red-600' 
+    }
+  ], [t])
 
   const selectedEquipment = mockEquipmentOptions.find(eq => eq.id === formData.equipmentId)
 
+  // [SRP] Rule: 폼 검증 로직 - 입력값 유효성 검사만 담당
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
     if (!formData.equipmentId) {
-      newErrors.equipmentId = '설비를 선택해주세요'
+      newErrors.equipmentId = t('repair:validation.equipmentIdRequired')
     }
     if (!formData.technicianName?.trim()) {
-      newErrors.technicianName = '기술자 이름을 입력해주세요'
+      newErrors.technicianName = t('repair:validation.technicianNameRequired')
     }
     if (!formData.workDescription?.trim()) {
-      newErrors.workDescription = '수행한 작업 내용을 입력해주세요'
+      newErrors.workDescription = t('repair:validation.workDescriptionRequired')
     }
     if (!formData.testResults?.trim()) {
-      newErrors.testResults = '테스트 및 검증 결과를 입력해주세요'
+      newErrors.testResults = t('repair:validation.testResultsRequired')
     }
     if (!formData.timeSpent || formData.timeSpent <= 0) {
-      newErrors.timeSpent = '작업 시간을 입력해주세요'
+      newErrors.timeSpent = t('repair:validation.timeSpentRequired')
+    } else if (isNaN(formData.timeSpent)) {
+      newErrors.timeSpent = t('repair:validation.timeSpentInvalid')
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
+  // [SRP] Rule: 폼 제출 처리 - 제출 로직만 담당
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -139,15 +165,17 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
       onSubmit?.(reportData)
       
       showSuccess(
-        '수리 완료 보고',
-        `${selectedEquipment?.equipment_name || '선택된 설비'}의 수리 완료가 성공적으로 등록되었습니다.`
+        t('repair:messages.repairSuccess'),
+        t('repair:messages.repairSuccessWithEquipment', { 
+          equipmentId: selectedEquipment?.equipment_number || reportData.equipmentId 
+        })
       )
       
     } catch (error) {
       console.error('수리 완료 보고 제출 실패:', error)
       showError(
-        '등록 실패',
-        '수리 완료 보고 처리 중 오류가 발생했습니다. 다시 시도해주세요.'
+        t('repair:messages.repairError'),
+        t('repair:messages.repairErrorDetail')
       )
     } finally {
       setLoading(false)
@@ -158,58 +186,42 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     <div className="max-w-4xl mx-auto">
       <Card>
         <Card.Header>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">수리 완료 보고</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {t('repair:form.title')}
+          </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            수리 작업이 완료되면 상세한 내용을 기록해주세요. 정확한 기록은 향후 유지보수에 도움이 됩니다.
+            {t('repair:form.description')}
           </p>
         </Card.Header>
         
         <Card.Content>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 1. 설비를 선택하세요 */}
+            {/* 1. 설비 ID */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                설비를 선택하세요 <span className="text-red-500">*</span>
+                {t('repair:form.equipmentId')} <span className="text-red-500">{t('repair:form.required')}</span>
               </label>
-              <select
+              <input
+                type="text"
                 value={formData.equipmentId || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, equipmentId: e.target.value }))}
+                placeholder={t('repair:form.equipmentIdPlaceholder')}
                 className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   errors.equipmentId 
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                     : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
                 } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
-              >
-                <option value="">설비를 선택하세요</option>
-                {mockEquipmentOptions.map((equipment) => (
-                  <option key={equipment.id} value={equipment.id}>
-                    {equipment.equipment_number} - {equipment.equipment_name} ({equipment.location})
-                  </option>
-                ))}
-              </select>
+              />
               {errors.equipmentId && <p className="mt-1 text-sm text-red-600">{errors.equipmentId}</p>}
             </div>
-
-            {/* 선택된 설비 정보 표시 */}
-            {selectedEquipment && (
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <h3 className="font-medium text-green-900 dark:text-green-300 mb-2">선택된 설비 정보</h3>
-                <div className="text-sm text-green-800 dark:text-green-200 space-y-1">
-                  <p><strong>설비명:</strong> {selectedEquipment.equipment_name}</p>
-                  <p><strong>설비번호:</strong> {selectedEquipment.equipment_number}</p>
-                  <p><strong>카테고리:</strong> {selectedEquipment.category}</p>
-                  <p><strong>위치:</strong> {selectedEquipment.location}</p>
-                </div>
-              </div>
-            )}
 
             {/* 2. 기술자 이름 */}
             <div>
               <Input
-                label="기술자 이름"
+                label={t('repair:form.technicianName')}
                 value={formData.technicianName || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, technicianName: e.target.value }))}
-                placeholder="수리 담당자 이름을 입력하세요"
+                placeholder={t('repair:form.technicianNamePlaceholder')}
                 required
                 error={errors.technicianName}
               />
@@ -219,14 +231,17 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  수리 유형 <span className="text-red-500">*</span>
+                  {t('repair:form.repairType')} <span className="text-red-500">{t('repair:form.required')}</span>
                 </label>
                 <select
                   value={formData.repairType || 'corrective'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, repairType: e.target.value as 'preventive' | 'corrective' | 'emergency' | 'upgrade' }))}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    repairType: e.target.value as 'preventive' | 'corrective' | 'emergency' | 'upgrade' 
+                  }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  {repairTypes.map((type) => (
+                  {repairTypeOptions.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
@@ -236,14 +251,17 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  완료 상태 <span className="text-red-500">*</span>
+                  {t('repair:form.completionStatus')} <span className="text-red-500">{t('repair:form.required')}</span>
                 </label>
                 <select
                   value={formData.completionStatus || 'completed'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, completionStatus: e.target.value as 'completed' | 'partial' | 'failed' }))}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    completionStatus: e.target.value as 'completed' | 'partial' | 'failed' 
+                  }))}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  {completionStatuses.map((status) => (
+                  {completionStatusOptions.map((status) => (
                     <option key={status.value} value={status.value}>
                       {status.label}
                     </option>
@@ -255,12 +273,12 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
             {/* 5. 수행한 작업 내용 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                수행한 작업 내용 <span className="text-red-500">*</span>
+                {t('repair:form.workDescription')} <span className="text-red-500">{t('repair:form.required')}</span>
               </label>
               <textarea
                 value={formData.workDescription || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, workDescription: e.target.value }))}
-                placeholder="수행한 수리 작업을 자세히 기술해주세요 (교체 부품, 조정 내용, 청소 등)"
+                placeholder={t('repair:form.workDescriptionPlaceholder')}
                 rows={4}
                 className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 resize-none ${
                   errors.workDescription 
@@ -274,11 +292,11 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
             {/* 6. 작업시간 */}
             <div>
               <Input
-                label="작업 시간 (시간)"
+                label={t('repair:form.timeSpent')}
                 type="number"
                 value={formData.timeSpent?.toString() || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, timeSpent: parseFloat(e.target.value) || 0 }))}
-                placeholder="예: 2.5"
+                placeholder={t('repair:form.timeSpentPlaceholder')}
                 required
                 error={errors.timeSpent}
                 min="0"
@@ -286,15 +304,15 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
               />
             </div>
 
-            {/* 7. 테스트 및 검증 결과 */}
+            {/* 7. 테스트 결과 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                테스트 및 검증 결과 <span className="text-red-500">*</span>
+                {t('repair:form.testResults')} <span className="text-red-500">{t('repair:form.required')}</span>
               </label>
               <textarea
                 value={formData.testResults || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, testResults: e.target.value }))}
-                placeholder="수리 후 동작 테스트 결과, 성능 확인 내용 등을 상세히 기술해주세요"
+                placeholder={t('repair:form.testResultsPlaceholder')}
                 rows={3}
                 className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 resize-none ${
                   errors.testResults 
@@ -308,12 +326,12 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
             {/* 8. 추가 참고사항 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                추가 참고사항
+                {t('repair:form.notes')}
               </label>
               <textarea
                 value={formData.notes || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="향후 유지보수 시 참고할 내용이나 주의사항이 있으면 기술해주세요"
+                placeholder={t('repair:form.notesPlaceholder')}
                 rows={3}
                 className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
               />
@@ -328,7 +346,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
                   onClick={onCancel}
                   disabled={loading}
                 >
-                  취소
+                  {t('repair:form.cancel')}
                 </Button>
               )}
               <Button
@@ -336,7 +354,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
                 loading={loading}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                {loading ? '등록 중...' : '수리 완료 등록'}
+                {loading ? t('repair:form.submitting') : t('repair:form.submit')}
               </Button>
             </div>
           </form>

@@ -1,0 +1,111 @@
+{
+  "management": {
+    "title": "Quản lý Báo cáo Sự cố",
+    "description": "Có thể xem tình trạng báo cáo sự cố thiết bị và báo cáo sự cố mới",
+    "reportBreakdown": "Báo cáo Sự cố",
+    "newReport": "Báo cáo Sự cố Mới",
+    "backToList": "Về Danh sách",
+    "detailView": "Thông tin Chi tiết",
+    "equipmentDetail": "Chi tiết"
+  },
+  "breadcrumb": {
+    "breakdownManagement": "Quản lý Báo cáo Sự cố",
+    "newReport": "Báo cáo Sự cố Mới",
+    "detail": "Chi tiết {{equipmentNumber}}"
+  },
+  "form": {
+    "title": "Báo cáo Sự cố",
+    "description": "Vui lòng báo cáo ngay khi thiết bị gặp sự cố. Hãy điền chính xác tất cả các mục.",
+    "equipmentCategory": "Loại thiết bị bị hỏng",
+    "equipmentCategoryPlaceholder": "Chọn loại thiết bị",
+    "equipmentNumber": "Số thiết bị bị hỏng",
+    "equipmentNumberPlaceholder": "Ví dụ: CNC-ML-001",
+    "reporterName": "Tên người báo cáo",
+    "reporterNamePlaceholder": "Nhập tên",
+    "urgencyLevel": "Mức độ khẩn cấp",
+    "issueType": "Loại vấn đề",
+    "description": "Nội dung sự cố",
+    "descriptionPlaceholder": "Mô tả chi tiết tình huống xảy ra sự cố",
+    "symptoms": "Triệu chứng xảy ra",
+    "symptomsPlaceholder": "Mô tả cụ thể các triệu chứng như tiếng ồn, rung động, thông báo lỗi, v.v.",
+    "cancel": "Hủy bỏ",
+    "submit": "Báo cáo Sự cố",
+    "submitting": "Đang báo cáo...",
+    "required": "*"
+  },
+  "validation": {
+    "equipmentCategoryRequired": "Vui lòng chọn loại thiết bị bị hỏng",
+    "equipmentNumberRequired": "Vui lòng nhập số thiết bị bị hỏng",
+    "reporterNameRequired": "Vui lòng nhập tên người báo cáo",
+    "descriptionRequired": "Vui lòng nhập nội dung sự cố",
+    "symptomsRequired": "Vui lòng nhập triệu chứng xảy ra"
+  },
+  "urgency": {
+    "low": "Thấp - Không ảnh hưởng đến sản xuất",
+    "medium": "Trung bình - Ảnh hưởng một phần",
+    "high": "Cao - Ngừng sản xuất",
+    "critical": "Khẩn cấp - Nguy hiểm an toàn",
+    "urgencyLevel": "Mức độ khẩn cấp"
+  },
+  "issueTypes": {
+    "mechanical": "Vấn đề cơ khí",
+    "electrical": "Vấn đề điện",
+    "software": "Vấn đề phần mềm",
+    "safety": "Vấn đề an toàn",
+    "other": "Khác",
+    "issueType": "Loại vấn đề"
+  },
+  "status": {
+    "reported": "Đã tiếp nhận báo cáo",
+    "assigned": "Đã phân công phụ trách",
+    "in_progress": "Đang sửa chữa",
+    "resolved": "Hoàn thành giải quyết",
+    "rejected": "Từ chối",
+    "current": "Tình trạng hiện tại"
+  },
+  "list": {
+    "title": "Lịch sử Báo cáo Sự cố",
+    "totalReports": "Tổng {{count}} báo cáo sự cố",
+    "statistics": {
+      "reported": "Đã tiếp nhận báo cáo",
+      "assigned": "Đã phân công phụ trách",
+      "inProgress": "Đang sửa chữa",
+      "resolved": "Hoàn thành giải quyết",
+      "rejected": "Từ chối"
+    },
+    "filters": {
+      "allStatus": "Tất cả tình trạng",
+      "allUrgency": "Tất cả mức độ khẩn cấp"
+    },
+    "noReports": "Không có lịch sử báo cáo",
+    "noReportsDescription": "Không có báo cáo sự cố nào phù hợp với điều kiện đã chọn.",
+    "reporter": "Người báo cáo",
+    "type": "Loại",
+    "assignee": "Phụ trách",
+    "reportedAt": "Báo cáo",
+    "updatedAt": "Cập nhật",
+    "symptoms": "Triệu chứng"
+  },
+  "detail": {
+    "title": "Thông tin Chi tiết Báo cáo Sự cố",
+    "equipmentInfo": "Thông tin Thiết bị",
+    "reporterInfo": "Thông tin Người báo cáo",
+    "breakdownDetail": "Chi tiết Sự cố",
+    "progress": "Tiến độ Xử lý",
+    "equipmentCategory": "Loại thiết bị",
+    "equipmentNumber": "Số thiết bị",
+    "reporterName": "Tên người báo cáo",
+    "symptomsTitle": "Triệu chứng xảy ra",
+    "descriptionTitle": "Nội dung sự cố",
+    "reportedAt": "Thời gian báo cáo",
+    "updatedAt": "Cập nhật lần cuối",
+    "assignedTo": "Phụ trách"
+  },
+  "messages": {
+    "reportSuccess": "Báo cáo Sự cố Hoàn tất",
+    "reportSuccessDetail": "Báo cáo sự cố đã được gửi thành công!",
+    "reportSuccessWithEquipment": "Sự cố thiết bị {{equipmentNumber}} đã được báo cáo thành công.",
+    "reportError": "Báo cáo Thất bại",
+    "reportErrorDetail": "Đã xảy ra lỗi khi xử lý báo cáo sự cố. Vui lòng thử lại."
+  }
+}

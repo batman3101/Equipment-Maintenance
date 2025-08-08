@@ -1,0 +1,111 @@
+{
+  "management": {
+    "title": "고장 신고 관리",
+    "description": "설비 고장 신고 현황을 확인하고 새로운 고장을 신고할 수 있습니다",
+    "reportBreakdown": "고장 신고",
+    "newReport": "새 고장 신고",
+    "backToList": "목록으로",
+    "detailView": "상세 정보",
+    "equipmentDetail": "상세"
+  },
+  "breadcrumb": {
+    "breakdownManagement": "고장 신고 관리",
+    "newReport": "새 고장 신고",
+    "detail": "{{equipmentNumber}} 상세"
+  },
+  "form": {
+    "title": "고장 신고",
+    "description": "설비 고장 발생 시 즉시 신고해주세요. 모든 항목을 정확히 기입해주시기 바랍니다.",
+    "equipmentCategory": "고장 설비 종류",
+    "equipmentCategoryPlaceholder": "설비 종류를 선택하세요",
+    "equipmentNumber": "고장 설비 번호",
+    "equipmentNumberPlaceholder": "예: CNC-ML-001",
+    "reporterName": "신고자 이름",
+    "reporterNamePlaceholder": "이름을 입력하세요",
+    "urgencyLevel": "긴급도",
+    "issueType": "문제 유형",
+    "description": "고장 내용",
+    "descriptionPlaceholder": "고장이 발생한 상황을 자세히 기술해주세요",
+    "symptoms": "발생 증상",
+    "symptomsPlaceholder": "소음, 진동, 오류 메시지 등 구체적인 증상을 기술해주세요",
+    "cancel": "취소",
+    "submit": "고장 신고",
+    "submitting": "신고 중...",
+    "required": "*"
+  },
+  "validation": {
+    "equipmentCategoryRequired": "고장 설비 종류를 선택해주세요",
+    "equipmentNumberRequired": "고장 설비 번호를 입력해주세요",
+    "reporterNameRequired": "신고자 이름을 입력해주세요",
+    "descriptionRequired": "고장 내용을 입력해주세요",
+    "symptomsRequired": "발생 증상을 입력해주세요"
+  },
+  "urgency": {
+    "low": "낮음 - 생산에 영향 없음",
+    "medium": "보통 - 부분적 영향",
+    "high": "높음 - 생산 중단",
+    "critical": "긴급 - 안전 위험",
+    "urgencyLevel": "긴급도"
+  },
+  "issueTypes": {
+    "mechanical": "기계적 문제",
+    "electrical": "전기적 문제",
+    "software": "소프트웨어 문제",
+    "safety": "안전 문제",
+    "other": "기타",
+    "issueType": "문제 유형"
+  },
+  "status": {
+    "reported": "신고 접수",
+    "assigned": "담당자 배정",
+    "in_progress": "수리 중",
+    "resolved": "해결 완료",
+    "rejected": "반려",
+    "current": "현재 상태"
+  },
+  "list": {
+    "title": "고장 신고 내역",
+    "totalReports": "총 {{count}}건의 신고 내역",
+    "statistics": {
+      "reported": "신고 접수",
+      "assigned": "담당자 배정",
+      "inProgress": "수리 중",
+      "resolved": "해결 완료",
+      "rejected": "반려"
+    },
+    "filters": {
+      "allStatus": "모든 상태",
+      "allUrgency": "모든 긴급도"
+    },
+    "noReports": "신고 내역이 없습니다",
+    "noReportsDescription": "선택한 조건에 해당하는 고장 신고가 없습니다.",
+    "reporter": "신고자",
+    "type": "유형",
+    "assignee": "담당자",
+    "reportedAt": "신고",
+    "updatedAt": "업데이트",
+    "symptoms": "증상"
+  },
+  "detail": {
+    "title": "고장 신고 상세 정보",
+    "equipmentInfo": "설비 정보",
+    "reporterInfo": "신고자 정보",
+    "breakdownDetail": "고장 상세 정보",
+    "progress": "진행 상황",
+    "equipmentCategory": "설비 종류",
+    "equipmentNumber": "설비번호",
+    "reporterName": "신고자 이름",
+    "symptomsTitle": "발생 증상",
+    "descriptionTitle": "고장 내용",
+    "reportedAt": "신고 일시",
+    "updatedAt": "최종 업데이트",
+    "assignedTo": "담당자"
+  },
+  "messages": {
+    "reportSuccess": "고장 신고 완료",
+    "reportSuccessDetail": "고장 신고가 성공적으로 제출되었습니다!",
+    "reportSuccessWithEquipment": "{{equipmentNumber}} 설비의 고장이 성공적으로 신고되었습니다.",
+    "reportError": "신고 실패",
+    "reportErrorDetail": "고장 신고 처리 중 오류가 발생했습니다. 다시 시도해주세요."
+  }
+}

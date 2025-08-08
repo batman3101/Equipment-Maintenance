@@ -1,0 +1,112 @@
+{
+  "title": "Hệ thống Quản lý Thiết bị CNC",
+  "subtitle": "Quản lý sự cố và theo dõi lịch sử sửa chữa thiết bị theo thời gian thực",
+  "mode": {
+    "development": "Chế độ phát triển",
+    "offline": "Ngoại tuyến (Demo)"
+  },
+  "metrics": {
+    "mtbf": {
+      "title": "MTBF trung bình",
+      "period": "tháng này",
+      "value": "168h",
+      "change": "+12h",
+      "target": "Mục tiêu: 150h (đã đạt)",
+      "best": "Tốt nhất: CNC-LT-001 (245h)",
+      "description": "MTBF là thời gian trung bình thiết bị có thể vận hành liên tục mà không gặp sự cố. Số liệu càng cao thì độ tin cậy của thiết bị càng tốt."
+    },
+    "mttr": {
+      "title": "MTTR trung bình",
+      "period": "thời gian sửa chữa",
+      "value": "2.4h",
+      "change": "-0.3h",
+      "target": "Mục tiêu: 3.0h (đã đạt)",
+      "best": "Ngắn nhất: CNC-LT-001 (1.8h)",
+      "description": "MTTR là thời gian trung bình từ khi xảy ra sự cố đến khi hoàn thành sửa chữa. Số liệu càng thấp thì khả năng phục hồi càng nhanh."
+    },
+    "completion": {
+      "title": "Tỷ lệ hoàn thành bảo trì",
+      "period": "tuần này",
+      "value": "91.7%",
+      "change": "+3.2%",
+      "details": "Hoàn thành: 22 / Kế hoạch: 24",
+      "preventive": "Tỷ lệ bảo trì dự phòng: 75%",
+      "description": "Tỷ lệ hoàn thành bảo trì là tỷ lệ công việc bảo trì thực tế hoàn thành trong tổng số công việc đã lên kế hoạch. Tỷ lệ càng cao thì việc thực hiện kế hoạch bảo trì càng tốt."
+    }
+  },
+  "dailyCards": {
+    "breakdowns": {
+      "title": "Sự cố hôm nay",
+      "unit": "vụ",
+      "urgent": "Khẩn cấp",
+      "pending": "Đang chờ",
+      "comparison": "so với hôm qua",
+      "recent": "Sự cố gần nhất: {{equipment}} ({{time}})"
+    },
+    "repairs": {
+      "title": "Sửa chữa hoàn thành hôm nay",
+      "unit": "vụ", 
+      "inProgress": "Đang xử lý",
+      "scheduled": "Đã lên lịch",
+      "comparison": "so với hôm qua",
+      "recent": "Hoàn thành gần nhất: {{equipment}} ({{time}})"
+    },
+    "equipmentStatus": {
+      "title": "Tình trạng vận hành thiết bị",
+      "operational": "Đang hoạt động",
+      "maintenance": "Bảo trì",
+      "stopped": "Dừng",
+      "rate": "Tỷ lệ hoạt động"
+    }
+  },
+  "trend": {
+    "title": "Phân tích xu hướng sự cố/sửa chữa",
+    "periods": {
+      "weekly": "Theo tuần",
+      "monthly": "Theo tháng", 
+      "yearly": "Theo năm"
+    },
+    "legend": {
+      "breakdowns": "Sự cố xảy ra",
+      "repairs": "Sửa chữa hoàn thành"
+    },
+    "summary": {
+      "totalBreakdowns": "Tổng sự cố xảy ra",
+      "totalRepairs": "Tổng sửa chữa hoàn thành",
+      "analysisTitle": "Phân tích xu hướng {{period}}",
+      "repairRate": "Tỷ lệ hoàn thành sửa chữa: {{rate}}%",
+      "averageBreakdowns": "Trung bình sự cố {{period}}: {{average}} vụ"
+    },
+    "data": {
+      "breakdowns": "Sự cố {{count}} vụ",
+      "repairs": "Sửa chữa {{count}} vụ"
+    }
+  },
+  "activities": {
+    "title": "Hoạt động gần đây",
+    "subtitle": "Tình trạng hoạt động hệ thống theo thời gian thực",
+    "realtime": "Thời gian thực",
+    "summary": {
+      "urgent": "Khẩn cấp: {{count}} vụ",
+      "inProgress": "Đang xử lý: {{count}} vụ",
+      "completed": "Hoàn thành: {{count}} vụ"
+    },
+    "viewAll": "Xem tất cả hoạt động",
+    "types": {
+      "urgent": "Báo cáo sự cố khẩn cấp",
+      "completed": "Hoàn thành bảo trì định kỳ",
+      "inProgress": "Đang thực hiện sửa chữa", 
+      "scheduled": "Sắp đến hạn bảo trì"
+    },
+    "labels": {
+      "reporter": "Người báo cáo: {{name}} ({{team}})",
+      "manager": "Phụ trách: {{name}} ({{team}})",
+      "location": "{{location}}",
+      "cost": "Chi phí: {{amount}} VND",
+      "expectedCompletion": "Dự kiến hoàn thành: {{time}}",
+      "scheduled": "Ngày dự kiến: {{date}}",
+      "assigned": "Phụ trách: {{name}}",
+      "daysLeft": "Còn {{days}} ngày"
+    }
+  }
+}

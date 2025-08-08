@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, memo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card, ThemeToggle } from '@/components/ui'
+import { LanguageToggle } from '@/components/ui/LanguageToggle'
 import { Navigation } from '@/components/Navigation'
 import { EquipmentStatusMonitor, EquipmentManagement } from '@/components/equipment'
 import { UserManagement } from '@/components/admin/UserManagement'
@@ -11,9 +12,15 @@ import { RepairPage } from '@/components/repair'
 import { StatisticsPage } from '@/components/statistics'
 import { SystemSettingsPage } from '@/components/settings'
 import { TrendChart, DailyStatusCards } from '@/components/dashboard-widgets'
+import { useTranslation } from 'react-i18next'
 
-export function Dashboard() {
+/**
+ * [OCP] Rule: 메모이제이션을 통한 성능 최적화 확장
+ * 기존 컴포넌트 로직을 수정하지 않고 성능 개선
+ */
+function DashboardComponent() {
   const { user, profile, signOut } = useAuth()
+  const { t } = useTranslation(['dashboard', 'common'])
   const [currentPage, setCurrentPage] = useState('dashboard')
   
   // 오프라인 모드 체크
@@ -50,24 +57,24 @@ export function Dashboard() {
                         <span className="text-white text-xl">📊</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">평균 MTBF</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">이번 달</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('dashboard:metrics.mtbf.title')}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard:metrics.mtbf.period')}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">168h</div>
+                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{t('dashboard:metrics.mtbf.value')}</div>
                       <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↗️ +12h
+                        ↗️ {t('dashboard:metrics.mtbf.change')}
                       </div>
                     </div>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>• 목표: 150h (달성)</div>
-                    <div>• 최고: CNC-LT-001 (245h)</div>
+                    <div>• {t('dashboard:metrics.mtbf.target')}</div>
+                    <div>• {t('dashboard:metrics.mtbf.best')}</div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      💡 <strong>MTBF</strong>는 설비가 고장 없이 연속 운전할 수 있는 평균 시간을 나타냅니다. 높을수록 설비 신뢰성이 우수함을 의미합니다.
+                      💡 <strong>MTBF</strong>: {t('dashboard:metrics.mtbf.description')}
                     </p>
                   </div>
                 </Card.Content>
@@ -81,24 +88,24 @@ export function Dashboard() {
                         <span className="text-white text-xl">⚡</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">평균 MTTR</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">수리 시간</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('dashboard:metrics.mttr.title')}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard:metrics.mttr.period')}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">2.4h</div>
+                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">{t('dashboard:metrics.mttr.value')}</div>
                       <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↘️ -0.3h
+                        ↘️ {t('dashboard:metrics.mttr.change')}
                       </div>
                     </div>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>• 목표: 3.0h (달성)</div>
-                    <div>• 최단: CNC-LT-001 (1.8h)</div>
+                    <div>• {t('dashboard:metrics.mttr.target')}</div>
+                    <div>• {t('dashboard:metrics.mttr.best')}</div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      💡 <strong>MTTR</strong>은 고장 발생 후 수리 완료까지 걸리는 평균 시간입니다. 낮을수록 신속한 복구 능력을 의미합니다.
+                      💡 <strong>MTTR</strong>: {t('dashboard:metrics.mttr.description')}
                     </p>
                   </div>
                 </Card.Content>
@@ -112,24 +119,24 @@ export function Dashboard() {
                         <span className="text-white text-xl">🎯</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">정비 완료율</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">이번 주</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('dashboard:metrics.completion.title')}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard:metrics.completion.period')}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">91.7%</div>
+                      <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{t('dashboard:metrics.completion.value')}</div>
                       <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↗️ +3.2%
+                        ↗️ {t('dashboard:metrics.completion.change')}
                       </div>
                     </div>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>• 완료: 22건 / 계획: 24건</div>
-                    <div>• 예방정비 비율: 75%</div>
+                    <div>• {t('dashboard:metrics.completion.details')}</div>
+                    <div>• {t('dashboard:metrics.completion.preventive')}</div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      💡 <strong>정비 완료율</strong>은 계획된 정비 작업 중 실제 완료된 작업의 비율입니다. 높을수록 정비 계획 이행률이 우수함을 의미합니다.
+                      💡 <strong>{t('dashboard:metrics.completion.title')}</strong>: {t('dashboard:metrics.completion.description')}
                     </p>
                   </div>
                 </Card.Content>
@@ -150,13 +157,13 @@ export function Dashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                        <span className="mr-2">📋</span> 최근 활동
+                        <span className="mr-2">📋</span> {t('dashboard:activities.title')}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">실시간 시스템 활동 현황</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard:activities.subtitle')}</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">실시간</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard:activities.realtime')}</span>
                     </div>
                   </div>
                 </Card.Header>
@@ -171,15 +178,15 @@ export function Dashboard() {
                       <div className="ml-4 flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-LT-001 긴급 고장 신고
+                            CNC-LT-001 {t('dashboard:activities.types.urgent')}
                           </p>
-                          <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-medium rounded-full">긴급</span>
+                          <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-medium rounded-full">{t('dashboard:dailyCards.breakdowns.urgent')}</span>
                         </div>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          신고자: 김기술자 (생산1팀) · 스핀들 베어링 이상소음 및 진동 발생
+                          {t('dashboard:activities.labels.reporter', { name: '김기술자', team: '생산1팀' })} · 스핀들 베어링 이상소음 및 진동 발생
                         </p>
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>📍 1공장 B라인</span>
+                          <span>📍 {t('equipment:locations.1공장 B라인')}</span>
                           <span>⏰ 2시간 전 (13:45)</span>
                         </div>
                       </div>
@@ -194,15 +201,15 @@ export function Dashboard() {
                       <div className="ml-4 flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-ML-001 정기 정비 완료
+                            CNC-ML-001 {t('dashboard:activities.types.completed')}
                           </p>
-                          <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-medium rounded-full">완료</span>
+                          <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-medium rounded-full">{t('common:status.completed')}</span>
                         </div>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          담당자: 박정비사 (정비팀) · 오일 교체, 필터 청소, 정밀도 점검 완료
+                          {t('dashboard:activities.labels.manager', { name: '박정비사', team: '정비팀' })} · 오일 교체, 필터 청소, 정밀도 점검 완료
                         </p>
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>💰 비용: 85,000원</span>
+                          <span>💰 {t('dashboard:activities.labels.cost', { amount: '85,000' })}</span>
                           <span>⏰ 4시간 전 (11:30)</span>
                         </div>
                       </div>
@@ -217,15 +224,15 @@ export function Dashboard() {
                       <div className="ml-4 flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-DR-001 수리 작업 진행중
+                            CNC-DR-001 {t('dashboard:activities.types.inProgress')}
                           </p>
-                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">진행중</span>
+                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">{t('common:status.inProgress')}</span>
                         </div>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          담당자: 이수리기사 (정비팀) · 드릴 척 교체 및 제어 시스템 점검
+                          {t('dashboard:activities.labels.manager', { name: '이수리기사', team: '정비팀' })} · 드릴 척 교체 및 제어 시스템 점검
                         </p>
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>⏱️ 예상 완료: 16:30</span>
+                          <span>⏱️ {t('dashboard:activities.labels.expectedCompletion', { time: '16:30' })}</span>
                           <span>⏰ 6시간 전 (09:15)</span>
                         </div>
                       </div>
@@ -240,16 +247,16 @@ export function Dashboard() {
                       <div className="ml-4 flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-GR-001 정비 일정 임박
+                            CNC-GR-001 {t('dashboard:activities.types.scheduled')}
                           </p>
-                          <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded-full">알림</span>
+                          <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded-full">{t('common:status.warning')}</span>
                         </div>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          예정일: 내일 (1월 16일) · 정기 예방 정비 및 부품 교체 예정
+                          {t('dashboard:activities.labels.scheduled', { date: '내일 (1월 16일)' })} · 정기 예방 정비 및 부품 교체 예정
                         </p>
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>👨‍🔧 담당: 최정비사</span>
-                          <span>📅 D-1</span>
+                          <span>👨‍🔧 {t('dashboard:activities.labels.assigned', { name: '최정비사' })}</span>
+                          <span>📅 {t('dashboard:activities.labels.daysLeft', { days: '1' })}</span>
                         </div>
                       </div>
                     </div>
@@ -257,12 +264,12 @@ export function Dashboard() {
                   
                   <div className="mt-6 flex items-center justify-between">
                     <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="flex items-center"><span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span> 긴급: 1건</span>
-                      <span className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> 진행중: 1건</span>
-                      <span className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> 완료: 1건</span>
+                      <span className="flex items-center"><span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span> {t('dashboard:activities.summary.urgent', { count: 1 })}</span>
+                      <span className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> {t('dashboard:activities.summary.inProgress', { count: 1 })}</span>
+                      <span className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> {t('dashboard:activities.summary.completed', { count: 1 })}</span>
                     </div>
                     <Button variant="secondary" size="sm" className="hover:shadow-md transition-shadow">
-                      📊 전체 활동 보기
+                      📊 {t('dashboard:activities.viewAll')}
                     </Button>
                   </div>
                 </Card.Content>
@@ -302,10 +309,10 @@ export function Dashboard() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                CNC 설비 관리 시스템
+                {t('dashboard:title')}
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                실시간 설비 고장 관리 및 수리 내역 추적
+                {t('dashboard:subtitle')}
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -313,10 +320,10 @@ export function Dashboard() {
               {isOfflineMode ? (
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    개발 모드
+                    {t('dashboard:mode.development')}
                   </p>
                   <p className="text-xs text-orange-600 dark:text-orange-400">
-                    오프라인 (데모)
+                    {t('dashboard:mode.offline')}
                   </p>
                 </div>
               ) : (
@@ -325,12 +332,13 @@ export function Dashboard() {
                     {profile?.full_name || user?.email}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {profile?.role === 'system_admin' && '시스템 관리자'}
-                    {profile?.role === 'manager' && '관리자'}
+                    {profile?.role === 'system_admin' && t('common:navigation.admin')}
+                    {profile?.role === 'manager' && t('common:navigation.admin')}
                     {profile?.role === 'user' && '일반 사용자'}
                   </p>
                 </div>
               )}
+              <LanguageToggle />
               <ThemeToggle />
               {/* 오프라인 모드가 아닐 때만 로그아웃 버튼 표시 */}
               {!isOfflineMode && (
@@ -339,7 +347,7 @@ export function Dashboard() {
                   size="sm"
                   onClick={handleSignOut}
                 >
-                  로그아웃
+                  {t('common:navigation.logout')}
                 </Button>
               )}
             </div>
@@ -360,3 +368,6 @@ export function Dashboard() {
     </div>
   )
 }
+
+// React.memo를 사용한 성능 최적화된 Dashboard 컴포넌트 내보내기
+export const Dashboard = memo(DashboardComponent)

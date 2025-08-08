@@ -1,0 +1,119 @@
+{
+  "title": "Cài đặt hệ thống",
+  "subtitle": "Quản lý và tùy chỉnh các thiết lập tổng thể của hệ thống",
+  "navigation": {
+    "title": "Danh mục cài đặt"
+  },
+  "actions": {
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "saved": "Hoàn tất",
+    "export": "Xuất cài đặt",
+    "import": "Nhập cài đặt",
+    "reset": "Khôi phục"
+  },
+  "sections": {
+    "general": {
+      "title": "Cài đặt chung",
+      "description": "Thông tin cơ bản và cài đặt tổng thể của hệ thống"
+    },
+    "notifications": {
+      "title": "Cài đặt thông báo",
+      "description": "Cài đặt thông báo email, SMS và hệ thống"
+    },
+    "maintenance": {
+      "title": "Cài đặt bảo trì",
+      "description": "Cài đặt bảo trì dự phòng và ngưỡng cảnh báo"
+    },
+    "users": {
+      "title": "Cài đặt người dùng",
+      "description": "Bảo mật tài khoản và quyền truy cập"
+    },
+    "backup": {
+      "title": "Cài đặt sao lưu",
+      "description": "Cài đặt sao lưu và khôi phục dữ liệu"
+    }
+  },
+  "settings": {
+    "general": {
+      "systemName": "Tên hệ thống",
+      "systemNameDesc": "Tạo tên hệ thống sẽ hiển thị trên tiêu đề",
+      "language": "Cài đặt ngôn ngữ",
+      "languageDesc": "Chọn ngôn ngữ cho giao diện hệ thống",
+      "languages": {
+        "korean": "Tiếng Hàn",
+        "vietnamese": "Tiếng Việt"
+      },
+      "theme": "Giao diện",
+      "themeDesc": "Chọn giao diện hệ thống",
+      "themes": {
+        "light": "Chế độ sáng",
+        "dark": "Chế độ tối"
+      },
+      "autoRefresh": "Tự động làm mới",
+      "autoRefreshDesc": "Tự động làm mới dữ liệu",
+      "refreshInterval": "Khoảng làm mới (giây)",
+      "refreshIntervalDesc": "Thiết lập khoảng thời gian tự động làm mới tính bằng giây"
+    },
+    "notifications": {
+      "emailAlerts": "Thông báo email",
+      "emailAlertsDesc": "Nhận thông báo các sự kiện quan trọng qua email",
+      "smsAlerts": "Thông báo SMS",
+      "smsAlertsDesc": "Nhận thông báo tình huống khẩn cấp qua SMS",
+      "urgentOnly": "Chỉ thông báo khẩn cấp",
+      "urgentOnlyDesc": "Chỉ nhận thông báo trong tình huống khẩn cấp",
+      "maintenanceReminders": "Nhắc nhở bảo trì",
+      "maintenanceRemindersDesc": "Nhận thông báo trước lịch bảo trì",
+      "dailyReports": "Báo cáo hàng ngày",
+      "dailyReportsDesc": "Nhận báo cáo tình trạng hệ thống hàng ngày"
+    },
+    "maintenance": {
+      "autoScheduling": "Quản lý lịch tự động",
+      "autoSchedulingDesc": "Hệ thống tự động quản lý lịch bảo trì",
+      "preventiveInterval": "Khoảng bảo trì dự phòng (ngày)",
+      "preventiveIntervalDesc": "Thiết lập khoảng thời gian thực hiện bảo trì dự phòng tính bằng ngày",
+      "criticalThreshold": "Ngưỡng cảnh báo (%)",
+      "criticalThresholdDesc": "Thiết lập ngưỡng cảnh báo tính bằng phần trăm",
+      "mtbfTarget": "Mục tiêu MTBF (giờ)",
+      "mtbfTargetDesc": "Thiết lập mục tiêu thời gian trung bình giữa các sự cố",
+      "mttrTarget": "Mục tiêu MTTR (giờ)",
+      "mttrTargetDesc": "Thiết lập mục tiêu thời gian sửa chữa trung bình"
+    },
+    "users": {
+      "maxLoginAttempts": "Số lần đăng nhập tối đa",
+      "maxLoginAttemptsDesc": "Số lần thử đăng nhập cho phép trước khi khóa tài khoản",
+      "sessionTimeout": "Thời gian chờ phiên (phút)",
+      "sessionTimeoutDesc": "Thời gian tự động đăng xuất khi không hoạt động",
+      "passwordExpiry": "Thời hạn mật khẩu (ngày)",
+      "passwordExpiryDesc": "Chu kỳ yêu cầu thay đổi mật khẩu",
+      "twoFactorAuth": "Xác thực 2 bước",
+      "twoFactorAuthDesc": "Kích hoạt xác thực 2 bước để tăng cường bảo mật"
+    },
+    "backup": {
+      "autoBackup": "Sao lưu tự động",
+      "autoBackupDesc": "Tự động sao lưu dữ liệu định kỳ",
+      "backupInterval": "Khoảng sao lưu",
+      "backupIntervalDesc": "Chọn khoảng thời gian thực hiện sao lưu tự động",
+      "intervals": {
+        "hourly": "Mỗi giờ",
+        "daily": "Hàng ngày",
+        "weekly": "Hàng tuần"
+      },
+      "retentionPeriod": "Thời gian lưu trữ (ngày)",
+      "retentionPeriodDesc": "Thiết lập thời gian lưu trữ tập tin sao lưu tính bằng ngày",
+      "cloudBackup": "Sao lưu đám mây",
+      "cloudBackupDesc": "Lưu trữ bản sao lưu trên đám mây"
+    }
+  },
+  "system": {
+    "title": "Thông tin hệ thống",
+    "version": "Phiên bản hệ thống",
+    "lastUpdate": "Cập nhật cuối",
+    "database": "Trạng thái cơ sở dữ liệu",
+    "connection": "Trạng thái kết nối",
+    "status": {
+      "healthy": "Bình thường",
+      "online": "Trực tuyến"
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTranslation } from 'react-i18next'
 
 interface NavigationProps {
   currentPage: string
@@ -10,19 +11,20 @@ interface NavigationProps {
 
 export function Navigation({ currentPage, onPageChange }: NavigationProps) {
   const { profile } = useAuth()
+  const { t } = useTranslation(['common'])
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navigationItems = [
-    { id: 'dashboard', name: '대시보드', icon: '📊' },
-    { id: 'equipment', name: '설비 관리', icon: '⚙️' },
-    { id: 'breakdown', name: '고장 보고', icon: '🚨' },
-    { id: 'repair', name: '수리 내역', icon: '🔧' },
-    { id: 'statistics', name: '통계', icon: '📈' },
+    { id: 'dashboard', name: t('common:navigation.dashboard'), icon: '📊' },
+    { id: 'equipment', name: t('common:navigation.equipment'), icon: '⚙️' },
+    { id: 'breakdown', name: t('common:navigation.breakdown'), icon: '🚨' },
+    { id: 'repair', name: t('common:navigation.repair'), icon: '🔧' },
+    { id: 'statistics', name: t('common:navigation.statistics'), icon: '📈' },
   ]
 
   const adminItems = [
-    { id: 'users', name: '사용자 관리', icon: '👥' },
-    { id: 'settings', name: '시스템 설정', icon: '⚙️' },
+    { id: 'users', name: t('common:navigation.admin'), icon: '👥' },
+    { id: 'settings', name: t('common:navigation.settings'), icon: '⚙️' },
   ]
 
   // 오프라인 모드에서는 모든 메뉴 표시
@@ -37,7 +39,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">CNC 관리</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('dashboard:title').replace(' 시스템', '')}</h2>
             </div>
             
             {/* Desktop Navigation */}
@@ -64,12 +66,16 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
             >
-              <span className="sr-only">메뉴 열기</span>
+              <span className="sr-only">
+                {isMobileMenuOpen ? t('common:actions.close') : t('common:actions.openMenu', '메뉴 열기')}
+              </span>
               {isMobileMenuOpen ? (
-                <span className="text-xl">✕</span>
+                <span className="text-xl" aria-hidden="true">✕</span>
               ) : (
-                <span className="text-xl">☰</span>
+                <span className="text-xl" aria-hidden="true">☰</span>
               )}
             </button>
           </div>
@@ -78,7 +84,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="sm:hidden">
+        <div className="sm:hidden" id="mobile-menu">
           <div className="pt-2 pb-3 space-y-1">
             {allItems.map((item) => (
               <button

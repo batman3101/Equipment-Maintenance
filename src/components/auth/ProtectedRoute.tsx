@@ -36,7 +36,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   if (requiredRole) {
     const roleHierarchy = {
       system_admin: 3,
-      admin: 3, // 호환성을 위해 추가
       manager: 2,
       user: 1
     }

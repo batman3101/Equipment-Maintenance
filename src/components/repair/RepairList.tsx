@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, StatusBadge } from '@/components/ui'
+import { useTranslation } from 'react-i18next'
 
+// [SRP] Rule: 수리 보고서 타입 정의 - 데이터 구조만 담당
 interface RepairReport {
   id: string
   equipmentId: string
@@ -16,286 +18,290 @@ interface RepairReport {
   completedAt: string
 }
 
-// Mock repair reports data
-const mockRepairReports: RepairReport[] = [
+interface RepairListProps {
+  onRepairClick: (repair: RepairReport) => void
+}
+
+// [SRP] Rule: Mock 데이터 생성 - 시연용 데이터만 담당
+const mockRepairs: RepairReport[] = [
   {
     id: '1',
     equipmentId: 'CNC-ML-001',
-    technicianName: '김안전관리사',
-    repairType: 'emergency',
-    workDescription: '안전 커버 센서 교체 및 안전 시스템 점검. 기존 센서가 오작동하여 새 센서로 완전 교체하고 전체 안전 시스템을 재보정했습니다.',
-    timeSpent: 3.5,
+    technicianName: '김기술',
+    repairType: 'preventive',
     completionStatus: 'completed',
-    testResults: '안전 커버 개폐 테스트 정상, 센서 감지 정확도 100%, 비상정지 기능 정상 작동 확인',
-    completedAt: '2024-01-15 09:15:00',
-    notes: '안전 센서는 3개월마다 정기 점검 필요. 습도가 높은 환경에서 부식 주의'
+    workDescription: '정기 점검 및 윤활유 교체 작업을 수행했습니다. 베어링 상태 확인 및 조정.',
+    timeSpent: 2.5,
+    testResults: '모든 테스트 통과. 정상 작동 확인.',
+    notes: '다음 점검 시 벨트 교체 필요',
+    completedAt: '2024-03-20T10:30:00'
   },
   {
     id: '2',
-    equipmentId: 'CNC-LT-001',
-    technicianName: '박정비사',
+    equipmentId: 'CNC-LAT-003',
+    technicianName: 'Nguyễn Văn A',
     repairType: 'corrective',
-    workDescription: '스핀들 베어링 교체 및 정렬 조정. 고주파 소음과 진동 원인인 손상된 베어링을 교체하고 스핀들 정렬을 재조정했습니다.',
-    timeSpent: 6.0,
     completionStatus: 'completed',
-    testResults: '스핀들 회전 테스트 정상, 진동 수준 0.2mm/s (기준값 이하), 소음 수준 정상',
-    completedAt: '2024-01-15 16:30:00',
-    notes: '베어링 교체 후 500시간 운전 후 재점검 권장'
+    workDescription: 'Đã thay thế motor servo bị hỏng. Kiểm tra và điều chỉnh lại hệ thống.',
+    timeSpent: 4.0,
+    testResults: 'Thiết bị hoạt động bình thường sau khi sửa chữa.',
+    completedAt: '2024-03-19T14:15:00'
   },
   {
     id: '3',
-    equipmentId: 'CNC-DR-001',
-    technicianName: '이수리기사',
-    repairType: 'corrective',
-    workDescription: '드릴 척 교체 및 제어 시스템 소프트웨어 업데이트',
-    timeSpent: 2.5,
+    equipmentId: 'CNC-DRL-005',
+    technicianName: '박수리',
+    repairType: 'emergency',
     completionStatus: 'partial',
-    testResults: '드릴링 정확도 개선되었으나 간헐적 에러 코드 E-203 지속. 추가 점검 필요',
-    completedAt: '2024-01-15 14:45:00',
-    notes: '소프트웨어 업데이트는 완료되었으나 하드웨어 점검이 추가로 필요함'
+    workDescription: '긴급 수리 진행. 메인 스핀들 베어링 교체 필요. 임시 조치 완료.',
+    timeSpent: 3.5,
+    testResults: '임시 조치로 제한적 작동 가능. 완전 수리 필요.',
+    notes: '교체 부품 주문 중',
+    completedAt: '2024-03-18T16:45:00'
   },
   {
     id: '4',
-    equipmentId: 'CNC-GR-001',
-    technicianName: '최정비사',
-    repairType: 'preventive',
-    workDescription: '정기 예방 정비 - 오일 교체, 필터 청소, 벨트 장력 조정',
-    timeSpent: 4.0,
+    equipmentId: 'CNC-GRD-002',
+    technicianName: 'Trần Thị B',
+    repairType: 'upgrade',
     completionStatus: 'completed',
-    testResults: '모든 시스템 정상 작동, 유압 압력 안정, 정밀도 테스트 통과',
-    completedAt: '2024-01-14 15:00:00',
-    notes: '다음 정기 정비 시 쿨런트 시스템 점검 권장'
+    workDescription: 'Nâng cấp hệ thống điều khiển CNC lên phiên bản mới nhất.',
+    timeSpent: 6.0,
+    testResults: 'Nâng cấp thành công. Hiệu suất cải thiện 20%.',
+    completedAt: '2024-03-17T11:00:00'
+  },
+  {
+    id: '5',
+    equipmentId: 'CNC-ML-004',
+    technicianName: '이정비',
+    repairType: 'preventive',
+    completionStatus: 'failed',
+    workDescription: '예방 정비 중 추가 문제 발견. 전문가 상담 필요.',
+    timeSpent: 1.5,
+    testResults: '정비 중단. 추가 진단 필요.',
+    notes: '제조사 기술 지원 요청',
+    completedAt: '2024-03-16T09:20:00'
   }
 ]
 
-const getRepairTypeColor = (type: string): 'success' | 'warning' | 'danger' | 'info' => {
-  switch (type) {
-    case 'preventive': return 'success'
-    case 'corrective': return 'warning' 
-    case 'emergency': return 'danger'
-    case 'upgrade': return 'info'
-    default: return 'info'
-  }
-}
-
-const getRepairTypeText = (type: string) => {
-  switch (type) {
-    case 'preventive': return '예방 정비'
-    case 'corrective': return '사후 정비'
-    case 'emergency': return '긴급 수리'
-    case 'upgrade': return '개선/업그레이드'
-    default: return '알 수 없음'
-  }
-}
-
-const getCompletionColor = (status: string): 'success' | 'warning' | 'danger' => {
-  switch (status) {
-    case 'completed': return 'success'
-    case 'partial': return 'warning'
-    case 'failed': return 'danger'
-    default: return 'warning'
-  }
-}
-
-const getCompletionText = (status: string) => {
-  switch (status) {
-    case 'completed': return '완료'
-    case 'partial': return '부분 완료'
-    case 'failed': return '실패/보류'
-    default: return '알 수 없음'
-  }
-}
-
-interface RepairListProps {
-  onRepairClick?: (repair: RepairReport) => void
-}
-
+// [SRP] Rule: 수리 목록 컴포넌트 - 목록 표시와 필터링만 담당
 export function RepairList({ onRepairClick }: RepairListProps) {
-  const [reports] = useState<RepairReport[]>(mockRepairReports)
-  const [typeFilter, setTypeFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<string>('date_desc')
+  const { t } = useTranslation(['repair'])
+  const [filterType, setFilterType] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const filteredReports = reports
-    .filter(report => {
-      if (typeFilter !== 'all' && report.repairType !== typeFilter) return false
-      if (statusFilter !== 'all' && report.completionStatus !== statusFilter) return false
-      return true
+  // [SRP] Rule: 필터링된 수리 목록 계산 - 데이터 필터링만 담당
+  const filteredRepairs = useMemo(() => {
+    return mockRepairs.filter(repair => {
+      const matchesType = filterType === 'all' || repair.repairType === filterType
+      const matchesStatus = filterStatus === 'all' || repair.completionStatus === filterStatus
+      const matchesSearch = searchTerm === '' || 
+        repair.equipmentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        repair.technicianName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        repair.workDescription.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      return matchesType && matchesStatus && matchesSearch
     })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'date_desc':
-          return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
-        case 'date_asc':
-          return new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime()
-        case 'time_desc':
-          return b.timeSpent - a.timeSpent
-        case 'time_asc':
-          return a.timeSpent - b.timeSpent
-        default:
-          return 0
-      }
-    })
+  }, [filterType, filterStatus, searchTerm])
 
-  // const typeCounts = reports.reduce((acc, report) => {
-  //   acc[report.repairType] = (acc[report.repairType] || 0) + 1
-  //   return acc
-  // }, {} as Record<string, number>)
+  // [SRP] Rule: 통계 계산 - 수리 통계만 담당
+  const statistics = useMemo(() => {
+    return {
+      total: mockRepairs.length,
+      completed: mockRepairs.filter(r => r.completionStatus === 'completed').length,
+      partial: mockRepairs.filter(r => r.completionStatus === 'partial').length,
+      failed: mockRepairs.filter(r => r.completionStatus === 'failed').length,
+      preventive: mockRepairs.filter(r => r.repairType === 'preventive').length,
+      corrective: mockRepairs.filter(r => r.repairType === 'corrective').length,
+      emergency: mockRepairs.filter(r => r.repairType === 'emergency').length,
+      upgrade: mockRepairs.filter(r => r.repairType === 'upgrade').length
+    }
+  }, [])
 
-  const statusCounts = reports.reduce((acc, report) => {
-    acc[report.completionStatus] = (acc[report.completionStatus] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  // [SRP] Rule: 수리 유형 색상 결정 - UI 스타일링만 담당
+  const getRepairTypeColor = (type: string): 'success' | 'warning' | 'danger' | 'info' | 'secondary' => {
+    switch (type) {
+      case 'preventive': return 'success'
+      case 'corrective': return 'warning'
+      case 'emergency': return 'danger'
+      case 'upgrade': return 'info'
+      default: return 'secondary'
+    }
+  }
 
-  const totalTimeSpent = reports.reduce((sum, report) => sum + report.timeSpent, 0)
-  const avgTimeSpent = reports.reduce((sum, report) => sum + report.timeSpent, 0) / reports.length
+  // [SRP] Rule: 완료 상태 색상 결정 - UI 스타일링만 담당
+  const getCompletionStatusColor = (status: string): 'success' | 'warning' | 'danger' => {
+    switch (status) {
+      case 'completed': return 'success'
+      case 'partial': return 'warning'
+      case 'failed': return 'danger'
+      default: return 'warning'
+    }
+  }
 
   return (
     <div className="space-y-6">
-      {/* 통계 요약 */}
+      {/* 통계 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-green-600">
-              {statusCounts.completed || 0}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">완료</div>
-          </Card.Content>
+        <Card className="p-4">
+          <div className="text-2xl font-bold text-green-600">{statistics.completed}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t('repair:list.statistics.completed')}
+          </div>
         </Card>
-        
-        <Card>
-          <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-yellow-600">
-              {statusCounts.partial || 0}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">부분 완료</div>
-          </Card.Content>
+        <Card className="p-4">
+          <div className="text-2xl font-bold text-yellow-600">{statistics.partial}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t('repair:list.statistics.partial')}
+          </div>
         </Card>
-        
-        <Card>
-          <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {totalTimeSpent.toFixed(1)}시간
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">총 작업시간</div>
-          </Card.Content>
+        <Card className="p-4">
+          <div className="text-2xl font-bold text-red-600">{statistics.failed}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t('repair:list.statistics.failed')}
+          </div>
         </Card>
-        
-        <Card>
-          <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-purple-600">
-              {avgTimeSpent.toFixed(1)}h
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">평균 작업시간</div>
-          </Card.Content>
+        <Card className="p-4">
+          <div className="text-2xl font-bold text-blue-600">{statistics.total}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t('repair:list.totalRepairs', { count: statistics.total })}
+          </div>
         </Card>
       </div>
 
-      {/* 필터링 및 정렬 */}
+      {/* 필터 및 검색 */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder={t('repair:list.filters.search')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          >
+            <option value="all">{t('repair:list.filters.allTypes')}</option>
+            <option value="preventive">{t('repair:repairTypes.preventive')}</option>
+            <option value="corrective">{t('repair:repairTypes.corrective')}</option>
+            <option value="emergency">{t('repair:repairTypes.emergency')}</option>
+            <option value="upgrade">{t('repair:repairTypes.upgrade')}</option>
+          </select>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          >
+            <option value="all">{t('repair:list.filters.allStatus')}</option>
+            <option value="completed">{t('repair:completionStatus.completed')}</option>
+            <option value="partial">{t('repair:completionStatus.partial')}</option>
+            <option value="failed">{t('repair:completionStatus.failed')}</option>
+          </select>
+        </div>
+      </Card>
+
+      {/* 수리 목록 테이블 */}
       <Card>
-        <Card.Header>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">수리 완료 내역</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                총 {filteredReports.length}건의 수리 완료 내역
-              </p>
-            </div>
-            <div className="mt-4 sm:mt-0 flex flex-wrap gap-2">
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="all">모든 유형</option>
-                <option value="preventive">예방 정비</option>
-                <option value="corrective">사후 정비</option>
-                <option value="emergency">긴급 수리</option>
-                <option value="upgrade">개선/업그레이드</option>
-              </select>
-              
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="all">모든 상태</option>
-                <option value="completed">완료</option>
-                <option value="partial">부분 완료</option>
-                <option value="failed">실패/보류</option>
-              </select>
-              
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="date_desc">최신순</option>
-                <option value="date_asc">오래된순</option>
-                <option value="time_desc">작업시간 긴순</option>
-                <option value="time_asc">작업시간 짧은순</option>
-              </select>
-            </div>
-          </div>
-        </Card.Header>
-        
-        <Card.Content>
-          <div className="space-y-4">
-            {filteredReports.map((report) => (
-              <div
-                key={report.id}
-                onClick={() => onRepairClick?.(report)}
-                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-bold text-gray-900 dark:text-white">
-                        설비 ID: {report.equipmentId}
-                      </h4>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {t('repair:list.columns.equipmentId')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {t('repair:list.columns.technician')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {t('repair:list.columns.type')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {t('repair:list.columns.status')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {t('repair:list.columns.timeSpent')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {t('repair:list.columns.completedAt')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {t('repair:list.columns.actions')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredRepairs.length > 0 ? (
+                filteredRepairs.map((repair) => (
+                  <tr 
+                    key={repair.id} 
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    onClick={() => onRepairClick(repair)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {repair.equipmentId}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {repair.technicianName}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge variant={getRepairTypeColor(repair.repairType)}>
+                        {t(`repair:repairTypes.${repair.repairType}`)}
+                      </StatusBadge>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge variant={getCompletionStatusColor(repair.completionStatus)}>
+                        {t(`repair:completionStatus.${repair.completionStatus}`)}
+                      </StatusBadge>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {repair.timeSpent}h
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {new Date(repair.completedAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(repair.completedAt).toLocaleTimeString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button 
+                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onRepairClick(repair)
+                        }}
+                      >
+                        {t('repair:list.viewDetail')}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <div className="text-gray-500 dark:text-gray-400">
+                      <p className="text-lg font-medium">{t('repair:list.noRepairs')}</p>
+                      <p className="text-sm mt-2">{t('repair:list.noRepairsDescription')}</p>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <StatusBadge variant={getRepairTypeColor(report.repairType)}>
-                      {getRepairTypeText(report.repairType)}
-                    </StatusBadge>
-                    <StatusBadge variant={getCompletionColor(report.completionStatus)}>
-                      {getCompletionText(report.completionStatus)}
-                    </StatusBadge>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
-                    <strong>작업 내용:</strong> {report.workDescription}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center space-x-4">
-                    <span><strong>기술자:</strong> {report.technicianName}</span>
-                    <span><strong>작업시간:</strong> {report.timeSpent}시간</span>
-                  </div>
-                  <div className="text-right">
-                    <div>완료: {new Date(report.completedAt).toLocaleString()}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {filteredReports.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-4xl mb-4">🔧</div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  수리 내역이 없습니다
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  선택한 조건에 해당하는 수리 완료 내역이 없습니다.
-                </p>
-              </div>
-            )}
-          </div>
-        </Card.Content>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   )

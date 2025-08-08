@@ -1,11 +1,12 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import * as XLSX from 'xlsx'
+import * as ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import { Button, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
+import { useTranslation } from 'react-i18next'
 
 interface Equipment {
   id: string
@@ -60,14 +61,16 @@ const getStatusColor = (status: string, settings: { equipment: { statuses: Array
   return colorMap[statusConfig.color] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
 }
 
-const getStatusText = (status: string, settings: { equipment: { statuses: Array<{ value: string; label: string; color: string }> } }) => {
+const getStatusText = (status: string, settings: { equipment: { statuses: Array<{ value: string; label: string; color: string }> } }, t: (key: string) => string) => {
   const statusConfig = settings.equipment.statuses.find((s) => s.value === status)
-  return statusConfig?.label || '알 수 없음'
+  return statusConfig?.label || t('equipment:status.unknown')
 }
 
 export function EquipmentManagement() {
+  const { t } = useTranslation(['equipment', 'common'])
   const { showSuccess, showError, showWarning } = useToast()
-  const { settings } = useSystemSettings()
+  const { getTranslatedSettings } = useSystemSettings()
+  const settings = getTranslatedSettings()
   const [equipments, setEquipments] = useState<Equipment[]>(mockEquipments)
   const [isUploading, setIsUploading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -81,33 +84,38 @@ export function EquipmentManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Excel 템플릿 다운로드
-  const downloadTemplate = () => {
-    const templateData = [
-      {
-        '설비종류': 'CNC',
-        '설비번호': 'CNC-002',
-        '설비위치': 'BUILD_A',
-        '설치일자': '2024-01-15',
-        '상태': 'operational'
-      }
-    ]
+  const downloadTemplate = async () => {
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet(t('equipment:excel.sheetName'))
 
-    const ws = XLSX.utils.json_to_sheet(templateData)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, '설비목록')
+    // 헤더 추가
+    const headers = [
+      t('equipment:excel.columns.equipmentType'),
+      t('equipment:excel.columns.equipmentNumber'),
+      t('equipment:excel.columns.location'),
+      t('equipment:excel.columns.installDate'),
+      t('equipment:excel.columns.status')
+    ]
+    worksheet.addRow(headers)
+
+    // 샘플 데이터 추가
+    worksheet.addRow(['CNC', 'CNC-002', 'BUILD_A', '2024-01-15', 'operational'])
 
     // 컬럼 너비 조정
-    ws['!cols'] = [
-      { wch: 15 }, // 설비종류
-      { wch: 15 }, // 설비번호
-      { wch: 15 }, // 설비위치
-      { wch: 12 }, // 설치일자
-      { wch: 10 }  // 상태
+    worksheet.columns = [
+      { width: 15 }, // 설비종류
+      { width: 15 }, // 설비번호
+      { width: 15 }, // 설비위치
+      { width: 12 }, // 설치일자
+      { width: 10 }  // 상태
     ]
 
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, '설비목록_템플릿.xlsx')
+    // 헤더 스타일 적용
+    worksheet.getRow(1).font = { bold: true }
+
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    saveAs(blob, t('equipment:excel.templateName'))
   }
 
   // Excel 파일 업로드 처리
@@ -119,76 +127,112 @@ export function EquipmentManagement() {
 
     try {
       const data = await file.arrayBuffer()
-      const workbook = XLSX.read(data)
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-      const jsonData = XLSX.utils.sheet_to_json(worksheet)
+      const workbook = new ExcelJS.Workbook()
+      await workbook.xlsx.load(data)
+      const worksheet = workbook.getWorksheet(1)
+      
+      // Excel 데이터를 JSON 형태로 변환
+      const jsonData: Record<string, unknown>[] = []
+      const headerRow = worksheet?.getRow(1)
+      const headers = headerRow?.values as string[]
+      
+      worksheet?.eachRow((row, rowNumber) => {
+        if (rowNumber > 1) { // 헤더 행 제외
+          const rowData: Record<string, unknown> = {}
+          row.eachCell((cell, colNumber) => {
+            if (headers && headers[colNumber]) {
+              rowData[headers[colNumber]] = cell.value
+            }
+          })
+          jsonData.push(rowData)
+        }
+      })
 
       const newEquipments: Equipment[] = []
       const validationErrors = [] as string[]
 
       (jsonData as Record<string, unknown>[]).forEach((row: Record<string, unknown>, index: number) => {
         try {
-          // 필수 필드 검증
-          if (!row['설비종류'] || !row['설비번호']) {
-            validationErrors.push(`행 ${index + 2}: 설비종류와 설비번호는 필수입니다.`)
+          // 필수 필드 검증 - 다국어 컬럼명 지원
+          const equipmentTypeKey = t('equipment:excel.columns.equipmentType')
+          const equipmentNumberKey = t('equipment:excel.columns.equipmentNumber')
+          const locationKey = t('equipment:excel.columns.location')
+          const installDateKey = t('equipment:excel.columns.installDate')
+          const statusKey = t('equipment:excel.columns.status')
+          
+          if (!row[equipmentTypeKey] || !row[equipmentNumberKey]) {
+            validationErrors.push(t('equipment:messages.validationError', { 
+              row: index + 2, 
+              message: t('equipment:messages.equipmentTypeAndNumberRequired') 
+            }))
             return
           }
 
           // 중복 설비번호 검증
-          const existingEquipment = equipments.find(eq => eq.equipmentNumber === row['설비번호'])
+          const existingEquipment = equipments.find(eq => eq.equipmentNumber === row[equipmentNumberKey])
           if (existingEquipment) {
-            validationErrors.push(`행 ${index + 2}: 설비번호 '${row['설비번호']}'는 이미 존재합니다.`)
+            validationErrors.push(t('equipment:messages.validationError', {
+              row: index + 2,
+              message: t('equipment:messages.equipmentNumberExists', { equipmentNumber: row[equipmentNumberKey] })
+            }))
             return
           }
 
           // 상태 값 검증
           const validStatuses = settings.equipment.statuses.map((s) => s.value)
-          const status = String(row['상태'] || settings.equipment.defaultStatus)
+          const status = String(row[statusKey] || settings.equipment.defaultStatus)
           if (!validStatuses.includes(status)) {
-            validationErrors.push(`행 ${index + 2}: 상태값은 ${validStatuses.join(', ')} 중 하나여야 합니다.`)
+            validationErrors.push(t('equipment:messages.validationError', {
+              row: index + 2,
+              message: t('equipment:messages.invalidStatus', { validStatuses: validStatuses.join(', ') })
+            }))
             return
           }
 
           const equipment: Equipment = {
             id: Date.now().toString() + index,
-            equipmentType: String(row['설비종류']),
-            equipmentNumber: String(row['설비번호']),
-            location: String(row['설비위치'] || settings.equipment.locations[0]?.value || ''),
-            installDate: String(row['설치일자'] || new Date().toISOString().split('T')[0]),
+            equipmentType: String(row[equipmentTypeKey]),
+            equipmentNumber: String(row[equipmentNumberKey]),
+            location: String(row[locationKey] || settings.equipment.locations[0]?.value || ''),
+            installDate: String(row[installDateKey] || new Date().toISOString().split('T')[0]),
             status: status as Equipment['status']
           }
 
           newEquipments.push(equipment)
         } catch (error) {
           console.error('Equipment validation error:', error)
-          validationErrors.push(`행 ${index + 2}: 데이터 처리 중 오류가 발생했습니다.`)
+          validationErrors.push(t('equipment:messages.validationError', {
+            row: index + 2,
+            message: t('equipment:messages.dataProcessingError')
+          }))
         }
       })
 
       if (validationErrors.length > 0) {
         showError(
-          '업로드 실패',
-          validationErrors.slice(0, 3).join('\n') + (validationErrors.length > 3 ? `\n... 외 ${validationErrors.length - 3}개 오류` : ''),
+          t('equipment:messages.uploadFailed'),
+          validationErrors.slice(0, 3).join('\n') + (validationErrors.length > 3 ? 
+            `\n${t('equipment:messages.moreErrors', { count: validationErrors.length - 3 })}` : ''),
           { duration: 8000 }
         )
       } else if (newEquipments.length === 0) {
         showWarning(
-          '추가할 설비 없음',
-          '파일 형식과 내용을 확인해주세요.'
+          t('equipment:messages.uploadWarning'),
+          t('equipment:messages.uploadWarningDetail')
         )
       } else {
         // 성공적으로 처리된 설비들을 추가
         setEquipments(prev => [...prev, ...newEquipments])
         showSuccess(
-          '업로드 성공',
-          `${newEquipments.length}개의 설비가 성공적으로 추가되었습니다.`
+          t('equipment:messages.uploadSuccess'),
+          t('equipment:messages.uploadSuccessDetail', { count: newEquipments.length })
         )
       }
     } catch (error) {
       console.error('Excel file processing error:', error)
       showError(
-        'Excel 파일 처리 오류',
-        'Excel 파일 처리 중 오류가 발생했습니다. 파일 형식을 확인해주세요.'
+        t('equipment:messages.excelProcessingError'),
+        t('equipment:messages.excelProcessingErrorDetail')
       )
     } finally {
       setIsUploading(false)
@@ -204,8 +248,8 @@ export function EquipmentManagement() {
     // 필수 필드 검증
     if (!newEquipment.equipmentType || !newEquipment.equipmentNumber) {
       showError(
-        '필수 정보 누락',
-        '설비종류와 설비번호는 필수 입력 항목입니다.'
+        t('equipment:messages.requiredFields'),
+        t('equipment:messages.requiredFieldsDetail')
       )
       return
     }
@@ -214,8 +258,8 @@ export function EquipmentManagement() {
     const existingEquipment = equipments.find(eq => eq.equipmentNumber === newEquipment.equipmentNumber)
     if (existingEquipment) {
       showError(
-        '중복된 설비번호',
-        `설비번호 '${newEquipment.equipmentNumber}'는 이미 존재합니다.`
+        t('equipment:messages.duplicateEquipmentNumber'),
+        t('equipment:messages.duplicateEquipmentNumberDetail', { equipmentNumber: newEquipment.equipmentNumber })
       )
       return
     }
@@ -232,8 +276,8 @@ export function EquipmentManagement() {
 
     setEquipments(prev => [...prev, equipment])
     showSuccess(
-      '등록 성공',
-      `설비 '${equipment.equipmentNumber}'이 성공적으로 등록되었습니다.`
+      t('equipment:messages.registerSuccess'),
+      t('equipment:messages.registerSuccessDetail', { equipmentNumber: equipment.equipmentNumber })
     )
 
     // 폼 초기화 및 닫기
@@ -270,9 +314,9 @@ export function EquipmentManagement() {
       {/* 헤더 섹션 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">설비 관리</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('equipment:management.title')}</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            전체 설비 현황을 관리하고 Excel을 통해 일괄 등록할 수 있습니다
+            {t('equipment:management.description')}
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex flex-wrap gap-2">
@@ -281,7 +325,7 @@ export function EquipmentManagement() {
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
           >
             <span>➕</span>
-            <span>개별 등록</span>
+            <span>{t('equipment:management.addEquipment')}</span>
           </Button>
           <Button
             variant="secondary"
@@ -289,7 +333,7 @@ export function EquipmentManagement() {
             className="flex items-center space-x-2"
           >
             <span>📁</span>
-            <span>템플릿 다운로드</span>
+            <span>{t('equipment:management.downloadTemplate')}</span>
           </Button>
           <Button
             onClick={() => fileInputRef.current?.click()}
@@ -297,7 +341,7 @@ export function EquipmentManagement() {
             disabled={isUploading}
           >
             <span>📤</span>
-            <span>{isUploading ? '업로드 중...' : 'Excel 업로드'}</span>
+            <span>{isUploading ? t('equipment:management.uploading') : t('equipment:management.excelUpload')}</span>
           </Button>
           <input
             ref={fileInputRef}
@@ -315,14 +359,14 @@ export function EquipmentManagement() {
         <Card className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20">
           <Card.Header>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">새 설비 등록</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('equipment:management.newEquipmentForm')}</h3>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleCancelAdd}
                 className="text-gray-600 hover:text-gray-800"
               >
-                ❌ 취소
+                ❌ {t('equipment:management.cancel')}
               </Button>
             </div>
           </Card.Header>
@@ -331,14 +375,14 @@ export function EquipmentManagement() {
               {/* 1. 설비 종류 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설비 종류 <span className="text-red-500">*</span>
+                  {t('equipment:fields.equipmentType')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newEquipment.equipmentType || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentType: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">설비 종류를 선택하세요</option>
+                  <option value="">{t('equipment:placeholders.selectEquipmentType')}</option>
                   {settings.equipment.categories.map((category) => (
                     <option key={category.value} value={category.value}>
                       {category.label}
@@ -350,28 +394,28 @@ export function EquipmentManagement() {
               {/* 2. 설비 번호 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설비 번호 <span className="text-red-500">*</span>
+                  {t('equipment:fields.equipmentNumber')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newEquipment.equipmentNumber || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentNumber: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: CNC-001"
+                  placeholder={t('equipment:placeholders.equipmentNumberExample')}
                 />
               </div>
 
               {/* 3. 설비 위치 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설비 위치 <span className="text-red-500">*</span>
+                  {t('equipment:fields.location')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newEquipment.location || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, location: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">위치를 선택하세요</option>
+                  <option value="">{t('equipment:placeholders.selectLocation')}</option>
                   {settings.equipment.locations.map((location) => (
                     <option key={location.value} value={location.value}>
                       {location.label}
@@ -383,7 +427,7 @@ export function EquipmentManagement() {
               {/* 4. 설치 일자 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설치 일자 <span className="text-red-500">*</span>
+                  {t('equipment:fields.installDate')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -396,7 +440,7 @@ export function EquipmentManagement() {
               {/* 5. 상태 */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  상태 <span className="text-red-500">*</span>
+                  {t('equipment:fields.status')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newEquipment.status || settings.equipment.defaultStatus}
@@ -417,13 +461,13 @@ export function EquipmentManagement() {
                 variant="secondary"
                 onClick={handleCancelAdd}
               >
-                취소
+                {t('equipment:management.cancel')}
               </Button>
               <Button
                 onClick={handleAddEquipment}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                ✅ 등록하기
+                ✅ {t('equipment:management.register')}
               </Button>
             </div>
           </Card.Content>
@@ -437,7 +481,7 @@ export function EquipmentManagement() {
             <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {equipments.length}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">전체 설비</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:management.totalEquipment')}</div>
           </Card.Content>
         </Card>
         
@@ -446,7 +490,7 @@ export function EquipmentManagement() {
             <div className="text-3xl font-bold text-green-600 dark:text-green-400">
               {statusCounts.operational || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">가동중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:management.operational')}</div>
           </Card.Content>
         </Card>
         
@@ -455,7 +499,7 @@ export function EquipmentManagement() {
             <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
               {statusCounts.maintenance || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">정비중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:management.maintenance')}</div>
           </Card.Content>
         </Card>
         
@@ -464,7 +508,7 @@ export function EquipmentManagement() {
             <div className="text-3xl font-bold text-red-600 dark:text-red-400">
               {statusCounts.broken || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">고장</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:management.broken')}</div>
           </Card.Content>
         </Card>
       </div>
@@ -472,9 +516,9 @@ export function EquipmentManagement() {
       {/* 설비 목록 */}
       <Card>
         <Card.Header>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">설비 목록</h3>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('equipment:management.equipmentList')}</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            등록된 설비 목록을 확인하고 관리할 수 있습니다
+            {t('equipment:management.equipmentListDescription')}
           </p>
         </Card.Header>
         <Card.Content>
@@ -483,19 +527,19 @@ export function EquipmentManagement() {
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    설비 종류
+                    {t('equipment:fields.equipmentType')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    설비 번호
+                    {t('equipment:fields.equipmentNumber')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    위치
+                    {t('equipment:fields.location')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    설치일자
+                    {t('equipment:fields.installDate')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    상태
+                    {t('equipment:fields.status')}
                   </th>
                 </tr>
               </thead>
@@ -522,7 +566,7 @@ export function EquipmentManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(equipment.status, settings)}`}>
-                        {getStatusText(equipment.status, settings)}
+                        {getStatusText(equipment.status, settings, t)}
                       </span>
                     </td>
                   </tr>
@@ -535,13 +579,13 @@ export function EquipmentManagement() {
             <div className="text-center py-12">
               <div className="text-4xl mb-4">⚙️</div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                등록된 설비가 없습니다
+                {t('equipment:management.noEquipment')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Excel 템플릿을 다운로드하여 설비를 일괄 등록해보세요
+                {t('equipment:management.noEquipmentDescription')}
               </p>
               <Button onClick={downloadTemplate} variant="secondary">
-                📁 템플릿 다운로드
+                📁 {t('equipment:management.downloadTemplate')}
               </Button>
             </div>
           )}

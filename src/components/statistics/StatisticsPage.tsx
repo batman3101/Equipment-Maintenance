@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, Button } from '@/components/ui'
 import { RealTimeMonitoring } from './RealTimeMonitoring'
 import { PerformanceAnalysis } from './PerformanceAnalysis'
@@ -21,66 +22,69 @@ interface AnalysisOption {
   }>
 }
 
-const analysisOptions: AnalysisOption[] = [
-  {
-    id: 'realtime',
-    label: '🔥 실시간 모니터링',
-    icon: '📊',
-    description: '현재 설비 상태와 실시간 데이터 분석',
-    subOptions: [
-      { id: 'current-status', label: '현재 설비 상태', description: '실시간 설비 운영 현황' },
-      { id: 'real-alarms', label: '실시간 알람 현황', description: '진행 중인 알람과 경고' },
-      { id: 'urgent-equipment', label: '긴급 조치 필요 설비', description: '즉시 대응이 필요한 설비' }
-    ]
-  },
-  {
-    id: 'performance',
-    label: '📈 성과 분석',
-    icon: '📈',
-    description: '설비 성능 및 효율성 지표 분석',
-    subOptions: [
-      { id: 'operation-rate', label: '가동률 분석', description: '설비별 가동률 및 추이 분석' },
-      { id: 'efficiency', label: '효율성 지표', description: 'MTBF, MTTR 등 효율성 측정' },
-      { id: 'productivity', label: '생산성 분석', description: '설비 생산성 및 품질 지표' }
-    ]
-  },
-  {
-    id: 'maintenance',
-    label: '🔧 정비 분석',
-    icon: '🔧',
-    description: '정비 활동 및 성과 분석',
-    subOptions: [
-      { id: 'schedule-analysis', label: '정비 일정 분석', description: '정비 계획 대비 실행률' },
-      { id: 'maintenance-type', label: '정비 유형 분석', description: '예방정비 vs 사후정비 비율' },
-      { id: 'team-performance', label: '정비팀 성과', description: '정비팀별 생산성과 품질' }
-    ]
-  },
-  {
-    id: 'report',
-    label: '📋 종합 리포트',
-    icon: '📋',
-    description: '통합 리포트 및 상세 분석',
-    subOptions: [
-      { id: 'monthly-report', label: '월간 종합 보고서', description: '월별 통합 성과 리포트' },
-      { id: 'equipment-detail', label: '설비별 상세 분석', description: '개별 설비 심층 분석' },
-      { id: 'improvement', label: '개선 제안 사항', description: 'AI 기반 개선 권고사항' }
-    ]
-  }
-]
-
-const periodOptions = [
-  { id: 'realtime', label: '실시간' },
-  { id: 'daily', label: '일간' },
-  { id: 'weekly', label: '주간' },
-  { id: 'monthly', label: '월간' },
-  { id: 'quarterly', label: '분기별' }
-]
 
 export function StatisticsPage() {
+  const { t } = useTranslation('statistics')
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisType>('realtime')
   const [selectedSubOption, setSelectedSubOption] = useState<string>('current-status')
   const [selectedPeriod, setSelectedPeriod] = useState<string>('daily')
   const [isLoading, setIsLoading] = useState(false)
+
+  // [SRP] Rule: 번역 기반 동적 옵션 생성
+  const analysisOptions: AnalysisOption[] = [
+    {
+      id: 'realtime',
+      label: t('analysisType.realtime.label'),
+      icon: '📊',
+      description: t('analysisType.realtime.description'),
+      subOptions: [
+        { id: 'current-status', label: t('subOptions.realtime.currentStatus.label'), description: t('subOptions.realtime.currentStatus.description') },
+        { id: 'real-alarms', label: t('subOptions.realtime.realAlarms.label'), description: t('subOptions.realtime.realAlarms.description') },
+        { id: 'urgent-equipment', label: t('subOptions.realtime.urgentEquipment.label'), description: t('subOptions.realtime.urgentEquipment.description') }
+      ]
+    },
+    {
+      id: 'performance',
+      label: t('analysisType.performance.label'),
+      icon: '📈',
+      description: t('analysisType.performance.description'),
+      subOptions: [
+        { id: 'operation-rate', label: t('subOptions.performance.operationRate.label'), description: t('subOptions.performance.operationRate.description') },
+        { id: 'efficiency', label: t('subOptions.performance.efficiency.label'), description: t('subOptions.performance.efficiency.description') },
+        { id: 'productivity', label: t('subOptions.performance.productivity.label'), description: t('subOptions.performance.productivity.description') }
+      ]
+    },
+    {
+      id: 'maintenance',
+      label: t('analysisType.maintenance.label'),
+      icon: '🔧',
+      description: t('analysisType.maintenance.description'),
+      subOptions: [
+        { id: 'schedule-analysis', label: t('subOptions.maintenance.scheduleAnalysis.label'), description: t('subOptions.maintenance.scheduleAnalysis.description') },
+        { id: 'maintenance-type', label: t('subOptions.maintenance.maintenanceType.label'), description: t('subOptions.maintenance.maintenanceType.description') },
+        { id: 'team-performance', label: t('subOptions.maintenance.teamPerformance.label'), description: t('subOptions.maintenance.teamPerformance.description') }
+      ]
+    },
+    {
+      id: 'report',
+      label: t('analysisType.report.label'),
+      icon: '📋',
+      description: t('analysisType.report.description'),
+      subOptions: [
+        { id: 'monthly-report', label: t('subOptions.report.monthlyReport.label'), description: t('subOptions.report.monthlyReport.description') },
+        { id: 'equipment-detail', label: t('subOptions.report.equipmentDetail.label'), description: t('subOptions.report.equipmentDetail.description') },
+        { id: 'improvement', label: t('subOptions.report.improvement.label'), description: t('subOptions.report.improvement.description') }
+      ]
+    }
+  ]
+
+  const periodOptions = [
+    { id: 'realtime', label: t('periods.realtime') },
+    { id: 'daily', label: t('periods.daily') },
+    { id: 'weekly', label: t('periods.weekly') },
+    { id: 'monthly', label: t('periods.monthly') },
+    { id: 'quarterly', label: t('periods.quarterly') }
+  ]
 
   const handleAnalysisChange = (analysisType: AnalysisType) => {
     setSelectedAnalysis(analysisType)
@@ -124,9 +128,9 @@ export function StatisticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">통계 분석</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('title')}</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            설비 운영 데이터를 분석하고 인사이트를 확인하세요
+            {t('subtitle')}
           </p>
         </div>
         <Button 
@@ -134,14 +138,14 @@ export function StatisticsPage() {
           disabled={isLoading}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          {isLoading ? '생성 중...' : '📊 리포트 생성'}
+          {isLoading ? t('generating') : `📊 ${t('generateReport')}`}
         </Button>
       </div>
 
       {/* Analysis Type Selection */}
       <Card>
         <Card.Header>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">분석 유형 선택</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('analysisType.title')}</h3>
         </Card.Header>
         <Card.Content>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -176,7 +180,7 @@ export function StatisticsPage() {
               {/* Sub-option selection */}
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  세부 분석 항목
+                  {t('subOptions.label')}
                 </label>
                 <select
                   value={selectedSubOption}
@@ -195,7 +199,7 @@ export function StatisticsPage() {
               {selectedAnalysis !== 'realtime' && (
                 <div className="flex-1 lg:max-w-xs">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    분석 기간
+                    {t('periods.label')}
                   </label>
                   <select
                     value={selectedPeriod}

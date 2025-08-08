@@ -1,0 +1,387 @@
+{
+  "title": "Phân tích thống kê",
+  "subtitle": "Phân tích dữ liệu vận hành thiết bị và xem các thông tin chi tiết",
+  "generateReport": "Tạo báo cáo",
+  "generating": "Đang tạo...",
+  "analysisType": {
+    "title": "Chọn loại phân tích",
+    "realtime": {
+      "label": "🔥 Giám sát thời gian thực",
+      "description": "Trạng thái thiết bị hiện tại và phân tích dữ liệu thời gian thực"
+    },
+    "performance": {
+      "label": "📈 Phân tích hiệu suất",
+      "description": "Phân tích hiệu suất và chỉ số hiệu quả thiết bị"
+    },
+    "maintenance": {
+      "label": "🔧 Phân tích bảo trì",
+      "description": "Phân tích hoạt động và hiệu quả bảo trì"
+    },
+    "report": {
+      "label": "📋 Báo cáo tổng hợp",
+      "description": "Báo cáo tích hợp và phân tích chi tiết"
+    }
+  },
+  "subOptions": {
+    "label": "Mục phân tích chi tiết",
+    "realtime": {
+      "currentStatus": {
+        "label": "Trạng thái thiết bị hiện tại",
+        "description": "Tình trạng vận hành thiết bị theo thời gian thực"
+      },
+      "realAlarms": {
+        "label": "Cảnh báo thời gian thực",
+        "description": "Cảnh báo và báo động đang diễn ra"
+      },
+      "urgentEquipment": {
+        "label": "Thiết bị cần xử lý khẩn cấp",
+        "description": "Thiết bị cần phản ứng ngay lập tức"
+      }
+    },
+    "performance": {
+      "operationRate": {
+        "label": "Phân tích tỷ lệ hoạt động",
+        "description": "Phân tích tỷ lệ hoạt động và xu hướng từng thiết bị"
+      },
+      "efficiency": {
+        "label": "Chỉ số hiệu quả",
+        "description": "Đo lường hiệu quả MTBF, MTTR, v.v."
+      },
+      "productivity": {
+        "label": "Phân tích năng suất",
+        "description": "Chỉ số năng suất và chất lượng thiết bị"
+      }
+    },
+    "maintenance": {
+      "scheduleAnalysis": {
+        "label": "Phân tích lịch bảo trì",
+        "description": "Tỷ lệ thực hiện so với kế hoạch bảo trì"
+      },
+      "maintenanceType": {
+        "label": "Phân tích loại bảo trì",
+        "description": "Tỷ lệ bảo trì dự phòng vs bảo trì khắc phục"
+      },
+      "teamPerformance": {
+        "label": "Hiệu suất đội bảo trì",
+        "description": "Năng suất và chất lượng từng đội bảo trì"
+      }
+    },
+    "report": {
+      "monthlyReport": {
+        "label": "Báo cáo tổng hợp hàng tháng",
+        "description": "Báo cáo hiệu suất tích hợp theo tháng"
+      },
+      "equipmentDetail": {
+        "label": "Phân tích chi tiết từng thiết bị",
+        "description": "Phân tích sâu từng thiết bị riêng lẻ"
+      },
+      "improvement": {
+        "label": "Đề xuất cải tiến",
+        "description": "Khuyến nghị cải tiến dựa trên AI"
+      }
+    }
+  },
+  "periods": {
+    "label": "Thời gian phân tích",
+    "realtime": "Thời gian thực",
+    "daily": "Theo ngày",
+    "weekly": "Theo tuần",
+    "monthly": "Theo tháng",
+    "quarterly": "Theo quý"
+  },
+  "realtime": {
+    "title": "🔥 Giám sát thời gian thực",
+    "realtimeUpdate": "Cập nhật thời gian thực",
+    "loading": "Đang tải dữ liệu mục phân tích đã chọn...",
+    "status": {
+      "normal": "Bình thường",
+      "warning": "Cảnh báo",
+      "critical": "Bất thường",
+      "emergency": "Dừng khẩn cấp"
+    },
+    "metrics": {
+      "operationRate": "Tỷ lệ hoạt động",
+      "temperature": "Nhiệt độ",
+      "vibration": "Rung động"
+    },
+    "alarms": {
+      "title": "Cảnh báo thời gian thực",
+      "emergency": "Khẩn cấp",
+      "warning": "Cảnh báo",
+      "priority": {
+        "high": "Khẩn cấp",
+        "medium": "Cảnh báo",
+        "low": "Thông thường"
+      },
+      "messages": {
+        "emergencyStop": "{{equipment}} dừng khẩn cấp",
+        "overheat": "Tự động dừng do trục chính quá nóng",
+        "temperatureRise": "{{equipment}} tăng nhiệt độ",
+        "tempExceed": "Nhiệt độ thiết bị vượt quá phạm vi bình thường ({{temp}}°C)"
+      },
+      "timeAgo": {
+        "realtime": "Thời gian thực",
+        "minutesAgo": "{{minutes}} phút trước"
+      }
+    },
+    "urgent": {
+      "title": "Thiết bị cần xử lý khẩn cấp",
+      "immediateAction": "Phản ứng ngay",
+      "inspectionNeeded": "Cần kiểm tra",
+      "causes": {
+        "coolantIssue": "Hệ thống làm mát tuần hoàn bất thường",
+        "filterCleaning": "Cần vệ sinh bộ lọc"
+      },
+      "ranges": {
+        "normal": "Bình thường",
+        "below": "dưới",
+        "average": "trung bình"
+      }
+    }
+  },
+  "performance": {
+    "title": "📈 Phân tích hiệu suất",
+    "loading": "Đang tải dữ liệu mục phân tích đã chọn...",
+    "operationRate": {
+      "title": "Tỷ lệ hoạt động từng thiết bị",
+      "overall": "Trung bình tổng thể",
+      "highest": "Tỷ lệ hoạt động cao nhất",
+      "needsImprovement": "Cần cải tiến",
+      "change": "so với kỳ trước",
+      "trend": {
+        "up": "↗️ +{{value}}%",
+        "down": "↘️ {{value}}%"
+      }
+    },
+    "efficiency": {
+      "mtbf": {
+        "title": "MTBF (Khoảng thời gian trung bình giữa các sự cố)",
+        "unit": "giờ"
+      },
+      "mttr": {
+        "title": "MTTR (Thời gian sửa chữa trung bình)",
+        "unit": "giờ"
+      },
+      "reliability": {
+        "title": "Chỉ số độ tin cậy thiết bị"
+      }
+    },
+    "productivity": {
+      "quality": "Chỉ số chất lượng",
+      "production": "Sản lượng",
+      "defectRate": "Tỷ lệ lỗi",
+      "analysis": "Phân tích năng suất từng thiết bị",
+      "efficiency": "Hiệu quả",
+      "table": {
+        "equipment": "Tên thiết bị",
+        "production": "Sản lượng",
+        "quality": "Chỉ số chất lượng",
+        "defect": "Tỷ lệ lỗi",
+        "efficiency": "Hiệu quả",
+        "unit": "cái"
+      }
+    }
+  },
+  "maintenance": {
+    "title": "🔧 Phân tích bảo trì",
+    "loading": "Đang tải dữ liệu mục phân tích đã chọn...",
+    "schedule": {
+      "planned": "Bảo trì đã lập kế hoạch",
+      "completed": "Bảo trì đã hoàn thành",
+      "inProgress": "Đang thực hiện",
+      "delayed": "Trì hoãn",
+      "compliance": "Tỷ lệ tuân thủ kế hoạch bảo trì",
+      "overall": "Tỷ lệ tuân thủ tổng thể",
+      "completedTasks": "{{completed}}/{{planned}} hoàn thành",
+      "upcoming": {
+        "title": "Công việc bảo trì dự kiến",
+        "types": {
+          "inspection": "Kiểm tra định kỳ",
+          "replacement": "Thay thế phụ tùng",
+          "oilChange": "Thay dầu"
+        },
+        "status": {
+          "pending": "Trì hoãn",
+          "scheduled": "Đã lên lịch"
+        }
+      }
+    },
+    "types": {
+      "preventive": "Bảo trì dự phòng",
+      "corrective": "Bảo trì khắc phục",
+      "emergency": "Bảo trì khẩn cấp",
+      "percentage": "{{percent}}% tổng số",
+      "analysis": "Phân tích loại bảo trì từng thiết bị",
+      "total": "Tổng {{count}} vụ",
+      "effect": "Phân tích hiệu quả từng loại bảo trì",
+      "averageTime": "Thời gian trung bình cần thiết"
+    },
+    "team": {
+      "title": "Phân tích hiệu suất từng đội bảo trì",
+      "completedTasks": "Công việc hoàn thành",
+      "completionRate": "Tỷ lệ hoàn thành",
+      "averageTime": "Thời gian xử lý trung bình",
+      "qualityScore": "Điểm chất lượng",
+      "specialty": "Chuyên môn",
+      "workload": "Khối lượng công việc",
+      "skills": "Kỹ năng chuyên môn",
+      "specialtyAreas": {
+        "cncPrecision": "Gia công chính xác CNC",
+        "drilling": "Hệ thống khoan",
+        "hydraulic": "Hệ thống thủy lực",
+        "electrical": "Điều khiển điện"
+      },
+      "skillCategories": {
+        "machining": "Gia công CNC",
+        "measurement": "Đo lường chính xác",
+        "quality": "Quản lý chất lượng",
+        "drilling": "Khoan",
+        "tapping": "Taro",
+        "boring": "Doa",
+        "hydraulic": "Thủy lực",
+        "pneumatic": "Khí nén",
+        "cooling": "Hệ thống làm mát",
+        "electrical": "Điện",
+        "plc": "PLC",
+        "sensor": "Cảm biến"
+      }
+    }
+  },
+  "report": {
+    "title": "📋 Báo cáo tổng hợp",
+    "loading": "Đang tải dữ liệu loại báo cáo đã chọn...",
+    "monthly": {
+      "title": "Tóm tắt hiệu suất tổng hợp",
+      "download": "📄 Tải PDF",
+      "metrics": {
+        "averageOperationRate": "Tỷ lệ hoạt động trung bình",
+        "qualityIndex": "Chỉ số chất lượng",
+        "maintenanceCompleted": "Bảo trì hoàn thành",
+        "averageMTBF": "MTBF trung bình"
+      },
+      "equipmentScore": "Điểm tổng hợp từng thiết bị",
+      "maintenancePerformance": "Phân tích hiệu suất bảo trì",
+      "planCompliance": "Tỷ lệ hoàn thành so với kế hoạch",
+      "averageRepairTime": "Thời gian sửa chữa trung bình",
+      "preventiveRatio": "Tỷ lệ bảo trì dự phòng",
+      "teamSatisfaction": "Mức hài lòng đội bảo trì",
+      "issues": {
+        "title": "Vấn đề chính và tình trạng giải quyết",
+        "status": {
+          "inProgress": "Đang giải quyết",
+          "completed": "Hoàn thành"
+        },
+        "repeatFailure": "CNC-GR-001 sự cố lặp lại",
+        "coolantIssue": "Quá nóng lặp lại do vấn đề hệ thống làm mát",
+        "systemImprovement": "Cải tiến hệ thống kế hoạch bảo trì",
+        "schedulingAutomation": "Tăng hiệu quả 15% nhờ tự động hóa lên lịch bảo trì dự phòng",
+        "details": {
+          "expectedResolution": "Dự kiến giải quyết: {{date}}",
+          "assignedTo": "Phụ trách: {{name}}",
+          "completionDate": "Ngày hoàn thành: {{date}}",
+          "effect": "Hiệu quả: Đạt tỷ lệ tuân thủ kế hoạch bảo trì 91.7%"
+        }
+      }
+    },
+    "equipmentDetail": {
+      "title": "Chọn thiết bị",
+      "detailAnalysis": "Phân tích chi tiết {{equipment}}",
+      "detailReport": "📊 Báo cáo chi tiết",
+      "basicInfo": {
+        "title": "Thông tin cơ bản",
+        "equipmentName": "Tên thiết bị",
+        "location": "Vị trí",
+        "installDate": "Ngày lắp đặt",
+        "lastMaintenance": "Bảo trì lần cuối"
+      },
+      "performanceMetrics": {
+        "title": "Chỉ số hiệu suất",
+        "operationRate": "Tỷ lệ hoạt động",
+        "qualityIndex": "Chỉ số chất lượng",
+        "reliabilityIndex": "Chỉ số độ tin cậy"
+      },
+      "maintenanceHistory": {
+        "title": "Lịch sử bảo trì gần đây",
+        "types": {
+          "regularInspection": "Kiểm tra định kỳ",
+          "oilReplacement": "Thay dầu",
+          "filterCleaning": "Vệ sinh bộ lọc",
+          "precisionCheck": "Kiểm tra độ chính xác"
+        },
+        "results": {
+          "normal": "Bình thường",
+          "completed": "Hoàn thành"
+        }
+      }
+    },
+    "improvement": {
+      "title": "Đề xuất cải tiến dựa trên AI",
+      "priority": {
+        "high": "Cao",
+        "medium": "Trung bình",
+        "low": "Thấp"
+      },
+      "urgentImprovement": "Cần cải tiến khẩn cấp",
+      "coolantReplacement": "Ngăn chặn sự cố lặp lại thông qua thay thế hệ thống làm mát CNC-GR-001",
+      "scheduleOptimization": "Tối ưu hóa chu kỳ bảo trì dự phòng",
+      "patternAnalysis": "Lập lịch bảo trì tùy chỉnh qua phân tích mô hình sử dụng từng thiết bị",
+      "trainingProgram": "Chương trình đào tạo đội bảo trì",
+      "skillEnhancement": "Đào tạo có hệ thống để áp dụng công nghệ mới và nâng cao chuyên môn",
+      "effects": {
+        "operationRate": "Tỷ lệ hoạt động +{{percent}}%",
+        "mtbf": "MTBF +{{hours}} giờ",
+        "maintenanceEfficiency": "Hiệu quả bảo trì +{{percent}}%",
+        "partLife": "Tuổi thọ phụ tùng +{{percent}}%",
+        "workQuality": "Chất lượng công việc +{{percent}}%",
+        "processingTime": "Thời gian xử lý -{{percent}}%"
+      },
+      "timeline": {
+        "target": "Đối tượng áp dụng: {{target}}",
+        "duration": "Thời gian thực hiện: {{duration}}",
+        "personnel": "Số nhân sự: {{count}} người",
+        "trainingDuration": "Thời gian đào tạo: {{duration}}",
+        "workHours": "Thời gian làm việc dự kiến: {{hours}} giờ"
+      },
+      "expectedEffects": {
+        "title": "Hiệu quả cải tiến dự kiến",
+        "overallOperationRate": "Tỷ lệ hoạt động tổng thể",
+        "averageMTBF": "MTBF trung bình",
+        "maintenanceEfficiency": "Hiệu quả bảo trì"
+      },
+      "roadmap": {
+        "title": "Lộ trình thực hiện",
+        "coolantSystem": "Thay thế hệ thống làm mát",
+        "scheduleOptimization": "Tối ưu hóa chu kỳ bảo trì",
+        "trainingProgram": "Thực hiện chương trình đào tạo"
+      },
+      "progress": {
+        "title": "Tình trạng thúc đẩy cải tiến",
+        "table": {
+          "item": "Mục cải tiến",
+          "progress": "Tiến độ",
+          "manager": "Phụ trách",
+          "dueDate": "Ngày dự kiến",
+          "status": "Trạng thái"
+        },
+        "items": {
+          "coolantReplacement": "Thay thế hệ thống làm mát CNC-GR-001",
+          "scheduleOptimization": "Tối ưu hóa lịch bảo trì dự phòng",
+          "trainingProgram": "Đào tạo công nghệ mới cho đội bảo trì"
+        },
+        "status": {
+          "inProgress": "Đang thực hiện",
+          "waiting": "Chờ"
+        }
+      }
+    }
+  },
+  "common": {
+    "score": "điểm",
+    "grade": "xếp hạng",
+    "hours": "giờ",
+    "items": "vụ",
+    "percent": "%",
+    "loading": "Đang tải...",
+    "noData": "Không có dữ liệu"
+  }
+}

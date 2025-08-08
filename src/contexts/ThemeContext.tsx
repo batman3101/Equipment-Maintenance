@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 
 // [SRP] Rule: 테마 타입과 상태만 관리하는 단일 책임
 type Theme = 'light' | 'dark'
@@ -21,7 +21,7 @@ interface ThemeProviderProps {
 // [SRP] Rule: 테마 상태 관리와 로컬 스토리지 동기화만 담당
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>('light')
-  const lastToggleTime = React.useRef(0)
+  const lastToggleTime = useRef(0)
 
   // 초기 테마 설정
   useEffect(() => {

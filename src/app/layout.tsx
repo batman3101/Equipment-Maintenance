@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SystemSettingsProvider } from "@/contexts/SystemSettingsContext";
+import { I18nProvider } from "@/contexts/I18nContext";
 
 // 영어와 베트남어용 Inter 폰트
 const inter = Inter({
@@ -58,15 +59,17 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased font-korean bg-background text-foreground">
-        <ThemeProvider>
-          <ToastProvider>
-            <SystemSettingsProvider>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
-            </SystemSettingsProvider>
-          </ToastProvider>
-        </ThemeProvider>
+        <I18nProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <SystemSettingsProvider>
+                <AuthProvider>
+                  {children}
+                </AuthProvider>
+              </SystemSettingsProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   );

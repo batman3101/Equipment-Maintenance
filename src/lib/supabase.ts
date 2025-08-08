@@ -1,10 +1,39 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// 환경 변수 검증 (서버 사이드에서만 실행)
+if (typeof window === 'undefined') {
+  const { validateEnvironmentVariables } = require('@/utils/env-validator')
+  
+  // [DIP] Rule: 환경변수 검증 서비스에 의존하여 런타임 보안 강화
+  const envValidation = validateEnvironmentVariables()
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  if (!envValidation.isValid) {
+    console.error('❌ Missing required environment variables:', envValidation.missingVars)
+    throw new Error(`Missing required environment variables: ${envValidation.missingVars.join(', ')}`)
+  }
+
+  // 프로덕션 환경에서 추가 보안 검증
+  if (envValidation.warnings.length > 0) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ Production security warnings:', envValidation.warnings)
+      throw new Error(`Production security issues detected: ${envValidation.warnings.join(', ')}`)
+    } else {
+      console.warn('⚠️ Environment warnings:', envValidation.warnings)
+    }
+  }
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// URL 형식 추가 검증
+if (!supabaseUrl.startsWith('https://') && process.env.NODE_ENV === 'production') {
+  throw new Error('Supabase URL must use HTTPS in production')
+}
+
+// 키 길이 검증 (최소 보안 기준)
+if (supabaseAnonKey.length < 100) {
+  throw new Error('Invalid Supabase anon key format')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -24,7 +53,7 @@ export interface Database {
         Row: {
           id: string
           email: string
-          role: 'admin' | 'manager' | 'user'
+          role: 'system_admin' | 'manager' | 'user'
           full_name: string | null
           phone: string | null
           department: string | null
@@ -35,7 +64,7 @@ export interface Database {
         Insert: {
           id?: string
           email: string
-          role?: 'admin' | 'manager' | 'user'
+          role?: 'system_admin' | 'manager' | 'user'
           full_name?: string | null
           phone?: string | null
           department?: string | null
@@ -46,7 +75,7 @@ export interface Database {
         Update: {
           id?: string
           email?: string
-          role?: 'admin' | 'manager' | 'user'
+          role?: 'system_admin' | 'manager' | 'user'
           full_name?: string | null
           phone?: string | null
           department?: string | null

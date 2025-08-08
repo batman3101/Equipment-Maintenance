@@ -1,0 +1,92 @@
+{
+  "app": {
+    "title": "Hệ thống Quản lý Thiết bị CNC",
+    "subtitle": "Quản lý và giám sát sự cố thiết bị theo thời gian thực",
+    "version": "Phiên bản 1.0.0"
+  },
+  "navigation": {
+    "dashboard": "Bảng điều khiển",
+    "equipment": "Quản lý thiết bị",
+    "breakdown": "Báo cáo sự cố",
+    "repair": "Quản lý sửa chữa",
+    "statistics": "Phân tích thống kê",
+    "settings": "Cài đặt hệ thống",
+    "admin": "Quản trị viên",
+    "logout": "Đăng xuất"
+  },
+  "actions": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "add": "Thêm",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "export": "Xuất",
+    "import": "Nhập",
+    "refresh": "Làm mới",
+    "submit": "Gửi",
+    "confirm": "Xác nhận",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Trước",
+    "close": "Đóng"
+  },
+  "status": {
+    "active": "Hoạt động",
+    "inactive": "Không hoạt động",
+    "pending": "Đang chờ",
+    "completed": "Hoàn thành",
+    "inProgress": "Đang xử lý",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "warning": "Cảnh báo",
+    "info": "Thông tin"
+  },
+  "messages": {
+    "loading": "Đang tải...",
+    "noData": "Không có dữ liệu",
+    "error": "Đã xảy ra lỗi",
+    "success": "Xử lý thành công",
+    "confirmDelete": "Bạn có chắc chắn muốn xóa?",
+    "unsavedChanges": "Có thay đổi chưa được lưu",
+    "sessionExpired": "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.",
+    "processing": "Đang xử lý...",
+    "connecting": "Đang kết nối...",
+    "authenticating": "Đang xác thực...",
+    "pleaseWait": "Vui lòng đợi...",
+    "operationSuccessful": "Thao tác đã hoàn thành thành công",
+    "operationFailed": "Thao tác đã thất bại"
+  },
+  "validation": {
+    "required": "Đây là trường bắt buộc",
+    "email": "Vui lòng nhập địa chỉ email hợp lệ",
+    "minLength": "Vui lòng nhập ít nhất {{min}} ký tự",
+    "maxLength": "Chỉ được nhập tối đa {{max}} ký tự",
+    "number": "Chỉ được nhập số",
+    "phoneNumber": "Vui lòng nhập số điện thoại hợp lệ"
+  },
+  "datetime": {
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua",
+    "tomorrow": "Ngày mai",
+    "thisWeek": "Tuần này",
+    "lastWeek": "Tuần trước",
+    "thisMonth": "Tháng này",
+    "lastMonth": "Tháng trước",
+    "dateFormat": "DD/MM/YYYY",
+    "timeFormat": "HH:mm",
+    "datetimeFormat": "DD/MM/YYYY HH:mm"
+  },
+  "units": {
+    "hours": "giờ",
+    "minutes": "phút",
+    "seconds": "giây",
+    "days": "ngày",
+    "weeks": "tuần",
+    "months": "tháng",
+    "years": "năm",
+    "pieces": "cái",
+    "times": "lần"
+  }
+}

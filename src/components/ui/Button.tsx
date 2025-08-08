@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 
 interface ButtonProps {
   children: React.ReactNode
@@ -9,9 +9,14 @@ interface ButtonProps {
   loading?: boolean
   onClick?: () => void
   className?: string
+  'aria-label'?: string
+  'aria-describedby'?: string
 }
 
-export function Button({
+/**
+ * [OCP] Rule: 메모이제이션을 통한 UI 컴포넌트 성능 최적화
+ */
+const ButtonComponent = ({
   children,
   variant = 'primary',
   size = 'md',
@@ -20,7 +25,9 @@ export function Button({
   loading = false,
   onClick,
   className = '',
-}: ButtonProps) {
+  'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedBy,
+}: ButtonProps) => {
   const baseClasses = 'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed'
   
   const variantClasses = {
@@ -46,6 +53,9 @@ export function Button({
       disabled={disabled || loading}
       onClick={onClick}
       className={classes}
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      aria-busy={loading ? 'true' : 'false'}
     >
       {loading && (
         <svg
@@ -53,6 +63,7 @@ export function Button({
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <circle
             className="opacity-25"
@@ -73,3 +84,6 @@ export function Button({
     </button>
   )
 }
+
+// 성능 최적화된 Button 컴포넌트 내보내기
+export const Button = memo(ButtonComponent)

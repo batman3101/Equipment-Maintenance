@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useToast } from './ToastContext'
+import { useTranslation } from 'react-i18next'
 
 // 시스템 설정 인터페이스 정의
 export interface SystemSettings {
@@ -105,11 +106,11 @@ export const defaultSettings: SystemSettings = {
       { value: 'BUILD_B', label: 'BUILD B' }
     ],
     statuses: [
-      { value: 'operational', label: '가동중', color: 'green' },
-      { value: 'maintenance', label: '정비중', color: 'yellow' },
+      { value: 'operational', label: '정상', color: 'green' },
+      { value: 'maintenance', label: '점검중', color: 'yellow' },
       { value: 'broken', label: '고장', color: 'red' },
-      { value: 'test', label: 'TEST', color: 'blue' },
-      { value: 'idle', label: '대기중', color: 'gray' }
+      { value: 'test', label: '수리중', color: 'blue' },
+      { value: 'idle', label: '폐기', color: 'gray' }
     ],
     defaultStatus: 'operational'
   },
@@ -190,6 +191,7 @@ interface SystemSettingsContextType {
   exportSettings: () => void
   importSettings: (settingsJson: string) => boolean
   loading: boolean
+  getTranslatedSettings: () => SystemSettings
 }
 
 const SystemSettingsContext = createContext<SystemSettingsContextType | undefined>(undefined)
@@ -201,6 +203,8 @@ interface SystemSettingsProviderProps {
 export function SystemSettingsProvider({ children }: SystemSettingsProviderProps) {
   // Always call useToast hook to follow rules of hooks
   const toast = useToast()
+  const { t } = useTranslation(['common', 'equipment', 'breakdown'])
+  // Note: i18n from useTranslation could be used for future language change handling
   
   const showSuccess = useCallback((title: string, message: string) => {
     try {
@@ -220,6 +224,39 @@ export function SystemSettingsProvider({ children }: SystemSettingsProviderProps
 
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
+
+  // 번역된 설정을 가져오는 함수
+  const getTranslatedSettings = useCallback((): SystemSettings => {
+    return {
+      ...settings,
+      equipment: {
+        ...settings.equipment,
+        categories: settings.equipment.categories.map(category => ({
+          ...category,
+          label: t(`equipment:categories.${category.value}`, category.label)
+        })),
+        locations: settings.equipment.locations.map(location => ({
+          ...location,
+          label: t(`equipment:locations.${location.value}`, location.label)
+        })),
+        statuses: settings.equipment.statuses.map(status => ({
+          ...status,
+          label: t(`equipment:status.${status.value}`, status.label)
+        }))
+      },
+      breakdown: {
+        ...settings.breakdown,
+        urgencyLevels: settings.breakdown.urgencyLevels.map(level => ({
+          ...level,
+          label: t(`breakdown:urgency.${level.value}`, level.label)
+        })),
+        issueTypes: settings.breakdown.issueTypes.map(type => ({
+          ...type,
+          label: t(`breakdown:issueTypes.${type.value}`, type.label)
+        }))
+      }
+    }
+  }, [settings, t])
 
   // 설정 로드
   useEffect(() => {
@@ -330,7 +367,8 @@ export function SystemSettingsProvider({ children }: SystemSettingsProviderProps
     resetSettings,
     exportSettings,
     importSettings,
-    loading
+    loading,
+    getTranslatedSettings
   }
 
   return (

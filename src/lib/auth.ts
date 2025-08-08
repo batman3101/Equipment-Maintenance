@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type { Database } from './supabase'
 
-export type UserRole = 'admin' | 'manager' | 'user'
+export type UserRole = 'system_admin' | 'manager' | 'user'
 export type Profile = Database['public']['Tables']['profiles']['Row']
 
 export const authService = {
@@ -110,11 +110,11 @@ export const authService = {
   async createUser(email: string, password: string, fullName: string, role: UserRole) {
     const currentProfile = await this.getCurrentProfile()
     
-    if (!currentProfile || (currentProfile.role !== 'admin' && currentProfile.role !== 'manager')) {
+    if (!currentProfile || (currentProfile.role !== 'system_admin' && currentProfile.role !== 'manager')) {
       throw new Error('Insufficient permissions to create users')
     }
 
-    if (currentProfile.role === 'manager' && role === 'admin') {
+    if (currentProfile.role === 'manager' && role === 'system_admin') {
       throw new Error('Managers cannot create admin users')
     }
 
@@ -124,7 +124,7 @@ export const authService = {
   async getUsersList() {
     const currentProfile = await this.getCurrentProfile()
     
-    if (!currentProfile || (currentProfile.role !== 'admin' && currentProfile.role !== 'manager')) {
+    if (!currentProfile || (currentProfile.role !== 'system_admin' && currentProfile.role !== 'manager')) {
       throw new Error('Insufficient permissions to view users')
     }
 
@@ -143,7 +143,7 @@ export const authService = {
   async updateUserRole(userId: string, newRole: UserRole) {
     const currentProfile = await this.getCurrentProfile()
     
-    if (!currentProfile || currentProfile.role !== 'admin') {
+    if (!currentProfile || currentProfile.role !== 'system_admin') {
       throw new Error('Only admins can update user roles')
     }
 
@@ -167,7 +167,7 @@ export const authService = {
   async deleteUser(userId: string) {
     const currentProfile = await this.getCurrentProfile()
     
-    if (!currentProfile || currentProfile.role !== 'admin') {
+    if (!currentProfile || currentProfile.role !== 'system_admin') {
       throw new Error('Only admins can delete users')
     }
 

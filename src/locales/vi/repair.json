@@ -1,0 +1,118 @@
+{
+  "management": {
+    "title": "Quản lý Lịch sử Sửa chữa",
+    "description": "Có thể xem lịch sử sửa chữa đã hoàn thành và đăng ký hoàn thành sửa chữa mới",
+    "registerRepair": "Đăng ký Hoàn thành Sửa chữa",
+    "newRepair": "Đăng ký Sửa chữa Mới",
+    "backToList": "Về Danh sách",
+    "detailView": "Thông tin Chi tiết",
+    "repairDetail": "Chi tiết Hoàn thành Sửa chữa"
+  },
+  "breadcrumb": {
+    "repairManagement": "Quản lý Lịch sử Sửa chữa",
+    "registerRepair": "Đăng ký Hoàn thành Sửa chữa",
+    "detail": "Chi tiết Thiết bị ID: {{equipmentId}}"
+  },
+  "form": {
+    "title": "Đăng ký Hoàn thành Sửa chữa",
+    "description": "Vui lòng điền chính xác thông tin công việc sửa chữa đã hoàn thành.",
+    "equipmentId": "ID Thiết bị",
+    "equipmentIdPlaceholder": "Ví dụ: CNC-ML-001",
+    "technicianName": "Tên Kỹ thuật viên",
+    "technicianNamePlaceholder": "Nhập tên kỹ thuật viên phụ trách",
+    "repairType": "Loại Sửa chữa",
+    "completionStatus": "Trạng thái Hoàn thành",
+    "workDescription": "Nội dung Công việc đã Thực hiện",
+    "workDescriptionPlaceholder": "Mô tả chi tiết công việc sửa chữa đã thực hiện",
+    "timeSpent": "Thời gian Làm việc (giờ)",
+    "timeSpentPlaceholder": "Ví dụ: 2.5",
+    "testResults": "Kết quả Kiểm tra",
+    "testResultsPlaceholder": "Mô tả kết quả kiểm tra sau khi sửa chữa",
+    "notes": "Ghi chú Bổ sung",
+    "notesPlaceholder": "Nếu có điều gì cần tham khảo trong tương lai, vui lòng ghi chú (tùy chọn)",
+    "cancel": "Hủy bỏ",
+    "submit": "Đăng ký",
+    "submitting": "Đang đăng ký...",
+    "required": "*"
+  },
+  "validation": {
+    "equipmentIdRequired": "Vui lòng nhập ID thiết bị",
+    "technicianNameRequired": "Vui lòng nhập tên kỹ thuật viên",
+    "workDescriptionRequired": "Vui lòng nhập nội dung công việc đã thực hiện",
+    "timeSpentRequired": "Vui lòng nhập thời gian làm việc",
+    "timeSpentInvalid": "Vui lòng nhập thời gian hợp lệ (ví dụ: 2.5)",
+    "testResultsRequired": "Vui lòng nhập kết quả kiểm tra"
+  },
+  "repairTypes": {
+    "preventive": "Bảo trì Phòng ngừa",
+    "corrective": "Bảo trì Sau sự cố",
+    "emergency": "Sửa chữa Khẩn cấp",
+    "upgrade": "Cải tiến/Nâng cấp",
+    "label": "Loại Sửa chữa"
+  },
+  "completionStatus": {
+    "completed": "Hoàn thành",
+    "partial": "Hoàn thành Một phần",
+    "failed": "Thất bại/Tạm hoãn",
+    "label": "Trạng thái Hoàn thành"
+  },
+  "list": {
+    "title": "Lịch sử Hoàn thành Sửa chữa",
+    "totalRepairs": "Tổng {{count}} lịch sử sửa chữa",
+    "statistics": {
+      "completed": "Hoàn thành",
+      "partial": "Hoàn thành Một phần",
+      "failed": "Thất bại/Tạm hoãn",
+      "preventive": "Bảo trì Phòng ngừa",
+      "corrective": "Bảo trì Sau sự cố",
+      "emergency": "Sửa chữa Khẩn cấp",
+      "upgrade": "Cải tiến"
+    },
+    "filters": {
+      "allTypes": "Tất cả Loại",
+      "allStatus": "Tất cả Trạng thái",
+      "dateRange": "Chọn Khoảng thời gian",
+      "search": "Tìm kiếm"
+    },
+    "columns": {
+      "equipmentId": "ID Thiết bị",
+      "technician": "Kỹ thuật viên",
+      "type": "Loại",
+      "status": "Trạng thái",
+      "timeSpent": "Thời gian Làm việc",
+      "completedAt": "Ngày giờ Hoàn thành",
+      "actions": "Thao tác"
+    },
+    "noRepairs": "Không có lịch sử sửa chữa",
+    "noRepairsDescription": "Không có lịch sử sửa chữa nào phù hợp với điều kiện đã chọn.",
+    "viewDetail": "Xem Chi tiết"
+  },
+  "detail": {
+    "title": "Thông tin Chi tiết Hoàn thành Sửa chữa",
+    "equipmentInfo": "Thông tin Thiết bị",
+    "technicianInfo": "Kỹ thuật viên Phụ trách",
+    "repairDetails": "Chi tiết Sửa chữa",
+    "timeAndCost": "Chi phí và Thời gian",
+    "scheduleNotes": "Lịch trình và Ghi chú",
+    "equipmentName": "Tên thiết bị",
+    "equipmentId": "ID Thiết bị",
+    "technicianName": "Tên",
+    "repairType": "Loại Sửa chữa",
+    "completionStatus": "Trạng thái Hoàn thành",
+    "workPerformed": "Nội dung Công việc đã Thực hiện",
+    "testResults": "Kết quả Kiểm tra",
+    "workTime": "Thời gian Làm việc",
+    "completedAt": "Ngày giờ Hoàn thành",
+    "additionalNotes": "Ghi chú Bổ sung"
+  },
+  "messages": {
+    "repairSuccess": "Báo cáo Hoàn thành Sửa chữa",
+    "repairSuccessDetail": "Báo cáo hoàn thành sửa chữa đã được đăng ký thành công!",
+    "repairSuccessWithEquipment": "Sửa chữa thiết bị {{equipmentId}} đã được đăng ký thành công.",
+    "repairError": "Đăng ký Thất bại",
+    "repairErrorDetail": "Đã xảy ra lỗi khi xử lý báo cáo hoàn thành sửa chữa. Vui lòng thử lại.",
+    "deleteConfirm": "Bạn có muốn xóa lịch sử sửa chữa này không?",
+    "deleteSuccess": "Lịch sử sửa chữa đã được xóa.",
+    "updateSuccess": "Lịch sử sửa chữa đã được cập nhật."
+  }
+}

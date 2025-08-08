@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Card, StatusBadge } from '@/components/ui'
+import { useTranslation } from 'react-i18next'
 
 interface Equipment {
   id: string
@@ -72,15 +73,8 @@ const getStatusColor = (status: string): 'success' | 'danger' | 'warning' | 'inf
   }
 }
 
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'running': return '가동중'
-    case 'breakdown': return '고장중'
-    case 'maintenance': return '정비중'
-    case 'standby': return '대기중'
-    case 'stopped': return '정지'
-    default: return '알 수 없음'
-  }
+const getStatusText = (status: string, t: (key: string) => string) => {
+  return t(`equipment:status.${status}`)
 }
 
 interface EquipmentStatusMonitorProps {
@@ -88,6 +82,7 @@ interface EquipmentStatusMonitorProps {
 }
 
 export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMonitorProps) {
+  const { t } = useTranslation(['equipment', 'common'])
   const [equipment] = useState<Equipment[]>(mockEquipmentData)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleString())
@@ -120,7 +115,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-green-600">
               {statusCounts.running || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">가동중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:status.running')}</div>
           </Card.Content>
         </Card>
         
@@ -129,7 +124,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-red-600">
               {statusCounts.breakdown || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">고장중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:status.breakdown')}</div>
           </Card.Content>
         </Card>
         
@@ -138,7 +133,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-yellow-600">
               {statusCounts.maintenance || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">정비중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:status.maintenance')}</div>
           </Card.Content>
         </Card>
         
@@ -147,7 +142,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-blue-600">
               {statusCounts.standby || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">대기중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:status.standby')}</div>
           </Card.Content>
         </Card>
         
@@ -156,7 +151,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">
               {statusCounts.stopped || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">정지</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:status.stopped')}</div>
           </Card.Content>
         </Card>
       </div>
@@ -166,8 +161,8 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
         <Card.Header>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">설비 현황 모니터링</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">최종 업데이트: {lastUpdated}</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('equipment:monitor.title')}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:monitor.lastUpdated', { time: lastUpdated })}</p>
             </div>
             <div className="mt-4 sm:mt-0">
               <select
@@ -175,10 +170,10 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="block w-full sm:w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="all">모든 카테고리</option>
+                <option value="all">{t('equipment:monitor.allCategories')}</option>
                 {categories.slice(1).map(category => (
                   <option key={category} value={category}>
-                    {category}
+                    {t(`equipment:categories.${category}`)}
                   </option>
                 ))}
               </select>
@@ -200,21 +195,21 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
                     <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{eq.equipment_number}</p>
                   </div>
                   <StatusBadge variant={getStatusColor(eq.status)}>
-                    {getStatusText(eq.status)}
+                    {getStatusText(eq.status, t)}
                   </StatusBadge>
                 </div>
                 
                 <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex justify-between">
-                    <span>카테고리:</span>
-                    <span>{eq.category}</span>
+                    <span>{t('equipment:monitor.category')}</span>
+                    <span>{t(`equipment:categories.${eq.category}`)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>위치:</span>
-                    <span>{eq.location}</span>
+                    <span>{t('equipment:monitor.location')}</span>
+                    <span>{t(`equipment:locations.${eq.location}`)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>최종 업데이트:</span>
+                    <span>{t('equipment:monitor.lastUpdate')}</span>
                     <span>{new Date(eq.lastUpdated).toLocaleTimeString()}</span>
                   </div>
                 </div>

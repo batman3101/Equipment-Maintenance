@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
+import { useTranslation } from 'react-i18next'
 
 interface BreakdownReport {
   equipmentCategory: string
@@ -24,7 +25,9 @@ interface BreakdownReportFormProps {
 
 export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormProps) {
   const { showSuccess, showError } = useToast()
-  const { settings } = useSystemSettings()
+  const { getTranslatedSettings } = useSystemSettings()
+  const { t } = useTranslation(['breakdown', 'common'])
+  const settings = getTranslatedSettings()
   
   const [formData, setFormData] = useState<Partial<BreakdownReport>>({
     equipmentCategory: '',
@@ -42,19 +45,19 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     const newErrors: Record<string, string> = {}
 
     if (!formData.equipmentCategory) {
-      newErrors.equipmentCategory = '고장 설비 종류를 선택해주세요'
+      newErrors.equipmentCategory = t('breakdown:validation.equipmentCategoryRequired')
     }
     if (!formData.equipmentNumber?.trim()) {
-      newErrors.equipmentNumber = '고장 설비 번호를 입력해주세요'
+      newErrors.equipmentNumber = t('breakdown:validation.equipmentNumberRequired')
     }
     if (!formData.reporterName?.trim()) {
-      newErrors.reporterName = '신고자 이름을 입력해주세요'
+      newErrors.reporterName = t('breakdown:validation.reporterNameRequired')
     }
     if (!formData.description?.trim()) {
-      newErrors.description = '고장 내용을 입력해주세요'
+      newErrors.description = t('breakdown:validation.descriptionRequired')
     }
     if (!formData.symptoms?.trim()) {
-      newErrors.symptoms = '발생 증상을 입력해주세요'
+      newErrors.symptoms = t('breakdown:validation.symptomsRequired')
     }
 
     setErrors(newErrors)
@@ -80,8 +83,8 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
       onSubmit?.(reportData)
       
       showSuccess(
-        '고장 신고 완료',
-        `${reportData.equipmentNumber} 설비의 고장이 성공적으로 신고되었습니다.`
+        t('breakdown:messages.reportSuccess'),
+        t('breakdown:messages.reportSuccessWithEquipment', { equipmentNumber: reportData.equipmentNumber })
       )
       
       // 폼 초기화
@@ -98,8 +101,8 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     } catch (error) {
       console.error('고장 신고 제출 실패:', error)
       showError(
-        '신고 실패',
-        '고장 신고 처리 중 오류가 발생했습니다. 다시 시도해주세요.'
+        t('breakdown:messages.reportError'),
+        t('breakdown:messages.reportErrorDetail')
       )
     } finally {
       setLoading(false)
@@ -110,9 +113,9 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     <div className="max-w-4xl mx-auto">
       <Card>
         <Card.Header>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">고장 신고</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('breakdown:form.title')}</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            설비 고장 발생 시 즉시 신고해주세요. 모든 항목을 정확히 기입해주시기 바랍니다.
+            {t('breakdown:form.description')}
           </p>
         </Card.Header>
         
@@ -121,7 +124,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
             {/* 1. 고장 설비 종류 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                고장 설비 종류 <span className="text-red-500">*</span>
+                {t('breakdown:form.equipmentCategory')} <span className="text-red-500">{t('breakdown:form.required')}</span>
               </label>
               <select
                 value={formData.equipmentCategory || ''}
@@ -132,7 +135,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
                     : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
                 } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
               >
-                <option value="">설비 종류를 선택하세요</option>
+                <option value="">{t('breakdown:form.equipmentCategoryPlaceholder')}</option>
                 {settings.equipment.categories.map((category) => (
                   <option key={category.value} value={category.value}>
                     {category.label}
@@ -145,10 +148,10 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
             {/* 2. 고장 설비 번호 */}
             <div>
               <Input
-                label="고장 설비 번호"
+                label={t('breakdown:form.equipmentNumber')}
                 value={formData.equipmentNumber || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, equipmentNumber: e.target.value }))}
-                placeholder="예: CNC-ML-001"
+                placeholder={t('breakdown:form.equipmentNumberPlaceholder')}
                 required
                 error={errors.equipmentNumber}
               />
@@ -157,10 +160,10 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
             {/* 3. 신고자 이름 */}
             <div>
               <Input
-                label="신고자 이름"
+                label={t('breakdown:form.reporterName')}
                 value={formData.reporterName || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, reporterName: e.target.value }))}
-                placeholder="이름을 입력하세요"
+                placeholder={t('breakdown:form.reporterNamePlaceholder')}
                 required
                 error={errors.reporterName}
               />
@@ -170,7 +173,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  긴급도 <span className="text-red-500">*</span>
+                  {t('breakdown:form.urgencyLevel')} <span className="text-red-500">{t('breakdown:form.required')}</span>
                 </label>
                 <select
                   value={formData.urgencyLevel || 'medium'}
@@ -187,7 +190,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  문제 유형 <span className="text-red-500">*</span>
+                  {t('breakdown:form.issueType')} <span className="text-red-500">{t('breakdown:form.required')}</span>
                 </label>
                 <select
                   value={formData.issueType || 'mechanical'}
@@ -206,12 +209,12 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
             {/* 6. 고장 내용 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                고장 내용 <span className="text-red-500">*</span>
+                {t('breakdown:form.description')} <span className="text-red-500">{t('breakdown:form.required')}</span>
               </label>
               <textarea
                 value={formData.description || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="고장이 발생한 상황을 자세히 기술해주세요"
+                placeholder={t('breakdown:form.descriptionPlaceholder')}
                 rows={4}
                 className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 resize-none ${
                   errors.description 
@@ -225,12 +228,12 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
             {/* 7. 발생 증상 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                발생 증상 <span className="text-red-500">*</span>
+                {t('breakdown:form.symptoms')} <span className="text-red-500">{t('breakdown:form.required')}</span>
               </label>
               <textarea
                 value={formData.symptoms || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, symptoms: e.target.value }))}
-                placeholder="소음, 진동, 오류 메시지 등 구체적인 증상을 기술해주세요"
+                placeholder={t('breakdown:form.symptomsPlaceholder')}
                 rows={3}
                 className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 resize-none ${
                   errors.symptoms 
@@ -250,7 +253,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
                   onClick={onCancel}
                   disabled={loading}
                 >
-                  취소
+                  {t('breakdown:form.cancel')}
                 </Button>
               )}
               <Button
@@ -258,7 +261,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
                 loading={loading}
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
-                {loading ? '신고 중...' : '고장 신고'}
+                {loading ? t('breakdown:form.submitting') : t('breakdown:form.submit')}
               </Button>
             </div>
           </form>

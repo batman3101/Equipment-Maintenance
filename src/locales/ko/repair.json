@@ -1,0 +1,118 @@
+{
+  "management": {
+    "title": "수리 내역 관리",
+    "description": "완료된 수리 작업 내역을 확인하고 새로운 수리 완료를 등록할 수 있습니다",
+    "registerRepair": "수리 완료 등록",
+    "newRepair": "새 수리 등록",
+    "backToList": "목록으로",
+    "detailView": "상세 정보",
+    "repairDetail": "수리 완료 상세 정보"
+  },
+  "breadcrumb": {
+    "repairManagement": "수리 내역 관리",
+    "registerRepair": "수리 완료 등록",
+    "detail": "설비 ID: {{equipmentId}} 상세"
+  },
+  "form": {
+    "title": "수리 완료 등록",
+    "description": "완료된 수리 작업 정보를 정확하게 기입해주세요.",
+    "equipmentId": "설비 ID",
+    "equipmentIdPlaceholder": "예: CNC-ML-001",
+    "technicianName": "기술자 이름",
+    "technicianNamePlaceholder": "담당 기술자 이름을 입력하세요",
+    "repairType": "수리 유형",
+    "completionStatus": "완료 상태",
+    "workDescription": "수행한 작업 내용",
+    "workDescriptionPlaceholder": "수행한 수리 작업을 상세히 기술해주세요",
+    "timeSpent": "작업 시간 (시간)",
+    "timeSpentPlaceholder": "예: 2.5",
+    "testResults": "테스트 결과",
+    "testResultsPlaceholder": "수리 후 테스트 결과를 기술해주세요",
+    "notes": "추가 참고사항",
+    "notesPlaceholder": "향후 참고할 사항이 있다면 기입해주세요 (선택)",
+    "cancel": "취소",
+    "submit": "등록",
+    "submitting": "등록 중...",
+    "required": "*"
+  },
+  "validation": {
+    "equipmentIdRequired": "설비 ID를 입력해주세요",
+    "technicianNameRequired": "기술자 이름을 입력해주세요",
+    "workDescriptionRequired": "수행한 작업 내용을 입력해주세요",
+    "timeSpentRequired": "작업 시간을 입력해주세요",
+    "timeSpentInvalid": "올바른 시간을 입력해주세요 (예: 2.5)",
+    "testResultsRequired": "테스트 결과를 입력해주세요"
+  },
+  "repairTypes": {
+    "preventive": "예방 정비",
+    "corrective": "사후 정비",
+    "emergency": "긴급 수리",
+    "upgrade": "개선/업그레이드",
+    "label": "수리 유형"
+  },
+  "completionStatus": {
+    "completed": "완료",
+    "partial": "부분 완료",
+    "failed": "실패/보류",
+    "label": "완료 상태"
+  },
+  "list": {
+    "title": "수리 완료 내역",
+    "totalRepairs": "총 {{count}}건의 수리 내역",
+    "statistics": {
+      "completed": "완료",
+      "partial": "부분 완료",
+      "failed": "실패/보류",
+      "preventive": "예방 정비",
+      "corrective": "사후 정비",
+      "emergency": "긴급 수리",
+      "upgrade": "개선"
+    },
+    "filters": {
+      "allTypes": "모든 유형",
+      "allStatus": "모든 상태",
+      "dateRange": "기간 선택",
+      "search": "검색"
+    },
+    "columns": {
+      "equipmentId": "설비 ID",
+      "technician": "기술자",
+      "type": "유형",
+      "status": "상태",
+      "timeSpent": "작업시간",
+      "completedAt": "완료일시",
+      "actions": "작업"
+    },
+    "noRepairs": "수리 내역이 없습니다",
+    "noRepairsDescription": "선택한 조건에 해당하는 수리 내역이 없습니다.",
+    "viewDetail": "상세보기"
+  },
+  "detail": {
+    "title": "수리 완료 상세 정보",
+    "equipmentInfo": "설비 정보",
+    "technicianInfo": "담당 기술자",
+    "repairDetails": "수리 상세 정보",
+    "timeAndCost": "비용 및 시간",
+    "scheduleNotes": "일정 및 참고사항",
+    "equipmentName": "설비명",
+    "equipmentId": "설비 ID",
+    "technicianName": "이름",
+    "repairType": "수리 유형",
+    "completionStatus": "완료 상태",
+    "workPerformed": "수행한 작업 내용",
+    "testResults": "테스트 결과",
+    "workTime": "작업 시간",
+    "completedAt": "완료 일시",
+    "additionalNotes": "추가 참고사항"
+  },
+  "messages": {
+    "repairSuccess": "수리 완료 보고",
+    "repairSuccessDetail": "수리 완료 보고가 성공적으로 등록되었습니다!",
+    "repairSuccessWithEquipment": "{{equipmentId}} 설비의 수리가 성공적으로 등록되었습니다.",
+    "repairError": "등록 실패",
+    "repairErrorDetail": "수리 완료 보고 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
+    "deleteConfirm": "이 수리 내역을 삭제하시겠습니까?",
+    "deleteSuccess": "수리 내역이 삭제되었습니다.",
+    "updateSuccess": "수리 내역이 업데이트되었습니다."
+  }
+}

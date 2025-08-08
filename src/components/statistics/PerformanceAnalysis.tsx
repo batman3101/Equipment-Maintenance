@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
 
 interface PerformanceAnalysisProps {
@@ -9,14 +10,16 @@ interface PerformanceAnalysisProps {
 }
 
 export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisProps) {
+  const { t } = useTranslation('statistics')
+  
   const getPeriodLabel = (period: string) => {
     const labels: { [key: string]: string } = {
-      daily: '일간',
-      weekly: '주간',
-      monthly: '월간',
-      quarterly: '분기별'
+      daily: t('periods.daily'),
+      weekly: t('periods.weekly'),
+      monthly: t('periods.monthly'),
+      quarterly: t('periods.quarterly')
     }
-    return labels[period] || '일간'
+    return labels[period] || t('periods.daily')
   }
 
   const renderContent = () => {
@@ -29,18 +32,18 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">전체 평균</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{t('performance.operationRate.overall')}</h4>
                     <div className="text-2xl">📊</div>
                   </div>
                   <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">87.5%</div>
-                  <p className="text-sm text-green-600 dark:text-green-400">↗️ 전 기간 대비 +2.3%</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">{t('performance.operationRate.trend.up', { value: '2.3' })} {t('performance.operationRate.change')}</p>
                 </Card.Content>
               </Card>
 
               <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">최고 가동률</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{t('performance.operationRate.highest')}</h4>
                     <div className="text-2xl">🏆</div>
                   </div>
                   <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">94.2%</div>
@@ -51,7 +54,7 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
               <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-700">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">개선 필요</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{t('performance.operationRate.needsImprovement')}</h4>
                     <div className="text-2xl">⚠️</div>
                   </div>
                   <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">72.8%</div>
@@ -63,7 +66,7 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
             {/* 설비별 가동률 차트 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{getPeriodLabel(period)} 설비별 가동률</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{getPeriodLabel(period)} {t('performance.operationRate.title')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="space-y-4">
@@ -108,11 +111,11 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <Card.Header>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">MTBF (평균 고장 간격)</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('performance.efficiency.mtbf.title')}</h4>
                 </Card.Header>
                 <Card.Content>
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">168시간</div>
-                  <p className="text-sm text-green-600 dark:text-green-400 mb-4">↗️ 전 기간 대비 +12시간</p>
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">168{t('performance.efficiency.mtbf.unit')}</div>
+                  <p className="text-sm text-green-600 dark:text-green-400 mb-4">{t('performance.operationRate.trend.up', { value: '12' })} {t('performance.efficiency.mtbf.unit')} {t('performance.operationRate.change')}</p>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">CNC-LT-001</span>
@@ -136,11 +139,11 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
 
               <Card>
                 <Card.Header>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">MTTR (평균 수리 시간)</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('performance.efficiency.mttr.title')}</h4>
                 </Card.Header>
                 <Card.Content>
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">2.4시간</div>
-                  <p className="text-sm text-green-600 dark:text-green-400 mb-4">↘️ 전 기간 대비 -0.3시간</p>
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">2.4{t('performance.efficiency.mttr.unit')}</div>
+                  <p className="text-sm text-green-600 dark:text-green-400 mb-4">{t('performance.operationRate.trend.down', { value: '0.3' })} {t('performance.efficiency.mttr.unit')} {t('performance.operationRate.change')}</p>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">CNC-LT-001</span>
@@ -166,7 +169,7 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
             {/* 신뢰성 지수 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">설비 신뢰성 지수</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('performance.efficiency.reliability.title')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -215,33 +218,33 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
               <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-700">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">품질 지수</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{t('performance.productivity.quality')}</h4>
                     <div className="text-2xl">💎</div>
                   </div>
                   <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">94.2%</div>
-                  <p className="text-sm text-green-600 dark:text-green-400">↗️ +1.8%</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">{t('performance.operationRate.trend.up', { value: '1.8' })}</p>
                 </Card.Content>
               </Card>
 
               <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 border-indigo-200 dark:border-indigo-700">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">생산량</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{t('performance.productivity.production')}</h4>
                     <div className="text-2xl">📦</div>
                   </div>
                   <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">1,245</div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">개 / {getPeriodLabel(period)}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('performance.productivity.table.unit')} / {getPeriodLabel(period)}</p>
                 </Card.Content>
               </Card>
 
               <Card className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 border-teal-200 dark:border-teal-700">
                 <Card.Content className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">불량률</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{t('performance.productivity.defectRate')}</h4>
                     <div className="text-2xl">⚡</div>
                   </div>
                   <div className="text-3xl font-bold text-teal-600 dark:text-teal-400 mb-2">0.8%</div>
-                  <p className="text-sm text-green-600 dark:text-green-400">↘️ -0.2%</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">{t('performance.operationRate.trend.down', { value: '0.2' })}</p>
                 </Card.Content>
               </Card>
             </div>
@@ -249,18 +252,18 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
             {/* 설비별 생산성 비교 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">설비별 생산성 분석</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('performance.productivity.analysis')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">설비명</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">생산량</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">품질지수</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">불량률</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">효율성</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('performance.productivity.table.equipment')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('performance.productivity.table.production')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('performance.productivity.table.quality')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('performance.productivity.table.defect')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('performance.productivity.table.efficiency')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -272,7 +275,7 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
                       ].map((equipment, index) => (
                         <tr key={equipment.name} className={index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/50' : ''}>
                           <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{equipment.name}</td>
-                          <td className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">{equipment.production}개</td>
+                          <td className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">{equipment.production}{t('performance.productivity.table.unit')}</td>
                           <td className="text-center py-3 px-4">
                             <span className={`font-semibold ${
                               equipment.quality >= 95 ? 'text-green-600' :
@@ -313,8 +316,8 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
           <Card>
             <Card.Content className="text-center py-12">
               <div className="text-4xl mb-4">📈</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">성과 분석</h3>
-              <p className="text-gray-600 dark:text-gray-400">선택한 분석 항목의 데이터를 불러오는 중...</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('performance.title')}</h3>
+              <p className="text-gray-600 dark:text-gray-400">{t('performance.loading')}</p>
             </Card.Content>
           </Card>
         )
@@ -325,7 +328,7 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-          📈 성과 분석 - {getPeriodLabel(period)}
+          {t('performance.title')} - {getPeriodLabel(period)}
         </h3>
       </div>
       {renderContent()}

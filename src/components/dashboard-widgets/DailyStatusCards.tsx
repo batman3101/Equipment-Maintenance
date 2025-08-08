@@ -2,12 +2,15 @@
 
 import React from 'react'
 import { Card } from '@/components/ui'
+import { useTranslation } from 'react-i18next'
 
 interface DailyStatusCardsProps {
   className?: string
 }
 
 export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
+  const { t } = useTranslation(['dashboard', 'common'])
+  
   // 실제 데이터는 API에서 가져올 예정
   const dailyStats = {
     breakdowns: {
@@ -54,18 +57,18 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 <span className="text-white text-2xl">🚨</span>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">금일 고장 발생</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('dashboard:dailyCards.breakdowns.title')}</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-red-600 dark:text-red-400">
                     {dailyStats.breakdowns.total}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">건</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{t('dashboard:dailyCards.breakdowns.unit')}</span>
                 </div>
               </div>
             </div>
             <div className="text-right">
               {formatTrend(dailyStats.breakdowns.trend, false)}
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">전일 대비</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('dashboard:dailyCards.breakdowns.comparison')}</div>
             </div>
           </div>
           
@@ -73,26 +76,26 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
             <div className="flex justify-between text-sm">
               <span className="text-red-600 dark:text-red-400 flex items-center">
                 <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
-                긴급
+                {t('dashboard:dailyCards.breakdowns.urgent')}
               </span>
               <span className="font-semibold text-red-600 dark:text-red-400">
-                {dailyStats.breakdowns.urgent}건
+                {dailyStats.breakdowns.urgent}{t('dashboard:dailyCards.breakdowns.unit')}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-orange-600 dark:text-orange-400 flex items-center">
                 <span className="w-2 h-2 bg-orange-600 rounded-full mr-2"></span>
-                대기중
+                {t('dashboard:dailyCards.breakdowns.pending')}
               </span>
               <span className="font-semibold text-orange-600 dark:text-orange-400">
-                {dailyStats.breakdowns.pending}건
+                {dailyStats.breakdowns.pending}{t('dashboard:dailyCards.breakdowns.unit')}
               </span>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-red-200 dark:border-red-700">
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              최근 고장: CNC-DR-001 (13:45)
+              {t('dashboard:dailyCards.breakdowns.recent', { equipment: 'CNC-DR-001', time: '13:45' })}
             </div>
           </div>
         </Card.Content>
@@ -107,18 +110,18 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 <span className="text-white text-2xl">✅</span>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">금일 수리 완료</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('dashboard:dailyCards.repairs.title')}</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-green-600 dark:text-green-400">
                     {dailyStats.repairs.completed}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">건</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{t('dashboard:dailyCards.repairs.unit')}</span>
                 </div>
               </div>
             </div>
             <div className="text-right">
               {formatTrend(dailyStats.repairs.trend, true)}
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">전일 대비</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('dashboard:dailyCards.repairs.comparison')}</div>
             </div>
           </div>
           
@@ -126,26 +129,26 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
             <div className="flex justify-between text-sm">
               <span className="text-blue-600 dark:text-blue-400 flex items-center">
                 <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
-                진행중
+                {t('dashboard:dailyCards.repairs.inProgress')}
               </span>
               <span className="font-semibold text-blue-600 dark:text-blue-400">
-                {dailyStats.repairs.inProgress}건
+                {dailyStats.repairs.inProgress}{t('dashboard:dailyCards.repairs.unit')}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-purple-600 dark:text-purple-400 flex items-center">
                 <span className="w-2 h-2 bg-purple-600 rounded-full mr-2"></span>
-                예정
+                {t('dashboard:dailyCards.repairs.scheduled')}
               </span>
               <span className="font-semibold text-purple-600 dark:text-purple-400">
-                {dailyStats.repairs.scheduled}건
+                {dailyStats.repairs.scheduled}{t('dashboard:dailyCards.repairs.unit')}
               </span>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-green-200 dark:border-green-700">
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              최근 완료: CNC-ML-001 (11:30)
+              {t('dashboard:dailyCards.repairs.recent', { equipment: 'CNC-ML-001', time: '11:30' })}
             </div>
           </div>
         </Card.Content>
@@ -160,7 +163,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 <span className="text-white text-2xl">⚙️</span>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">설비 가동 현황</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('dashboard:dailyCards.equipmentStatus.title')}</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                     {dailyStats.equipmentStatus.operational}
@@ -175,7 +178,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {Math.round((dailyStats.equipmentStatus.operational / dailyStats.equipmentStatus.total) * 100)}%
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">가동률</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard:dailyCards.equipmentStatus.rate')}</div>
             </div>
           </div>
           
@@ -183,7 +186,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
             <div className="flex justify-between text-sm">
               <span className="text-yellow-600 dark:text-yellow-400 flex items-center">
                 <span className="w-2 h-2 bg-yellow-600 rounded-full mr-2"></span>
-                정비중
+                {t('dashboard:dailyCards.equipmentStatus.maintenance')}
               </span>
               <span className="font-semibold text-yellow-600 dark:text-yellow-400">
                 {dailyStats.equipmentStatus.maintenance}대
@@ -192,7 +195,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
             <div className="flex justify-between text-sm">
               <span className="text-red-600 dark:text-red-400 flex items-center">
                 <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
-                정지
+                {t('dashboard:dailyCards.equipmentStatus.stopped')}
               </span>
               <span className="font-semibold text-red-600 dark:text-red-400">
                 {dailyStats.equipmentStatus.stopped}대

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, Button } from '@/components/ui'
 
 interface ComprehensiveReportProps {
@@ -9,14 +10,16 @@ interface ComprehensiveReportProps {
 }
 
 export function ComprehensiveReport({ subOption, period }: ComprehensiveReportProps) {
+  const { t } = useTranslation('statistics')
+  
   const getPeriodLabel = (period: string) => {
     const labels: { [key: string]: string } = {
-      daily: '일간',
-      weekly: '주간',
-      monthly: '월간',
-      quarterly: '분기별'
+      daily: t('periods.daily'),
+      weekly: t('periods.weekly'),
+      monthly: t('periods.monthly'),
+      quarterly: t('periods.quarterly')
     }
-    return labels[period] || '월간'
+    return labels[period] || t('periods.monthly')
   }
 
   const renderContent = () => {
@@ -29,10 +32,10 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
               <Card.Header>
                 <div className="flex items-center justify-between">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {getPeriodLabel(period)} 종합 성과 요약
+                    {getPeriodLabel(period)} {t('report.monthly.title')}
                   </h4>
                   <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    📄 PDF 다운로드
+                    {t('report.monthly.download')}
                   </Button>
                 </div>
               </Card.Header>
@@ -41,25 +44,25 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
                   <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
                     <div className="text-3xl mb-2">📊</div>
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">87.5%</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">평균 가동률</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{t('report.monthly.metrics.averageOperationRate')}</div>
                     <div className="text-xs text-green-600 dark:text-green-400 mt-1">↗️ +2.3%</div>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg">
                     <div className="text-3xl mb-2">🎯</div>
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">94.2%</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">품질 지수</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{t('report.monthly.metrics.qualityIndex')}</div>
                     <div className="text-xs text-green-600 dark:text-green-400 mt-1">↗️ +1.8%</div>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg">
                     <div className="text-3xl mb-2">🔧</div>
-                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">24건</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">정비 완료</div>
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">24{t('common.items')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{t('report.monthly.metrics.maintenanceCompleted')}</div>
                     <div className="text-xs text-green-600 dark:text-green-400 mt-1">↗️ +4건</div>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg">
                     <div className="text-3xl mb-2">⚡</div>
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">168h</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">평균 MTBF</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{t('report.monthly.metrics.averageMTBF')}</div>
                     <div className="text-xs text-green-600 dark:text-green-400 mt-1">↗️ +12h</div>
                   </div>
                 </div>
@@ -70,7 +73,7 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <Card.Header>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">설비별 종합 점수</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('report.monthly.equipmentScore')}</h4>
                 </Card.Header>
                 <Card.Content>
                   <div className="space-y-4">
@@ -92,7 +95,7 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
                         <div className="flex items-center space-x-4">
                           <div className="text-right">
                             <div className="text-lg font-bold text-gray-900 dark:text-white">{equipment.score}</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">점</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">{t('common.score')}</div>
                           </div>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                             equipment.grade.startsWith('A') ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200' :
@@ -110,24 +113,24 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
 
               <Card>
                 <Card.Header>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">정비 성과 분석</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('report.monthly.maintenancePerformance')}</h4>
                 </Card.Header>
                 <Card.Content>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">계획 대비 완료율</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{t('report.monthly.planCompliance')}</span>
                       <span className="text-lg font-bold text-green-600 dark:text-green-400">91.7%</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">평균 수리 시간</span>
-                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">2.4시간</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{t('report.monthly.averageRepairTime')}</span>
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">2.4{t('common.hours')}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">예방정비 비율</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{t('report.monthly.preventiveRatio')}</span>
                       <span className="text-lg font-bold text-purple-600 dark:text-purple-400">75%</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">정비팀 만족도</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{t('report.monthly.teamSatisfaction')}</span>
                       <span className="text-lg font-bold text-orange-600 dark:text-orange-400">4.6/5.0</span>
                     </div>
                   </div>
@@ -138,33 +141,33 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
             {/* 주요 이슈 및 개선사항 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">주요 이슈 및 해결 현황</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('report.monthly.issues.title')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="space-y-4">
                   <div className="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-semibold text-red-800 dark:text-red-200">CNC-GR-001 반복 고장</h5>
-                      <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs rounded">해결중</span>
+                      <h5 className="font-semibold text-red-800 dark:text-red-200">{t('report.monthly.issues.repeatFailure')}</h5>
+                      <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs rounded">{t('report.monthly.issues.status.inProgress')}</span>
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                      냉각 시스템 문제로 인한 반복적인 과열 발생
+                      {t('report.monthly.issues.coolantIssue')}
                     </p>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
-                      • 예상 해결일: 2024-01-18 • 담당: 최정비사
+                      • {t('report.monthly.issues.details.expectedResolution', { date: '2024-01-18' })} • {t('report.monthly.issues.details.assignedTo', { name: '최정비사' })}
                     </div>
                   </div>
 
                   <div className="p-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-900/20">
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-semibold text-green-800 dark:text-green-200">정비 계획 시스템 개선</h5>
-                      <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs rounded">완료</span>
+                      <h5 className="font-semibold text-green-800 dark:text-green-200">{t('report.monthly.issues.systemImprovement')}</h5>
+                      <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs rounded">{t('report.monthly.issues.status.completed')}</span>
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                      예방 정비 스케줄링 자동화로 효율성 15% 향상
+                      {t('report.monthly.issues.schedulingAutomation')}
                     </p>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
-                      • 완료일: 2024-01-10 • 효과: 정비 계획 준수율 91.7% 달성
+                      • {t('report.monthly.issues.details.completionDate', { date: '2024-01-10' })} • {t('report.monthly.issues.details.effect')}
                     </div>
                   </div>
                 </div>
@@ -179,7 +182,7 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
             {/* 설비 선택 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">설비 선택</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('report.equipmentDetail.title')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -202,9 +205,9 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
             <Card>
               <Card.Header>
                 <div className="flex items-center justify-between">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">CNC-LT-001 상세 분석</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('report.equipmentDetail.detailAnalysis', { equipment: 'CNC-LT-001' })}</h4>
                   <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                    📊 상세 리포트
+                    {t('report.equipmentDetail.detailReport')}
                   </Button>
                 </div>
               </Card.Header>
@@ -212,22 +215,22 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* 기본 정보 */}
                   <div>
-                    <h5 className="font-semibold text-gray-900 dark:text-white mb-3">기본 정보</h5>
+                    <h5 className="font-semibold text-gray-900 dark:text-white mb-3">{t('report.equipmentDetail.basicInfo.title')}</h5>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">설비명</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('report.equipmentDetail.basicInfo.equipmentName')}</span>
                         <span className="font-medium">CNC Lathe Machine</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">위치</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('report.equipmentDetail.basicInfo.location')}</span>
                         <span className="font-medium">1공장 A라인</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">설치일</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('report.equipmentDetail.basicInfo.installDate')}</span>
                         <span className="font-medium">2020-03-15</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">마지막 정비</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('report.equipmentDetail.basicInfo.lastMaintenance')}</span>
                         <span className="font-medium">2024-01-10</span>
                       </div>
                     </div>
@@ -235,11 +238,11 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
 
                   {/* 성능 지표 */}
                   <div>
-                    <h5 className="font-semibold text-gray-900 dark:text-white mb-3">성능 지표</h5>
+                    <h5 className="font-semibold text-gray-900 dark:text-white mb-3">{t('report.equipmentDetail.performanceMetrics.title')}</h5>
                     <div className="space-y-3">
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-600 dark:text-gray-400">가동률</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('report.equipmentDetail.performanceMetrics.operationRate')}</span>
                           <span className="font-medium text-green-600 dark:text-green-400">94.2%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -248,7 +251,7 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
                       </div>
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-600 dark:text-gray-400">품질 지수</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('report.equipmentDetail.performanceMetrics.qualityIndex')}</span>
                           <span className="font-medium text-blue-600 dark:text-blue-400">97.8%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -257,7 +260,7 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
                       </div>
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-600 dark:text-gray-400">신뢰성 지수</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('report.equipmentDetail.performanceMetrics.reliabilityIndex')}</span>
                           <span className="font-medium text-purple-600 dark:text-purple-400">98.2%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -270,13 +273,13 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
 
                 {/* 정비 이력 */}
                 <div className="mt-6">
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-3">최근 정비 이력</h5>
+                  <h5 className="font-semibold text-gray-900 dark:text-white mb-3">{t('report.equipmentDetail.maintenanceHistory.title')}</h5>
                   <div className="space-y-2">
                     {[
-                      { date: '2024-01-10', type: '정기 점검', result: '정상', technician: '박정비사' },
-                      { date: '2023-12-28', type: '오일 교체', result: '완료', technician: '박정비사' },
-                      { date: '2023-12-15', type: '필터 청소', result: '완료', technician: '이수리기사' },
-                      { date: '2023-11-30', type: '정밀도 점검', result: '정상', technician: '박정비사' }
+                      { date: '2024-01-10', type: t('report.equipmentDetail.maintenanceHistory.types.regularInspection'), result: t('report.equipmentDetail.maintenanceHistory.results.normal'), technician: '박정비사' },
+                      { date: '2023-12-28', type: t('report.equipmentDetail.maintenanceHistory.types.oilReplacement'), result: t('report.equipmentDetail.maintenanceHistory.results.completed'), technician: '박정비사' },
+                      { date: '2023-12-15', type: t('report.equipmentDetail.maintenanceHistory.types.filterCleaning'), result: t('report.equipmentDetail.maintenanceHistory.results.completed'), technician: '이수리기사' },
+                      { date: '2023-11-30', type: t('report.equipmentDetail.maintenanceHistory.types.precisionCheck'), result: t('report.equipmentDetail.maintenanceHistory.results.normal'), technician: '박정비사' }
                     ].map((maintenance, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded text-sm">
                         <div className="flex items-center space-x-4">
@@ -304,18 +307,18 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
               <Card.Header>
                 <div className="flex items-center space-x-2">
                   <div className="text-xl">🤖</div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">AI 기반 개선 제안</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('report.improvement.title')}</h4>
                 </div>
               </Card.Header>
               <Card.Content>
                 <div className="space-y-4">
                   <div className="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20 rounded">
                     <div className="flex items-start justify-between mb-2">
-                      <h5 className="font-semibold text-red-800 dark:text-red-200">긴급 개선 필요</h5>
-                      <span className="px-2 py-1 bg-red-500 text-white text-xs rounded">High</span>
+                      <h5 className="font-semibold text-red-800 dark:text-red-200">{t('report.improvement.urgentImprovement')}</h5>
+                      <span className="px-2 py-1 bg-red-500 text-white text-xs rounded">{t('report.improvement.priority.high')}</span>
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                      CNC-GR-001의 냉각 시스템 교체를 통한 반복 고장 방지
+                      {t('report.improvement.coolantReplacement')}
                     </p>
                     <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                       <div>• 예상 개선 효과: 가동률 +15%, MTBF +48시간</div>
@@ -481,8 +484,8 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
           <Card>
             <Card.Content className="text-center py-12">
               <div className="text-4xl mb-4">📋</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">종합 리포트</h3>
-              <p className="text-gray-600 dark:text-gray-400">선택한 리포트 유형의 데이터를 불러오는 중...</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('report.title')}</h3>
+              <p className="text-gray-600 dark:text-gray-400">{t('report.loading')}</p>
             </Card.Content>
           </Card>
         )
@@ -493,7 +496,7 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-          📋 종합 리포트
+          {t('report.title')}
         </h3>
       </div>
       {renderContent()}

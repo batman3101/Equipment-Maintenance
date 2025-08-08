@@ -1,0 +1,130 @@
+{
+  "status": {
+    "operational": "Bình thường",
+    "maintenance": "Đang kiểm tra",
+    "broken": "Hỏng hóc",
+    "test": "Đang sửa chữa",
+    "idle": "Đã loại bỏ",
+    "running": "Đang hoạt động",
+    "breakdown": "Bị hỏng",
+    "standby": "Chờ",
+    "stopped": "Dừng",
+    "unknown": "Không xác định"
+  },
+  "management": {
+    "title": "Quản lý thiết bị",
+    "description": "Quản lý tình trạng toàn bộ thiết bị và có thể đăng ký hàng loạt thông qua Excel",
+    "addEquipment": "Đăng ký riêng lẻ",
+    "downloadTemplate": "Tải xuống mẫu",
+    "excelUpload": "Tải lên Excel",
+    "uploading": "Đang tải lên...",
+    "newEquipmentForm": "Đăng ký thiết bị mới",
+    "cancel": "Hủy bỏ",
+    "register": "Đăng ký",
+    "save": "Lưu",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "search": "Tìm kiếm",
+    "reset": "Đặt lại",
+    "equipmentList": "Danh sách thiết bị",
+    "equipmentListDescription": "Có thể xem và quản lý danh sách thiết bị đã đăng ký",
+    "noEquipment": "Không có thiết bị nào được đăng ký",
+    "noEquipmentDescription": "Hãy tải xuống mẫu Excel để đăng ký thiết bị hàng loạt",
+    "totalEquipment": "Tổng thiết bị",
+    "operational": "Đang hoạt động",
+    "maintenance": "Bảo trì",
+    "broken": "Hỏng hóc"
+  },
+  "fields": {
+    "equipmentType": "Loại thiết bị",
+    "equipmentNumber": "Số thiết bị",
+    "location": "Vị trí thiết bị",
+    "installDate": "Ngày lắp đặt",
+    "status": "Trạng thái",
+    "category": "Danh mục",
+    "manufacturer": "Nhà sản xuất",
+    "model": "Tên mẫu",
+    "purchaseDate": "Ngày mua"
+  },
+  "placeholders": {
+    "selectEquipmentType": "Chọn loại thiết bị",
+    "equipmentNumberExample": "Ví dụ: CNC-001",
+    "selectLocation": "Chọn vị trí"
+  },
+  "filters": {
+    "all": "Tất cả",
+    "byCategory": "Theo danh mục",
+    "byStatus": "Theo trạng thái",
+    "byLocation": "Theo vị trí"
+  },
+  "messages": {
+    "uploadSuccess": "Tải lên thành công",
+    "uploadSuccessDetail": "{{count}} thiết bị đã được thêm thành công.",
+    "uploadFailed": "Tải lên thất bại",
+    "uploadWarning": "Không có thiết bị để thêm",
+    "uploadWarningDetail": "Vui lòng kiểm tra định dạng và nội dung tệp.",
+    "excelProcessingError": "Lỗi xử lý tệp Excel",
+    "excelProcessingErrorDetail": "Đã xảy ra lỗi khi xử lý tệp Excel. Vui lòng kiểm tra định dạng tệp.",
+    "registerSuccess": "Đăng ký thành công",
+    "registerSuccessDetail": "Thiết bị '{{equipmentNumber}}' đã được đăng ký thành công.",
+    "requiredFields": "Thiếu thông tin bắt buộc",
+    "requiredFieldsDetail": "Loại thiết bị và số thiết bị là các mục nhập bắt buộc.",
+    "duplicateEquipmentNumber": "Số thiết bị trùng lặp",
+    "duplicateEquipmentNumberDetail": "Số thiết bị '{{equipmentNumber}}' đã tồn tại.",
+    "saved": "Đã lưu",
+    "deleted": "Đã xóa",
+    "errorOccurred": "Đã xảy ra lỗi",
+    "validationError": "Hàng {{row}}: {{message}}",
+    "equipmentTypeAndNumberRequired": "Loại thiết bị và số thiết bị là bắt buộc.",
+    "equipmentNumberExists": "Số thiết bị '{{equipmentNumber}}' đã tồn tại.",
+    "invalidStatus": "Giá trị trạng thái phải là một trong {{validStatuses}}.",
+    "dataProcessingError": "Đã xảy ra lỗi khi xử lý dữ liệu.",
+    "moreErrors": "... và {{count}} lỗi khác"
+  },
+  "excel": {
+    "templateName": "Danh_sách_thiết_bị_mẫu.xlsx",
+    "sheetName": "Danh sách thiết bị",
+    "columns": {
+      "equipmentType": "Loại thiết bị",
+      "equipmentNumber": "Số thiết bị",
+      "location": "Vị trí thiết bị",
+      "installDate": "Ngày lắp đặt",
+      "status": "Trạng thái"
+    }
+  },
+  "monitor": {
+    "title": "Giám sát tình trạng thiết bị",
+    "lastUpdated": "Cập nhật lần cuối: {{time}}",
+    "allCategories": "Tất cả danh mục",
+    "category": "Danh mục:",
+    "location": "Vị trí:",
+    "lastUpdate": "Cập nhật lần cuối:"
+  },
+  "categories": {
+    "CNC": "CNC",
+    "CLEANING": "Máy làm sạch",
+    "DEBURRING": "Máy khử gờ",
+    "TRI": "TRI",
+    "AIR_DRYER": "Máy sấy khí",
+    "BOILER": "Lò hơi",
+    "RO_WATER_MAKER": "Máy làm nước RO",
+    "COOLANT_MIXING_UNIT": "Bộ trộn chất làm mát",
+    "SCRAP_COMPACTOR": "Máy nén phế liệu",
+    "SCRAP_WASHING_MACHINE": "Máy rửa phế liệu",
+    "밀링머신": "Máy phay",
+    "선반": "Máy tiện",
+    "드릴링머신": "Máy khoan",
+    "그라인딩머신": "Máy mài",
+    "레이저커터": "Máy cắt laser"
+  },
+  "locations": {
+    "BUILD_A": "Tòa nhà A",
+    "BUILD_B": "Tòa nhà B",
+    "BUILD_C": "Tòa nhà C",
+    "1공장 A라인": "Nhà máy 1 - Dây chuyền A",
+    "1공장 B라인": "Nhà máy 1 - Dây chuyền B",
+    "2공장 A라인": "Nhà máy 2 - Dây chuyền A", 
+    "2공장 B라인": "Nhà máy 2 - Dây chuyền B",
+    "3공장 A라인": "Nhà máy 3 - Dây chuyền A"
+  }
+}

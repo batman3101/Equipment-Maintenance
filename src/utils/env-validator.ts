@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Environment Variables Validation Utility
  * 프로덕션 환경에서 필수 환경 변수들을 검증하고 안전하게 관리
@@ -89,9 +87,10 @@ export function getEnvConfig(): EnvConfig {
 
 /**
  * 개발 환경에서 환경 변수 상태를 콘솔에 출력
+ * 프로덕션 환경에서는 로그 출력하지 않음 (보안상 이유)
  */
 export function logEnvironmentStatus(): void {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
     const validation = validateEnvironmentVariables()
     
     console.log('🔧 Environment Variables Status:')

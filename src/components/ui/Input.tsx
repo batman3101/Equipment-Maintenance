@@ -15,6 +15,8 @@ interface InputProps {
   min?: string
   step?: string
   readOnly?: boolean
+  'aria-label'?: string
+  'aria-describedby'?: string
 }
 
 export function Input({
@@ -32,6 +34,8 @@ export function Input({
   min,
   step,
   readOnly,
+  'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedBy,
 }: InputProps) {
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
 
@@ -55,6 +59,9 @@ export function Input({
         min={min}
         step={step}
         readOnly={readOnly}
+        aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy || (error ? `${inputId}-error` : undefined)}
+        aria-invalid={error ? 'true' : 'false'}
         className={`
           w-full px-3 py-2 border rounded-lg 
           text-gray-900 dark:text-gray-100
@@ -67,7 +74,14 @@ export function Input({
         `}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-500 dark:text-red-400">{error}</p>
+        <p 
+          id={`${inputId}-error`}
+          className="mt-1 text-sm text-red-500 dark:text-red-400"
+          role="alert"
+          aria-live="polite"
+        >
+          {error}
+        </p>
       )}
     </div>
   )

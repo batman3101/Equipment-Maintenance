@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Card, StatusBadge } from '@/components/ui'
+import { useTranslation } from 'react-i18next'
 
 interface BreakdownReport {
   id: string
@@ -74,16 +75,6 @@ const getUrgencyColor = (level: string): 'success' | 'warning' | 'danger' | 'sec
   }
 }
 
-const getUrgencyText = (level: string) => {
-  switch (level) {
-    case 'low': return '낮음'
-    case 'medium': return '보통'
-    case 'high': return '높음'
-    case 'critical': return '긴급'
-    default: return '알 수 없음'
-  }
-}
-
 const getStatusColor = (status: string): 'secondary' | 'info' | 'warning' | 'success' | 'danger' => {
   switch (status) {
     case 'reported': return 'secondary'
@@ -95,33 +86,12 @@ const getStatusColor = (status: string): 'secondary' | 'info' | 'warning' | 'suc
   }
 }
 
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'reported': return '신고 접수'
-    case 'assigned': return '담당자 배정'
-    case 'in_progress': return '수리 중'
-    case 'resolved': return '해결 완료'
-    case 'rejected': return '반려'
-    default: return '알 수 없음'
-  }
-}
-
-const getIssueTypeText = (type: string) => {
-  switch (type) {
-    case 'mechanical': return '기계적'
-    case 'electrical': return '전기적'
-    case 'software': return '소프트웨어'
-    case 'safety': return '안전'
-    case 'other': return '기타'
-    default: return '알 수 없음'
-  }
-}
-
 interface BreakdownListProps {
   onReportClick?: (report: BreakdownReport) => void
 }
 
 export function BreakdownList({ onReportClick }: BreakdownListProps) {
+  const { t } = useTranslation(['breakdown', 'common'])
   const [reports] = useState<BreakdownReport[]>(mockBreakdownReports)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all')
@@ -146,7 +116,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
             <div className="text-2xl font-bold text-gray-600">
               {statusCounts.reported || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">신고 접수</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.reported')}</div>
           </Card.Content>
         </Card>
         
@@ -155,7 +125,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
             <div className="text-2xl font-bold text-blue-600">
               {statusCounts.assigned || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">담당자 배정</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.assigned')}</div>
           </Card.Content>
         </Card>
         
@@ -164,7 +134,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
             <div className="text-2xl font-bold text-yellow-600">
               {statusCounts.in_progress || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">수리 중</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.inProgress')}</div>
           </Card.Content>
         </Card>
         
@@ -173,7 +143,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
             <div className="text-2xl font-bold text-green-600">
               {statusCounts.resolved || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">해결 완료</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.resolved')}</div>
           </Card.Content>
         </Card>
         
@@ -182,7 +152,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
             <div className="text-2xl font-bold text-red-600">
               {statusCounts.rejected || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">반려</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.rejected')}</div>
           </Card.Content>
         </Card>
       </div>
@@ -192,9 +162,9 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
         <Card.Header>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">고장 신고 내역</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('breakdown:list.title')}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                총 {filteredReports.length}건의 신고 내역
+                {t('breakdown:list.totalReports', { count: filteredReports.length })}
               </p>
             </div>
             <div className="mt-4 sm:mt-0 flex space-x-4">
@@ -203,12 +173,12 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="all">모든 상태</option>
-                <option value="reported">신고 접수</option>
-                <option value="assigned">담당자 배정</option>
-                <option value="in_progress">수리 중</option>
-                <option value="resolved">해결 완료</option>
-                <option value="rejected">반려</option>
+                <option value="all">{t('breakdown:list.filters.allStatus')}</option>
+                <option value="reported">{t('breakdown:status.reported')}</option>
+                <option value="assigned">{t('breakdown:status.assigned')}</option>
+                <option value="in_progress">{t('breakdown:status.in_progress')}</option>
+                <option value="resolved">{t('breakdown:status.resolved')}</option>
+                <option value="rejected">{t('breakdown:status.rejected')}</option>
               </select>
               
               <select
@@ -216,11 +186,11 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
                 onChange={(e) => setUrgencyFilter(e.target.value)}
                 className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="all">모든 긴급도</option>
-                <option value="critical">긴급</option>
-                <option value="high">높음</option>
-                <option value="medium">보통</option>
-                <option value="low">낮음</option>
+                <option value="all">{t('breakdown:list.filters.allUrgency')}</option>
+                <option value="critical">{t('breakdown:urgency.critical')}</option>
+                <option value="high">{t('breakdown:urgency.high')}</option>
+                <option value="medium">{t('breakdown:urgency.medium')}</option>
+                <option value="low">{t('breakdown:urgency.low')}</option>
               </select>
             </div>
           </div>
@@ -244,17 +214,17 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
                   </div>
                   <div className="flex items-center space-x-2">
                     <StatusBadge variant={getUrgencyColor(report.urgencyLevel)}>
-                      {getUrgencyText(report.urgencyLevel)}
+                      {t(`breakdown:urgency.${report.urgencyLevel}`, report.urgencyLevel)}
                     </StatusBadge>
                     <StatusBadge variant={getStatusColor(report.status)}>
-                      {getStatusText(report.status)}
+                      {t(`breakdown:status.${report.status}`, report.status)}
                     </StatusBadge>
                   </div>
                 </div>
 
                 <div className="mb-3">
                   <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
-                    <strong>증상:</strong> {report.symptoms}
+                    <strong>{t('breakdown:list.symptoms')}:</strong> {report.symptoms}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                     {report.description}
@@ -263,15 +233,15 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
 
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center space-x-4">
-                    <span><strong>신고자:</strong> {report.reporterName}</span>
-                    <span><strong>유형:</strong> {getIssueTypeText(report.issueType)}</span>
+                    <span><strong>{t('breakdown:list.reporter')}:</strong> {report.reporterName}</span>
+                    <span><strong>{t('breakdown:list.type')}:</strong> {t(`breakdown:issueTypes.${report.issueType}`, report.issueType)}</span>
                     {report.assignedTo && (
-                      <span><strong>담당자:</strong> {report.assignedTo}</span>
+                      <span><strong>{t('breakdown:list.assignee')}:</strong> {report.assignedTo}</span>
                     )}
                   </div>
                   <div className="text-right">
-                    <div>신고: {new Date(report.reportedAt).toLocaleString()}</div>
-                    <div>업데이트: {new Date(report.updatedAt).toLocaleString()}</div>
+                    <div>{t('breakdown:list.reportedAt')}: {new Date(report.reportedAt).toLocaleString()}</div>
+                    <div>{t('breakdown:list.updatedAt')}: {new Date(report.updatedAt).toLocaleString()}</div>
                   </div>
                 </div>
               </div>
@@ -281,10 +251,10 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">📋</div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  신고 내역이 없습니다
+                  {t('breakdown:list.noReports')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  선택한 조건에 해당하는 고장 신고가 없습니다.
+                  {t('breakdown:list.noReportsDescription')}
                 </p>
               </div>
             )}

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
 
 interface MaintenanceAnalysisProps {
@@ -9,14 +10,16 @@ interface MaintenanceAnalysisProps {
 }
 
 export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisProps) {
+  const { t } = useTranslation('statistics')
+  
   const getPeriodLabel = (period: string) => {
     const labels: { [key: string]: string } = {
-      daily: '일간',
-      weekly: '주간',
-      monthly: '월간',
-      quarterly: '분기별'
+      daily: t('periods.daily'),
+      weekly: t('periods.weekly'),
+      monthly: t('periods.monthly'),
+      quarterly: t('periods.quarterly')
     }
-    return labels[period] || '일간'
+    return labels[period] || t('periods.daily')
   }
 
   const renderContent = () => {
@@ -29,25 +32,25 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">24</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">계획된 정비</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.planned')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">22</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">완료된 정비</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.completed')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">1</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">진행 중</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.inProgress')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">1</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">지연</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.delayed')}</div>
                 </Card.Content>
               </Card>
             </div>
@@ -55,7 +58,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
             {/* 정비 계획 준수율 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{getPeriodLabel(period)} 정비 계획 준수율</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{getPeriodLabel(period)} {t('maintenance.schedule.compliance')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="flex items-center justify-between mb-4">
@@ -126,7 +129,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
                           task.status === 'pending' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200' :
                           'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
                         }`}>
-                          {task.status === 'pending' ? '지연' : '예정'}
+                          {task.status === 'pending' ? t('maintenance.schedule.upcoming.status.pending') : t('maintenance.schedule.upcoming.status.scheduled')}
                         </div>
                       </div>
                     </div>
@@ -145,27 +148,27 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
               <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700">
                 <Card.Content className="p-6 text-center">
                   <div className="text-3xl mb-2">🛡️</div>
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">예방 정비</h4>
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">18건</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">전체의 75%</div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t('maintenance.types.preventive')}</h4>
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">18{t('common.items')}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.types.percentage', { percent: '75' })}</div>
                 </Card.Content>
               </Card>
 
               <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-700">
                 <Card.Content className="p-6 text-center">
                   <div className="text-3xl mb-2">🔧</div>
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">사후 정비</h4>
-                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">5건</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">전체의 21%</div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t('maintenance.types.corrective')}</h4>
+                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">5{t('common.items')}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.types.percentage', { percent: '21' })}</div>
                 </Card.Content>
               </Card>
 
               <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-700">
                 <Card.Content className="p-6 text-center">
                   <div className="text-3xl mb-2">🚨</div>
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">긴급 정비</h4>
-                  <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">1건</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">전체의 4%</div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t('maintenance.types.emergency')}</h4>
+                  <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">1{t('common.items')}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.types.percentage', { percent: '4' })}</div>
                 </Card.Content>
               </Card>
             </div>
@@ -173,7 +176,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
             {/* 설비별 정비 유형 분석 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">설비별 정비 유형 분석</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('maintenance.types.analysis')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="space-y-4">
@@ -188,7 +191,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
                       <div key={equipment.name} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div className="flex items-center justify-between mb-3">
                           <h5 className="font-semibold text-gray-900 dark:text-white">{equipment.name}</h5>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">총 {total}건</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.types.total', { count: total })}</span>
                         </div>
                         <div className="flex space-x-1 mb-2">
                           <div 
@@ -205,9 +208,9 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
                           ></div>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                          <span>예방: {equipment.preventive}건</span>
-                          <span>사후: {equipment.corrective}건</span>
-                          <span>긴급: {equipment.emergency}건</span>
+                          <span>{t('maintenance.types.preventive')}: {equipment.preventive}{t('common.items')}</span>
+                          <span>{t('maintenance.types.corrective')}: {equipment.corrective}{t('common.items')}</span>
+                          <span>{t('maintenance.types.emergency')}: {equipment.emergency}{t('common.items')}</span>
                         </div>
                       </div>
                     )
@@ -219,24 +222,24 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
             {/* 정비 유형별 효과 분석 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">정비 유형별 효과 분석</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('maintenance.types.effect')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 border border-green-200 dark:border-green-700 rounded-lg">
-                    <div className="text-green-600 dark:text-green-400 font-semibold mb-2">예방 정비</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">평균 소요시간</div>
-                    <div className="text-xl font-bold text-green-600">1.8시간</div>
+                    <div className="text-green-600 dark:text-green-400 font-semibold mb-2">{t('maintenance.types.preventive')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('maintenance.types.averageTime')}</div>
+                    <div className="text-xl font-bold text-green-600">1.8{t('common.hours')}</div>
                   </div>
                   <div className="text-center p-4 border border-orange-200 dark:border-orange-700 rounded-lg">
-                    <div className="text-orange-600 dark:text-orange-400 font-semibold mb-2">사후 정비</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">평균 소요시간</div>
-                    <div className="text-xl font-bold text-orange-600">3.2시간</div>
+                    <div className="text-orange-600 dark:text-orange-400 font-semibold mb-2">{t('maintenance.types.corrective')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('maintenance.types.averageTime')}</div>
+                    <div className="text-xl font-bold text-orange-600">3.2{t('common.hours')}</div>
                   </div>
                   <div className="text-center p-4 border border-red-200 dark:border-red-700 rounded-lg">
-                    <div className="text-red-600 dark:text-red-400 font-semibold mb-2">긴급 정비</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">평균 소요시간</div>
-                    <div className="text-xl font-bold text-red-600">5.5시간</div>
+                    <div className="text-red-600 dark:text-red-400 font-semibold mb-2">{t('maintenance.types.emergency')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('maintenance.types.averageTime')}</div>
+                    <div className="text-xl font-bold text-red-600">5.5{t('common.hours')}</div>
                   </div>
                 </div>
               </Card.Content>
@@ -252,25 +255,25 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">24</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">완료 작업</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.team.completedTasks')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">95.8%</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">완료율</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.team.completionRate')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">2.4h</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">평균 처리시간</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.team.averageTime')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20">
                 <Card.Content className="p-4 text-center">
                   <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">98.2%</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">품질 점수</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.team.qualityScore')}</div>
                 </Card.Content>
               </Card>
             </div>
@@ -278,31 +281,31 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
             {/* 정비팀별 성과 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">정비팀별 성과 분석</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('maintenance.team.title')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">정비사</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">완료 작업</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">평균 시간</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">품질 점수</th>
-                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">전문 분야</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('maintenance.team.title')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('maintenance.team.completedTasks')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('maintenance.team.averageTime')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('maintenance.team.qualityScore')}</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">{t('maintenance.team.specialty')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {[
-                        { name: '박정비사', completed: 8, avgTime: 2.1, quality: 99.2, specialty: 'CNC 정밀가공' },
-                        { name: '이수리기사', completed: 6, avgTime: 2.3, quality: 98.5, specialty: '드릴링 시스템' },
-                        { name: '최정비사', completed: 7, avgTime: 2.8, quality: 97.8, specialty: '유압 시스템' },
-                        { name: '김기술자', completed: 3, avgTime: 1.9, quality: 96.5, specialty: '전기 제어' }
+                        { name: '박정비사', completed: 8, avgTime: 2.1, quality: 99.2, specialty: t('maintenance.team.specialtyAreas.cncPrecision') },
+                        { name: '이수리기사', completed: 6, avgTime: 2.3, quality: 98.5, specialty: t('maintenance.team.specialtyAreas.drilling') },
+                        { name: '최정비사', completed: 7, avgTime: 2.8, quality: 97.8, specialty: t('maintenance.team.specialtyAreas.hydraulic') },
+                        { name: '김기술자', completed: 3, avgTime: 1.9, quality: 96.5, specialty: t('maintenance.team.specialtyAreas.electrical') }
                       ].map((technician, index) => (
                         <tr key={technician.name} className={index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/50' : ''}>
                           <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{technician.name}</td>
-                          <td className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">{technician.completed}건</td>
-                          <td className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">{technician.avgTime}시간</td>
+                          <td className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">{technician.completed}{t('common.items')}</td>
+                          <td className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">{technician.avgTime}{t('common.hours')}</td>
                           <td className="text-center py-3 px-4">
                             <span className={`font-semibold ${
                               technician.quality >= 98 ? 'text-green-600' :
@@ -323,15 +326,15 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
             {/* 기술자별 전문성 분석 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">기술자별 전문성 및 워크로드</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('maintenance.team.skills')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { name: '박정비사', workload: 85, skills: ['CNC 가공', '정밀 측정', '품질 관리'], rating: 'A+' },
-                    { name: '이수리기사', workload: 70, skills: ['드릴링', '타핑', '보링'], rating: 'A' },
-                    { name: '최정비사', workload: 78, skills: ['유압', '공압', '냉각시스템'], rating: 'A-' },
-                    { name: '김기술자', workload: 45, skills: ['전기', 'PLC', '센서'], rating: 'B+' }
+                    { name: '박정비사', workload: 85, skills: [t('maintenance.team.skillCategories.machining'), t('maintenance.team.skillCategories.measurement'), t('maintenance.team.skillCategories.quality')], rating: 'A+' },
+                    { name: '이수리기사', workload: 70, skills: [t('maintenance.team.skillCategories.drilling'), t('maintenance.team.skillCategories.tapping'), t('maintenance.team.skillCategories.boring')], rating: 'A' },
+                    { name: '최정비사', workload: 78, skills: [t('maintenance.team.skillCategories.hydraulic'), t('maintenance.team.skillCategories.pneumatic'), t('maintenance.team.skillCategories.cooling')], rating: 'A-' },
+                    { name: '김기술자', workload: 45, skills: [t('maintenance.team.skillCategories.electrical'), t('maintenance.team.skillCategories.plc'), t('maintenance.team.skillCategories.sensor')], rating: 'B+' }
                   ].map((tech) => (
                     <div key={tech.name} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
@@ -345,7 +348,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
                       </div>
                       <div className="mb-3">
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-600 dark:text-gray-400">워크로드</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('maintenance.team.workload')}</span>
                           <span className="font-medium">{tech.workload}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -359,7 +362,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">전문 기술</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('maintenance.team.skills')}</div>
                         <div className="flex flex-wrap gap-1">
                           {tech.skills.map((skill) => (
                             <span key={skill} className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs rounded">
@@ -381,8 +384,8 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
           <Card>
             <Card.Content className="text-center py-12">
               <div className="text-4xl mb-4">🔧</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">정비 분석</h3>
-              <p className="text-gray-600 dark:text-gray-400">선택한 분석 항목의 데이터를 불러오는 중...</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('maintenance.title')}</h3>
+              <p className="text-gray-600 dark:text-gray-400">{t('maintenance.loading')}</p>
             </Card.Content>
           </Card>
         )
@@ -393,7 +396,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-          🔧 정비 분석 - {getPeriodLabel(period)}
+          {t('maintenance.title')} - {getPeriodLabel(period)}
         </h3>
       </div>
       {renderContent()}

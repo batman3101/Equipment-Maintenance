@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Card } from '@/components/ui'
+import { useTranslation } from 'react-i18next'
 
 type TrendPeriod = 'weekly' | 'monthly' | 'yearly'
 
@@ -16,6 +17,7 @@ interface TrendChartProps {
 }
 
 export function TrendChart({ className = '' }: TrendChartProps) {
+  const { t } = useTranslation(['dashboard'])
   const [selectedPeriod, setSelectedPeriod] = useState<TrendPeriod>('weekly')
 
   const trendData: Record<TrendPeriod, TrendData[]> = {
@@ -43,12 +45,7 @@ export function TrendChart({ className = '' }: TrendChartProps) {
   const maxValue = Math.max(...currentData.flatMap(d => [d.breakdowns, d.repairs]))
 
   const getPeriodLabel = (period: TrendPeriod) => {
-    const labels = {
-      weekly: '주간',
-      monthly: '월간', 
-      yearly: '연간'
-    }
-    return labels[period]
+    return t(`dashboard:trend.periods.${period}`)
   }
 
   return (
@@ -56,7 +53,7 @@ export function TrendChart({ className = '' }: TrendChartProps) {
       <Card.Header>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            📈 고장/수리 트렌드 분석
+            📈 {t('dashboard:trend.title')}
           </h3>
           <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
             {(['weekly', 'monthly', 'yearly'] as TrendPeriod[]).map((period) => (
@@ -81,11 +78,11 @@ export function TrendChart({ className = '' }: TrendChartProps) {
           <div className="flex items-center justify-center space-x-6 mb-6">
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">고장 발생</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard:trend.legend.breakdowns')}</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">수리 완료</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard:trend.legend.repairs')}</span>
             </div>
           </div>
 
@@ -99,10 +96,10 @@ export function TrendChart({ className = '' }: TrendChartProps) {
                   </span>
                   <div className="flex items-center space-x-4 text-xs">
                     <span className="text-red-600 dark:text-red-400">
-                      고장 {data.breakdowns}건
+                      {t('dashboard:trend.data.breakdowns', { count: data.breakdowns })}
                     </span>
                     <span className="text-green-600 dark:text-green-400">
-                      수리 {data.repairs}건
+                      {t('dashboard:trend.data.repairs', { count: data.repairs })}
                     </span>
                   </div>
                 </div>
@@ -155,7 +152,7 @@ export function TrendChart({ className = '' }: TrendChartProps) {
                   {currentData.reduce((sum, d) => sum + d.breakdowns, 0)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  총 고장 발생
+                  {t('dashboard:trend.summary.totalBreakdowns')}
                 </div>
               </div>
               <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
@@ -163,7 +160,7 @@ export function TrendChart({ className = '' }: TrendChartProps) {
                   {currentData.reduce((sum, d) => sum + d.repairs, 0)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  총 수리 완료
+                  {t('dashboard:trend.summary.totalRepairs')}
                 </div>
               </div>
             </div>
@@ -174,7 +171,7 @@ export function TrendChart({ className = '' }: TrendChartProps) {
             <div className="flex items-center space-x-2 mb-2">
               <span className="text-blue-600 dark:text-blue-400">📊</span>
               <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                {getPeriodLabel(selectedPeriod)} 트렌드 분석
+                {t('dashboard:trend.summary.analysisTitle', { period: getPeriodLabel(selectedPeriod) })}
               </span>
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -182,8 +179,9 @@ export function TrendChart({ className = '' }: TrendChartProps) {
                 const totalBreakdowns = currentData.reduce((sum, d) => sum + d.breakdowns, 0)
                 const totalRepairs = currentData.reduce((sum, d) => sum + d.repairs, 0)
                 const repairRate = totalBreakdowns > 0 ? ((totalRepairs / totalBreakdowns) * 100).toFixed(1) : '100.0'
+                const averageBreakdowns = (totalBreakdowns / currentData.length).toFixed(1)
                 
-                return `수리 완료율: ${repairRate}% | 평균 ${getPeriodLabel(selectedPeriod)} 고장: ${(totalBreakdowns / currentData.length).toFixed(1)}건`
+                return `${t('dashboard:trend.summary.repairRate', { rate: repairRate })} | ${t('dashboard:trend.summary.averageBreakdowns', { period: getPeriodLabel(selectedPeriod), average: averageBreakdowns })}`
               })()}
             </div>
           </div>

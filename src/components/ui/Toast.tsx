@@ -72,6 +72,7 @@ export function Toast({ toast, onClose }: ToastProps) {
 
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [toast.id, duration, onClose])
 
   const handleClose = () => {

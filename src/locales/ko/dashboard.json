@@ -1,0 +1,112 @@
+{
+  "title": "CNC 설비 관리 시스템",
+  "subtitle": "실시간 설비 고장 관리 및 수리 내역 추적",
+  "mode": {
+    "development": "개발 모드",
+    "offline": "오프라인 (데모)"
+  },
+  "metrics": {
+    "mtbf": {
+      "title": "평균 MTBF",
+      "period": "이번 달",
+      "value": "168h",
+      "change": "+12h",
+      "target": "목표: 150h (달성)",
+      "best": "최고: CNC-LT-001 (245h)",
+      "description": "MTBF는 설비가 고장 없이 연속 운전할 수 있는 평균 시간을 나타냅니다. 높을수록 설비 신뢰성이 우수함을 의미합니다."
+    },
+    "mttr": {
+      "title": "평균 MTTR",
+      "period": "수리 시간",
+      "value": "2.4h",
+      "change": "-0.3h",
+      "target": "목표: 3.0h (달성)",
+      "best": "최단: CNC-LT-001 (1.8h)",
+      "description": "MTTR은 고장 발생 후 수리 완료까지 걸리는 평균 시간입니다. 낮을수록 신속한 복구 능력을 의미합니다."
+    },
+    "completion": {
+      "title": "정비 완료율",
+      "period": "이번 주",
+      "value": "91.7%",
+      "change": "+3.2%",
+      "details": "완료: 22건 / 계획: 24건",
+      "preventive": "예방정비 비율: 75%",
+      "description": "정비 완료율은 계획된 정비 작업 중 실제 완료된 작업의 비율입니다. 높을수록 정비 계획 이행률이 우수함을 의미합니다."
+    }
+  },
+  "dailyCards": {
+    "breakdowns": {
+      "title": "금일 고장 발생",
+      "unit": "건",
+      "urgent": "긴급",
+      "pending": "대기중",
+      "comparison": "전일 대비",
+      "recent": "최근 고장: {{equipment}} ({{time}})"
+    },
+    "repairs": {
+      "title": "금일 수리 완료", 
+      "unit": "건",
+      "inProgress": "진행중",
+      "scheduled": "예정",
+      "comparison": "전일 대비",
+      "recent": "최근 완료: {{equipment}} ({{time}})"
+    },
+    "equipmentStatus": {
+      "title": "설비 가동 현황",
+      "operational": "가동중",
+      "maintenance": "정비중",
+      "stopped": "정지",
+      "rate": "가동률"
+    }
+  },
+  "trend": {
+    "title": "고장/수리 트렌드 분석",
+    "periods": {
+      "weekly": "주간",
+      "monthly": "월간",
+      "yearly": "연간"
+    },
+    "legend": {
+      "breakdowns": "고장 발생",
+      "repairs": "수리 완료"
+    },
+    "summary": {
+      "totalBreakdowns": "총 고장 발생",
+      "totalRepairs": "총 수리 완료",
+      "analysisTitle": "{{period}} 트렌드 분석",
+      "repairRate": "수리 완료율: {{rate}}%",
+      "averageBreakdowns": "평균 {{period}} 고장: {{average}}건"
+    },
+    "data": {
+      "breakdowns": "고장 {{count}}건",
+      "repairs": "수리 {{count}}건"
+    }
+  },
+  "activities": {
+    "title": "최근 활동",
+    "subtitle": "실시간 시스템 활동 현황",
+    "realtime": "실시간",
+    "summary": {
+      "urgent": "긴급: {{count}}건",
+      "inProgress": "진행중: {{count}}건", 
+      "completed": "완료: {{count}}건"
+    },
+    "viewAll": "전체 활동 보기",
+    "types": {
+      "urgent": "긴급 고장 신고",
+      "completed": "정기 정비 완료",
+      "inProgress": "수리 작업 진행중",
+      "scheduled": "정비 일정 임박"
+    },
+    "labels": {
+      "reporter": "신고자: {{name}} ({{team})",
+      "manager": "담당자: {{name}} ({{team})",
+      "location": "{{location}}",
+      "cost": "비용: {{amount}}원",
+      "expectedCompletion": "예상 완료: {{time}}",
+      "scheduled": "예정일: {{date}}",
+      "assigned": "담당: {{name}}",
+      "daysLeft": "D-{{days}}"
+    }
+  }
+}

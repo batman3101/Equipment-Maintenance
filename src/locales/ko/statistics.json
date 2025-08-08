@@ -1,0 +1,387 @@
+{
+  "title": "통계 분석",
+  "subtitle": "설비 운영 데이터를 분석하고 인사이트를 확인하세요",
+  "generateReport": "리포트 생성",
+  "generating": "생성 중...",
+  "analysisType": {
+    "title": "분석 유형 선택",
+    "realtime": {
+      "label": "🔥 실시간 모니터링",
+      "description": "현재 설비 상태와 실시간 데이터 분석"
+    },
+    "performance": {
+      "label": "📈 성과 분석",
+      "description": "설비 성능 및 효율성 지표 분석"
+    },
+    "maintenance": {
+      "label": "🔧 정비 분석",
+      "description": "정비 활동 및 성과 분석"
+    },
+    "report": {
+      "label": "📋 종합 리포트",
+      "description": "통합 리포트 및 상세 분석"
+    }
+  },
+  "subOptions": {
+    "label": "세부 분석 항목",
+    "realtime": {
+      "currentStatus": {
+        "label": "현재 설비 상태",
+        "description": "실시간 설비 운영 현황"
+      },
+      "realAlarms": {
+        "label": "실시간 알람 현황",
+        "description": "진행 중인 알람과 경고"
+      },
+      "urgentEquipment": {
+        "label": "긴급 조치 필요 설비",
+        "description": "즉시 대응이 필요한 설비"
+      }
+    },
+    "performance": {
+      "operationRate": {
+        "label": "가동률 분석",
+        "description": "설비별 가동률 및 추이 분석"
+      },
+      "efficiency": {
+        "label": "효율성 지표",
+        "description": "MTBF, MTTR 등 효율성 측정"
+      },
+      "productivity": {
+        "label": "생산성 분석",
+        "description": "설비 생산성 및 품질 지표"
+      }
+    },
+    "maintenance": {
+      "scheduleAnalysis": {
+        "label": "정비 일정 분석",
+        "description": "정비 계획 대비 실행률"
+      },
+      "maintenanceType": {
+        "label": "정비 유형 분석",
+        "description": "예방정비 vs 사후정비 비율"
+      },
+      "teamPerformance": {
+        "label": "정비팀 성과",
+        "description": "정비팀별 생산성과 품질"
+      }
+    },
+    "report": {
+      "monthlyReport": {
+        "label": "월간 종합 보고서",
+        "description": "월별 통합 성과 리포트"
+      },
+      "equipmentDetail": {
+        "label": "설비별 상세 분석",
+        "description": "개별 설비 심층 분석"
+      },
+      "improvement": {
+        "label": "개선 제안 사항",
+        "description": "AI 기반 개선 권고사항"
+      }
+    }
+  },
+  "periods": {
+    "label": "분석 기간",
+    "realtime": "실시간",
+    "daily": "일간",
+    "weekly": "주간",
+    "monthly": "월간",
+    "quarterly": "분기별"
+  },
+  "realtime": {
+    "title": "🔥 실시간 모니터링",
+    "realtimeUpdate": "실시간 업데이트",
+    "loading": "선택한 분석 항목의 데이터를 불러오는 중...",
+    "status": {
+      "normal": "정상",
+      "warning": "주의",
+      "critical": "이상",
+      "emergency": "긴급 정지"
+    },
+    "metrics": {
+      "operationRate": "가동률",
+      "temperature": "온도",
+      "vibration": "진동"
+    },
+    "alarms": {
+      "title": "실시간 알람 현황",
+      "emergency": "긴급",
+      "warning": "주의",
+      "priority": {
+        "high": "긴급",
+        "medium": "주의",
+        "low": "일반"
+      },
+      "messages": {
+        "emergencyStop": "{{equipment}} 긴급 정지",
+        "overheat": "스핀들 과열로 인한 자동 정지 발생",
+        "temperatureRise": "{{equipment}} 온도 상승",
+        "tempExceed": "설비 온도가 정상 범위를 초과함 ({{temp}}°C)"
+      },
+      "timeAgo": {
+        "realtime": "실시간",
+        "minutesAgo": "{{minutes}}분 전"
+      }
+    },
+    "urgent": {
+      "title": "긴급 조치 필요 설비",
+      "immediateAction": "즉시 대응",
+      "inspectionNeeded": "점검 필요",
+      "causes": {
+        "coolantIssue": "냉각수 순환 이상",
+        "filterCleaning": "필터 청소 필요"
+      },
+      "ranges": {
+        "normal": "정상",
+        "below": "이하",
+        "average": "평균"
+      }
+    }
+  },
+  "performance": {
+    "title": "📈 성과 분석",
+    "loading": "선택한 분석 항목의 데이터를 불러오는 중...",
+    "operationRate": {
+      "title": "설비별 가동률",
+      "overall": "전체 평균",
+      "highest": "최고 가동률",
+      "needsImprovement": "개선 필요",
+      "change": "전 기간 대비",
+      "trend": {
+        "up": "↗️ +{{value}}%",
+        "down": "↘️ {{value}}%"
+      }
+    },
+    "efficiency": {
+      "mtbf": {
+        "title": "MTBF (평균 고장 간격)",
+        "unit": "시간"
+      },
+      "mttr": {
+        "title": "MTTR (평균 수리 시간)",
+        "unit": "시간"
+      },
+      "reliability": {
+        "title": "설비 신뢰성 지수"
+      }
+    },
+    "productivity": {
+      "quality": "품질 지수",
+      "production": "생산량",
+      "defectRate": "불량률",
+      "analysis": "설비별 생산성 분석",
+      "efficiency": "효율성",
+      "table": {
+        "equipment": "설비명",
+        "production": "생산량",
+        "quality": "품질지수",
+        "defect": "불량률",
+        "efficiency": "효율성",
+        "unit": "개"
+      }
+    }
+  },
+  "maintenance": {
+    "title": "🔧 정비 분석",
+    "loading": "선택한 분석 항목의 데이터를 불러오는 중...",
+    "schedule": {
+      "planned": "계획된 정비",
+      "completed": "완료된 정비",
+      "inProgress": "진행 중",
+      "delayed": "지연",
+      "compliance": "정비 계획 준수율",
+      "overall": "전체 준수율",
+      "completedTasks": "{{completed}}/{{planned}} 완료",
+      "upcoming": {
+        "title": "예정된 정비 작업",
+        "types": {
+          "inspection": "정기 점검",
+          "replacement": "부품 교체",
+          "oilChange": "오일 교체"
+        },
+        "status": {
+          "pending": "지연",
+          "scheduled": "예정"
+        }
+      }
+    },
+    "types": {
+      "preventive": "예방 정비",
+      "corrective": "사후 정비",
+      "emergency": "긴급 정비",
+      "percentage": "전체의 {{percent}}%",
+      "analysis": "설비별 정비 유형 분석",
+      "total": "총 {{count}}건",
+      "effect": "정비 유형별 효과 분석",
+      "averageTime": "평균 소요시간"
+    },
+    "team": {
+      "title": "정비팀별 성과 분석",
+      "completedTasks": "완료 작업",
+      "completionRate": "완료율",
+      "averageTime": "평균 처리시간",
+      "qualityScore": "품질 점수",
+      "specialty": "전문 분야",
+      "workload": "워크로드",
+      "skills": "전문 기술",
+      "specialtyAreas": {
+        "cncPrecision": "CNC 정밀가공",
+        "drilling": "드릴링 시스템",
+        "hydraulic": "유압 시스템",
+        "electrical": "전기 제어"
+      },
+      "skillCategories": {
+        "machining": "CNC 가공",
+        "measurement": "정밀 측정",
+        "quality": "품질 관리",
+        "drilling": "드릴링",
+        "tapping": "타핑",
+        "boring": "보링",
+        "hydraulic": "유압",
+        "pneumatic": "공압",
+        "cooling": "냉각시스템",
+        "electrical": "전기",
+        "plc": "PLC",
+        "sensor": "센서"
+      }
+    }
+  },
+  "report": {
+    "title": "📋 종합 리포트",
+    "loading": "선택한 리포트 유형의 데이터를 불러오는 중...",
+    "monthly": {
+      "title": "종합 성과 요약",
+      "download": "📄 PDF 다운로드",
+      "metrics": {
+        "averageOperationRate": "평균 가동률",
+        "qualityIndex": "품질 지수",
+        "maintenanceCompleted": "정비 완료",
+        "averageMTBF": "평균 MTBF"
+      },
+      "equipmentScore": "설비별 종합 점수",
+      "maintenancePerformance": "정비 성과 분석",
+      "planCompliance": "계획 대비 완료율",
+      "averageRepairTime": "평균 수리 시간",
+      "preventiveRatio": "예방정비 비율",
+      "teamSatisfaction": "정비팀 만족도",
+      "issues": {
+        "title": "주요 이슈 및 해결 현황",
+        "status": {
+          "inProgress": "해결중",
+          "completed": "완료"
+        },
+        "repeatFailure": "CNC-GR-001 반복 고장",
+        "coolantIssue": "냉각 시스템 문제로 인한 반복적인 과열 발생",
+        "systemImprovement": "정비 계획 시스템 개선",
+        "schedulingAutomation": "예방 정비 스케줄링 자동화로 효율성 15% 향상",
+        "details": {
+          "expectedResolution": "예상 해결일: {{date}}",
+          "assignedTo": "담당: {{name}}",
+          "completionDate": "완료일: {{date}}",
+          "effect": "효과: 정비 계획 준수율 91.7% 달성"
+        }
+      }
+    },
+    "equipmentDetail": {
+      "title": "설비 선택",
+      "detailAnalysis": "{{equipment}} 상세 분석",
+      "detailReport": "📊 상세 리포트",
+      "basicInfo": {
+        "title": "기본 정보",
+        "equipmentName": "설비명",
+        "location": "위치",
+        "installDate": "설치일",
+        "lastMaintenance": "마지막 정비"
+      },
+      "performanceMetrics": {
+        "title": "성능 지표",
+        "operationRate": "가동률",
+        "qualityIndex": "품질 지수",
+        "reliabilityIndex": "신뢰성 지수"
+      },
+      "maintenanceHistory": {
+        "title": "최근 정비 이력",
+        "types": {
+          "regularInspection": "정기 점검",
+          "oilReplacement": "오일 교체",
+          "filterCleaning": "필터 청소",
+          "precisionCheck": "정밀도 점검"
+        },
+        "results": {
+          "normal": "정상",
+          "completed": "완료"
+        }
+      }
+    },
+    "improvement": {
+      "title": "AI 기반 개선 제안",
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "urgentImprovement": "긴급 개선 필요",
+      "coolantReplacement": "CNC-GR-001의 냉각 시스템 교체를 통한 반복 고장 방지",
+      "scheduleOptimization": "예방 정비 주기 최적화",
+      "patternAnalysis": "설비별 사용 패턴 분석을 통한 맞춤형 정비 스케줄 수립",
+      "trainingProgram": "정비팀 교육 프로그램",
+      "skillEnhancement": "신기술 도입 및 전문성 향상을 위한 체계적 교육 실시",
+      "effects": {
+        "operationRate": "가동률 +{{percent}}%",
+        "mtbf": "MTBF +{{hours}}시간",
+        "maintenanceEfficiency": "정비 효율 +{{percent}}%",
+        "partLife": "부품 수명 +{{percent}}%",
+        "workQuality": "작업 품질 +{{percent}}%",
+        "processingTime": "처리 시간 -{{percent}}%"
+      },
+      "timeline": {
+        "target": "적용 대상: {{target}}",
+        "duration": "시행 기간: {{duration}}",
+        "personnel": "대상 인원: {{count}}명",
+        "trainingDuration": "교육 기간: {{duration}}",
+        "workHours": "예상 작업시간: {{hours}}시간"
+      },
+      "expectedEffects": {
+        "title": "예상 개선 효과",
+        "overallOperationRate": "전체 가동률",
+        "averageMTBF": "평균 MTBF",
+        "maintenanceEfficiency": "정비 효율"
+      },
+      "roadmap": {
+        "title": "실행 로드맵",
+        "coolantSystem": "냉각 시스템 교체",
+        "scheduleOptimization": "정비 주기 최적화",
+        "trainingProgram": "교육 프로그램 실시"
+      },
+      "progress": {
+        "title": "개선 추진 현황",
+        "table": {
+          "item": "개선 항목",
+          "progress": "진행률",
+          "manager": "담당자",
+          "dueDate": "예정일",
+          "status": "상태"
+        },
+        "items": {
+          "coolantReplacement": "CNC-GR-001 냉각시스템 교체",
+          "scheduleOptimization": "예방정비 스케줄 최적화",
+          "trainingProgram": "정비팀 신기술 교육"
+        },
+        "status": {
+          "inProgress": "진행중",
+          "waiting": "대기"
+        }
+      }
+    }
+  },
+  "common": {
+    "score": "점",
+    "grade": "등급",
+    "hours": "시간",
+    "items": "건",
+    "percent": "%",
+    "loading": "불러오는 중...",
+    "noData": "데이터가 없습니다"
+  }
+}
