@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DataFetcher, AnalyticsEngine, DataManager } from '@/lib/analytics'
+import type {
+  Equipment,
+  EquipmentStatus,
+  BreakdownReport,
+  RepairReport,
+  MaintenanceSchedule,
+} from '@/lib/analytics'
 
 /**
  * 통계 분석 페이지용 고급 분석 데이터 API
@@ -9,6 +16,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || 'monthly'
+    type Period = 'weekly' | 'monthly' | 'yearly'
+    const periodParam: Period = (['weekly', 'monthly', 'yearly'] as const).includes(period as Period)
+      ? (period as Period)
+      : 'monthly'
     const category = searchParams.get('category') || 'performance'
 
     // 캐시 키 생성
@@ -31,25 +42,25 @@ export async function GET(request: NextRequest) {
         switch (category) {
           case 'performance':
             analysisData = await generatePerformanceAnalysis(
-              equipment, statusData, breakdowns, repairs, maintenance, period
+              equipment, statusData, breakdowns, repairs, maintenance, periodParam
             )
             break
 
           case 'maintenance':
             analysisData = await generateMaintenanceAnalysis(
-              equipment, statusData, breakdowns, repairs, maintenance, period
+              equipment, statusData, breakdowns, repairs, maintenance, periodParam
             )
             break
 
           case 'comprehensive':
             analysisData = await generateComprehensiveReport(
-              equipment, statusData, breakdowns, repairs, maintenance, period
+              equipment, statusData, breakdowns, repairs, maintenance, periodParam
             )
             break
 
           default:
             analysisData = await generatePerformanceAnalysis(
-              equipment, statusData, breakdowns, repairs, maintenance, period
+              equipment, statusData, breakdowns, repairs, maintenance, periodParam
             )
         }
 
@@ -81,19 +92,13 @@ export async function GET(request: NextRequest) {
 }
 
 // 성능 분석 데이터 생성
-type Equipment = { id: string; equipment_number: string; equipment_name?: string; category?: string; location?: string }
-type EquipmentStatus = { equipment_id: string; status: string }
-type Breakdown = { equipment_id: string; occurred_at?: string }
-type Repair = { equipment_id: string }
-type Maintenance = { equipment_id: string; status?: string; completed_date?: string; scheduled_date?: string; type?: string }
-
 async function generatePerformanceAnalysis(
   equipment: Equipment[],
   statusData: EquipmentStatus[],
-  breakdowns: Breakdown[],
-  repairs: Repair[],
-  maintenance: Maintenance[],
-  period: string
+  breakdowns: BreakdownReport[],
+  repairs: RepairReport[],
+  maintenance: MaintenanceSchedule[],
+  period: Period
 ) {
   const metrics = AnalyticsEngine.generateComprehensiveMetrics(
     equipment, statusData, breakdowns, repairs, maintenance
@@ -166,10 +171,10 @@ async function generatePerformanceAnalysis(
 async function generateMaintenanceAnalysis(
   equipment: Equipment[],
   statusData: EquipmentStatus[],
-  breakdowns: Breakdown[],
-  repairs: Repair[],
-  maintenance: Maintenance[],
-  period: string
+  breakdowns: BreakdownReport[],
+  repairs: RepairReport[],
+  maintenance: MaintenanceSchedule[],
+  period: Period
 ) {
   // 정비 완료율 계산
   const completionRate = AnalyticsEngine.calculateMaintenanceCompletionRate(maintenance)
@@ -244,10 +249,10 @@ async function generateMaintenanceAnalysis(
 async function generateComprehensiveReport(
   equipment: Equipment[],
   statusData: EquipmentStatus[],
-  breakdowns: Breakdown[],
-  repairs: Repair[],
-  maintenance: Maintenance[],
-  period: string
+  breakdowns: BreakdownReport[],
+  repairs: RepairReport[],
+  maintenance: MaintenanceSchedule[],
+  period: Period
 ) {
   const metrics = AnalyticsEngine.generateComprehensiveMetrics(
     equipment, statusData, breakdowns, repairs, maintenance
