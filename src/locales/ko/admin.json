@@ -1,0 +1,154 @@
+{
+  "title": "사용자 관리",
+  "subtitle": "총 {{count}}명의 등록된 사용자",
+  "buttons": {
+    "newUser": "새 사용자",
+    "userList": "사용자 목록",
+    "refresh": "새로고침"
+  },
+  "userList": {
+    "title": "등록된 사용자 목록",
+    "noUsers": "등록된 사용자가 없습니다",
+    "createFirst": "첫 번째 사용자 생성",
+    "loading": "사용자 목록을 불러오는 중..."
+  },
+  "table": {
+    "name": "이름",
+    "noName": "이름 없음",
+    "userInfo": "사용자 정보",
+    "role": "역할",
+    "department": "부서",
+    "status": "상태",
+    "joinDate": "가입일",
+    "actions": "작업"
+  },
+  "roles": {
+    "systemAdmin": "시스템 관리자",
+    "manager": "관리자",
+    "user": "일반 사용자"
+  },
+  "status": {
+    "active": "활성",
+    "inactive": "비활성"
+  },
+  "actions": {
+    "view": "보기",
+    "edit": "수정",
+    "delete": "삭제"
+  },
+  "statistics": {
+    "systemAdmins": "시스템 관리자",
+    "managers": "관리자",
+    "normalUsers": "일반 사용자",
+    "activeUsers": "활성 사용자"
+  },
+  "modals": {
+    "userDetail": {
+      "title": "사용자 상세 정보",
+      "name": "이름",
+      "email": "이메일",
+      "phone": "전화번호",
+      "role": "역할",
+      "department": "부서",
+      "status": "상태",
+      "joinDate": "가입일",
+      "close": "닫기"
+    },
+    "editUser": {
+      "title": "사용자 정보 수정",
+      "name": "이름",
+      "phone": "전화번호",
+      "department": "부서",
+      "role": "역할",
+      "activeStatus": "활성 상태",
+      "cancel": "취소",
+      "save": "저장",
+      "saving": "저장 중..."
+    },
+    "deleteConfirm": "{{name}} 사용자를 삭제하시겠습니까?"
+  },
+  "messages": {
+    "noPermission": "사용자 관리 권한이 없습니다.",
+    "fetchError": "사용자 목록을 불러올 수 없습니다",
+    "updateSuccess": {
+      "title": "사용자 정보 업데이트",
+      "message": "사용자 정보가 성공적으로 업데이트되었습니다."
+    },
+    "updateError": {
+      "title": "업데이트 실패",
+      "message": "사용자 정보를 업데이트할 수 없습니다."
+    },
+    "deleteSuccess": {
+      "title": "사용자 삭제",
+      "message": "사용자가 성공적으로 삭제되었습니다."
+    },
+    "deleteError": {
+      "title": "삭제 실패",
+      "message": "사용자를 삭제할 수 없습니다."
+    }
+  },
+  "createUser": {
+    "title": "새 사용자 생성",
+    "subtitle": "새 사용자 정보 입력",
+    "form": {
+      "email": "이메일 주소",
+      "emailPlaceholder": "user@example.com",
+      "password": "비밀번호",
+      "passwordPlaceholder": "안전한 비밀번호 입력",
+      "confirmPassword": "비밀번호 확인",
+      "confirmPasswordPlaceholder": "비밀번호 재입력",
+      "fullName": "전체 이름",
+      "fullNamePlaceholder": "홍길동",
+      "phone": "전화번호",
+      "phonePlaceholder": "010-1234-5678",
+      "department": "부서",
+      "departmentPlaceholder": "예: 생산팀",
+      "role": "역할",
+      "roleOptions": {
+        "user": "일반 사용자",
+        "manager": "관리자",
+        "systemAdmin": "시스템 관리자"
+      },
+      "activeStatus": "계정 즉시 활성화"
+    },
+    "validation": {
+      "emailRequired": "이메일은 필수입니다",
+      "emailInvalid": "유효하지 않은 이메일입니다",
+      "passwordRequired": "비밀번호는 필수입니다",
+      "passwordMinLength": "비밀번호는 최소 6자 이상이어야 합니다",
+      "passwordMismatch": "비밀번호가 일치하지 않습니다",
+      "nameRequired": "이름은 필수입니다"
+    },
+    "buttons": {
+      "cancel": "취소",
+      "create": "사용자 생성",
+      "creating": "생성 중..."
+    },
+    "messages": {
+      "success": {
+        "title": "사용자 생성 성공",
+        "message": "새 사용자가 성공적으로 생성되었습니다.",
+        "details": "✅ 사용자가 성공적으로 생성되었습니다!\n📧 이메일: {{email}}\n{{passwordInfo}}\n👤 역할: {{role}}\n🔗 Auth 연결: {{authStatus}}\n{{loginStatus}}"
+      },
+      "error": {
+        "title": "사용자 생성 실패",
+        "message": "새 사용자를 생성할 수 없습니다."
+      },
+      "authTokenNotFound": "인증 토큰을 찾을 수 없습니다",
+      "roleLabels": {
+        "manager": "관리자",
+        "user": "일반 사용자"
+      },
+      "authStatus": {
+        "completed": "완료",
+        "incomplete": "미완료",
+        "canLogin": "✅ 로그인 가능",
+        "waitingAuth": "⏳ 로그인 권한 대기"
+      },
+      "passwordInfo": {
+        "withPassword": "🔐 임시 비밀번호: {{password}}",
+        "withoutPassword": "🔐 로그인 권한: 대기 중 (관리자가 나중에 부여)"
+      }
+    }
+  }
+}

@@ -22,6 +22,8 @@ import koStatistics from '@/locales/ko/statistics.json'
 import viStatistics from '@/locales/vi/statistics.json'
 import koSettings from '@/locales/ko/settings.json'
 import viSettings from '@/locales/vi/settings.json'
+import koAdmin from '@/locales/ko/admin.json'
+import viAdmin from '@/locales/vi/admin.json'
 
 // [SRP] Rule: 언어 관리 타입 정의
 type Language = 'ko' | 'vi'
@@ -47,6 +49,7 @@ i18n
         repair: koRepair,
         statistics: koStatistics,
         settings: koSettings,
+        admin: koAdmin,
       },
       vi: {
         common: viCommon,
@@ -57,12 +60,13 @@ i18n
         repair: viRepair,
         statistics: viStatistics,
         settings: viSettings,
+        admin: viAdmin,
       },
     },
     lng: 'ko',
     fallbackLng: 'ko',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'dashboard', 'equipment', 'breakdown', 'repair', 'statistics', 'settings'],
+    ns: ['common', 'auth', 'dashboard', 'equipment', 'breakdown', 'repair', 'statistics', 'settings', 'admin'],
     interpolation: {
       escapeValue: false,
     },
