@@ -12,8 +12,10 @@ interface PerformanceAnalysisProps {
 
 export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisProps) {
   const { t } = useTranslation('statistics')
-  const [equipmentData, setEquipmentData] = useState<any[]>([])
-  const [statusData, setStatusData] = useState<any[]>([])
+  type Equipment = { id: string; equipment_number: string; equipment_name: string }
+  type EquipmentStatus = { id: string; equipment_id: string; status: 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped'; updated_at?: string }
+  const [equipmentData, setEquipmentData] = useState<Equipment[]>([])
+  const [statusData, setStatusData] = useState<EquipmentStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

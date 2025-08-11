@@ -7,7 +7,7 @@ interface PerformanceMetric {
   name: string
   value: number
   timestamp: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 interface ComponentRenderMetric {
@@ -42,7 +42,7 @@ export class PerformanceMonitor {
   }
 
   // 성능 측정 종료 및 기록
-  static endMeasurement(measurementId: string, metadata?: Record<string, any>): number {
+  static endMeasurement(measurementId: string, metadata?: Record<string, unknown>): number {
     if (!this.isEnabled) return 0
 
     const endMark = `${measurementId}-end`
@@ -65,7 +65,7 @@ export class PerformanceMonitor {
   }
 
   // 메트릭 추가
-  private static addMetric(name: string, value: number, metadata?: Record<string, any>) {
+  private static addMetric(name: string, value: number, metadata?: Record<string, unknown>) {
     if (!this.metrics.has(name)) {
       this.metrics.set(name, [])
     }
@@ -85,10 +85,10 @@ export class PerformanceMonitor {
   }
 
   // React 컴포넌트 렌더 성능 측정
-  static measureComponentRender<T extends Record<string, any>>(
+  static measureComponentRender<T extends Record<string, unknown>>(
     componentName: string,
     renderFn: () => T,
-    props?: any
+    props?: Record<string, unknown>
   ): T {
     if (!this.isEnabled) return renderFn()
 
@@ -108,11 +108,11 @@ export class PerformanceMonitor {
       this.endMeasurement(measurementId, { type: 'component-render', ...metric })
       
       return result
-    } catch (error) {
+    } catch (error: unknown) {
       this.endMeasurement(measurementId, { 
         type: 'component-render', 
         componentName, 
-        error: error.message 
+        error: error instanceof Error ? error.message : 'unknown' 
       })
       throw error
     }
@@ -238,10 +238,10 @@ export class PerformanceMonitor {
   }
 
   // 성능 리포트 생성
-  static generateReport(): Record<string, any> {
+  static generateReport(): Record<string, unknown> {
     if (!this.isEnabled) return {}
 
-    const report: Record<string, any> = {
+    const report: Record<string, unknown> = {
       timestamp: new Date().toISOString(),
       memory: this.measureMemoryUsage(),
       metrics: {}
@@ -284,14 +284,14 @@ export class PerformanceMonitor {
     const report = this.generateReport()
 
     // API 호출 시간 체크
-    for (const [name, metric] of Object.entries(report.metrics)) {
+    for (const [name, metric] of Object.entries(report.metrics as Record<string, { average: number }>)) {
       if (name.startsWith('api-') && metric.average > 1000) {
         warnings.push(`API ${name}: 평균 응답시간이 ${metric.average}ms로 너무 깁니다`)
       }
     }
 
     // 컴포넌트 렌더 시간 체크
-    for (const [name, metric] of Object.entries(report.metrics)) {
+    for (const [name, metric] of Object.entries(report.metrics as Record<string, { average: number }>)) {
       if (name.startsWith('component-') && metric.average > 16) {
         warnings.push(`컴포넌트 ${name}: 평균 렌더시간이 ${metric.average}ms로 60fps를 초과합니다`)
       }
@@ -337,25 +337,25 @@ export class PerformanceMonitor {
 }
 
 // [DIP] Rule: 고수준 API 제공
-export const performanceDecorator = (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
+export const performanceDecorator = (target: unknown, propertyName: string, descriptor: PropertyDescriptor) => {
   const method = descriptor.value
 
-  descriptor.value = function (...args: any[]) {
+  descriptor.value = function (...args: unknown[]) {
     return PerformanceMonitor.measureComponentRender(
       `${target.constructor.name}.${propertyName}`,
       () => method.apply(this, args),
-      args[0]
+      (args[0] as Record<string, unknown> | undefined)
     )
   }
 }
 
 // Hook 형태로 성능 측정 제공
 export function usePerformanceMonitor(componentName: string) {
-  const measureRender = (renderFn: () => any, props?: any) => {
+  const measureRender = <T>(renderFn: () => T, props?: Record<string, unknown>) => {
     return PerformanceMonitor.measureComponentRender(componentName, renderFn, props)
   }
 
-  const measureAsync = async (name: string, asyncFn: () => Promise<any>) => {
+  const measureAsync = async <T>(name: string, asyncFn: () => Promise<T>) => {
     return PerformanceMonitor.measureApiCall(name, asyncFn)
   }
 

@@ -12,9 +12,12 @@ interface MaintenanceAnalysisProps {
 
 export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisProps) {
   const { t } = useTranslation('statistics')
-  const [equipmentData, setEquipmentData] = useState<any[]>([])
-  const [maintenanceData, setMaintenanceData] = useState<any[]>([])
-  const [repairData, setRepairData] = useState<any[]>([])
+  type Equipment = { id: string; equipment_number: string; equipment_name?: string; category?: string }
+  type Maintenance = { id: string; equipment_id: string; status: 'planned' | 'completed' | 'in_progress' | 'delayed' | 'overdue' }
+  type Repair = { id: string; equipment_id: string; repair_completed_at?: string }
+  const [equipmentData, setEquipmentData] = useState<Equipment[]>([])
+  const [maintenanceData, setMaintenanceData] = useState<Maintenance[]>([])
+  const [repairData, setRepairData] = useState<Repair[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
