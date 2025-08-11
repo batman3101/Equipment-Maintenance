@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSystemSettings } from '@/contexts/SystemSettingsContext'
 import { Button, Input, Card, ThemeToggle, LanguageToggle } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -14,7 +15,42 @@ export function LoginForm() {
   const [passwordError, setPasswordError] = useState('')
   
   const { signIn } = useAuth()
+  const { settings, loading: settingsLoading } = useSystemSettings()
   const { t } = useTranslation(['auth', 'common'])
+
+  // 브랜딩 이미지 로드 효과
+  useEffect(() => {
+    const loadBrandingImages = () => {
+      // 심볼 이미지 로드
+      if (settings.branding?.symbolUrl) {
+        const symbolImg = document.getElementById('login-symbol') as HTMLImageElement
+        const symbolPlaceholder = document.getElementById('symbol-placeholder')
+        
+        if (symbolImg && symbolPlaceholder) {
+          symbolImg.src = settings.branding.symbolUrl
+          symbolImg.classList.remove('hidden')
+          symbolPlaceholder.classList.add('hidden')
+        }
+      }
+
+      // 로고 이미지 로드
+      if (settings.branding?.logoUrl) {
+        const logoImg = document.getElementById('login-logo') as HTMLImageElement
+        const logoPlaceholder = document.getElementById('logo-placeholder')
+        
+        if (logoImg && logoPlaceholder) {
+          logoImg.src = settings.branding.logoUrl
+          logoImg.classList.remove('hidden')
+          logoPlaceholder.classList.add('hidden')
+        }
+      }
+    }
+
+    // 설정이 로드되면 이미지를 설정
+    if (settings && !settingsLoading) {
+      loadBrandingImages()
+    }
+  }, [settings, settingsLoading])
 
   // [SRP] Rule: 이메일 검증 로직을 별도 함수로 분리
   const validateEmail = (email: string): string => {
@@ -107,33 +143,68 @@ export function LoginForm() {
       </div>
       
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            {t('auth:login.title')} - CNC
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {t('auth:login.subtitle')}
-          </p>
-        </div>
-        
-        {/* 시스템 안내 */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <span className="text-blue-400 text-lg">🏭</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                {t('auth:login.systemInfo.title')}
-              </h3>
-              <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                <p>{t('auth:login.systemInfo.description')}</p>
-                <p className="text-xs mt-1 text-blue-600 dark:text-blue-400">
-                  {t('auth:login.systemInfo.contactAdmin')}
-                </p>
+        {/* 심볼과 로고 컨테이너 */}
+        <div className="text-center space-y-6">
+          {/* 심볼 컨테이너 */}
+          <div className="flex justify-center">
+            <div 
+              id="login-symbol-container" 
+              className="w-20 h-20 flex items-center justify-center overflow-hidden"
+            >
+              <img 
+                id="login-symbol" 
+                className="max-w-full max-h-full object-contain hidden" 
+                alt="Company Symbol"
+                onError={() => {
+                  const img = document.getElementById('login-symbol') as HTMLImageElement;
+                  const placeholder = document.getElementById('symbol-placeholder');
+                  if (img && placeholder) {
+                    img.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                  }
+                }}
+              />
+              <div 
+                id="symbol-placeholder" 
+                className="w-20 h-20 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs"
+              >
+                심볼
               </div>
             </div>
           </div>
+          
+          {/* 로고 컨테이너 */}
+          <div className="flex justify-center">
+            <div 
+              id="login-logo-container" 
+              className="max-w-xs h-16 flex items-center justify-center overflow-hidden px-4"
+            >
+              <img 
+                id="login-logo" 
+                className="max-w-full max-h-full object-contain hidden" 
+                alt="Company Logo"
+                onError={() => {
+                  const img = document.getElementById('login-logo') as HTMLImageElement;
+                  const placeholder = document.getElementById('logo-placeholder');
+                  if (img && placeholder) {
+                    img.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                  }
+                }}
+              />
+              <div 
+                id="logo-placeholder" 
+                className="max-w-xs h-16 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs"
+              >
+                회사 로고
+              </div>
+            </div>
+          </div>
+          
+          {/* 시스템 설명 */}
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+            {t('auth:login.subtitle')}
+          </p>
         </div>
         
         <Card>

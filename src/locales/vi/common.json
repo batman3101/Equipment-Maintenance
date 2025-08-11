@@ -30,7 +30,8 @@
     "back": "Quay lại",
     "next": "Tiếp theo",
     "previous": "Trước",
-    "close": "Đóng"
+    "close": "Đóng",
+    "generate": "Tạo"
   },
   "status": {
     "active": "Hoạt động",
@@ -88,5 +89,89 @@
     "years": "năm",
     "pieces": "cái",
     "times": "lần"
-  }
+  },
+  "equipment": {
+    "title": "Thiết bị",
+    "settings": "Cài đặt thiết bị",
+    "settingsDesc": "Quản lý các loại thiết bị, vị trí, trạng thái và các tùy chọn khác",
+    "categories": "Loại thiết bị",
+    "locations": "Vị trí thiết bị",
+    "defaultStatus": "Trạng thái mặc định",
+    "valuePlaceholder": "Giá trị (ví dụ: LASER)",
+    "labelPlaceholder": "Tên hiển thị (ví dụ: Máy cắt laser)",
+    "locationValuePlaceholder": "Giá trị (ví dụ: BUILD_C)",
+    "locationLabelPlaceholder": "Tên hiển thị (ví dụ: Tòa nhà C)",
+    "systemNamePlaceholder": "Hệ thống quản lý thiết bị CNC"
+  },
+  "breakdown": {
+    "title": "Báo cáo sự cố",
+    "settings": "Cài đặt báo cáo sự cố",
+    "settingsDesc": "Quản lý cài đặt liên quan đến biểu mẫu báo cáo sự cố",
+    "defaultUrgency": "Mức độ khẩn cấp mặc định",
+    "autoAssignment": "Tự động phân công người xử lý",
+    "requirePhotos": "Yêu cầu đính kèm hình ảnh"
+  },
+  "repair": {
+    "title": "Quản lý sửa chữa",
+    "settings": "Cài đặt sửa chữa",
+    "settingsDesc": "Quản lý cài đặt liên quan đến công việc sửa chữa",
+    "maxTimeSpent": "Thời gian làm việc tối đa",
+    "timeUnit": "Đơn vị thời gian",
+    "requireTestResults": "Yêu cầu nhập kết quả kiểm tra"
+  },
+  "data": {
+    "title": "Dữ liệu",
+    "settings": "Cài đặt dữ liệu",
+    "settingsDesc": "Quản lý cài đặt liên quan đến hiển thị, xuất và lưu trữ dữ liệu",
+    "itemsPerPage": "Số mục trên mỗi trang",
+    "exportFormat": "Định dạng xuất mặc định",
+    "autoSave": "Kích hoạt tự động lưu",
+    "autoSaveInterval": "Khoảng thời gian tự động lưu (phút)",
+    "dataRetentionDays": "Thời gian lưu trữ dữ liệu (ngày)"
+  },
+  "ui": {
+    "title": "Giao diện",
+    "settings": "Cài đặt giao diện",
+    "settingsDesc": "Quản lý cài đặt liên quan đến giao diện người dùng",
+    "fontSize": "Kích thước chữ",
+    "small": "Nhỏ",
+    "medium": "Trung bình",
+    "large": "Lớn",
+    "compactMode": "Chế độ thu gọn (bố cục chặt chẽ)",
+    "showHelpTexts": "Hiển thị văn bản trợ giúp",
+    "animationsEnabled": "Kích hoạt hiệu ứng hoạt hình"
+  },
+  "security": {
+    "title": "Bảo mật",
+    "settings": "Cài đặt bảo mật",
+    "settingsDesc": "Quản lý cài đặt liên quan đến bảo mật hệ thống",
+    "passwordMinLength": "Độ dài mật khẩu tối thiểu",
+    "lockoutDuration": "Thời gian khóa tài khoản (phút)"
+  },
+  "notifications": {
+    "toastDuration": "Thời gian hiển thị thông báo (mili giây)",
+    "maxToasts": "Số lượng thông báo tối đa",
+    "position": "Vị trí thông báo",
+    "topRight": "Góc trên bên phải",
+    "topLeft": "Góc trên bên trái",
+    "bottomRight": "Góc dưới bên phải",
+    "bottomLeft": "Góc dưới bên trái",
+    "enableSound": "Kích hoạt âm thanh thông báo",
+    "autoHide": "Tự động ẩn"
+  },
+  "company": {
+    "label": "Tên công ty",
+    "placeholder": "Công ty của bạn"
+  },
+  "timezone": {
+    "label": "Múi giờ",
+    "seoul": "Seoul",
+    "hochiminh": "Hồ Chí Minh"
+  },
+  "offlineMode": "Chế độ ngoại tuyến (sử dụng không cần kết nối internet)",
+  "add": "Thêm",
+  "cancel": "Hủy",
+  "confirm": "Xác nhận",
+  "resetWarning": "Tất cả cài đặt hệ thống sẽ được đặt lại về giá trị mặc định. Hành động này không thể hoàn tác.",
+  "auto": "Tự động"
 }

@@ -1,0 +1,154 @@
+{
+  "title": "Quản lý người dùng",
+  "subtitle": "Toàn bộ {{count}} người dùng đã đăng ký",
+  "buttons": {
+    "newUser": "Người dùng mới",
+    "userList": "Danh sách người dùng",
+    "refresh": "Làm mới"
+  },
+  "userList": {
+    "title": "Danh sách người dùng đã đăng ký",
+    "noUsers": "Không có người dùng đã đăng ký",
+    "createFirst": "Tạo người dùng đầu tiên",
+    "loading": "Đang tải danh sách người dùng..."
+  },
+  "table": {
+    "name": "Tên",
+    "noName": "Không có tên",
+    "userInfo": "Thông tin người dùng",
+    "role": "Vai trò",
+    "department": "Bộ phận",
+    "status": "Trạng thái",
+    "joinDate": "Ngày tham gia",
+    "actions": "Thao tác"
+  },
+  "roles": {
+    "systemAdmin": "Quản trị hệ thống",
+    "manager": "Quản lý",
+    "user": "Người dùng thông thường"
+  },
+  "status": {
+    "active": "Hoạt động",
+    "inactive": "Không hoạt động"
+  },
+  "actions": {
+    "view": "Xem",
+    "edit": "Sửa",
+    "delete": "Xóa"
+  },
+  "statistics": {
+    "systemAdmins": "Quản trị hệ thống",
+    "managers": "Quản lý",
+    "normalUsers": "Người dùng thông thường",
+    "activeUsers": "Người dùng hoạt động"
+  },
+  "modals": {
+    "userDetail": {
+      "title": "Chi tiết người dùng",
+      "name": "Tên",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "role": "Vai trò",
+      "department": "Bộ phận",
+      "status": "Trạng thái",
+      "joinDate": "Ngày tham gia",
+      "close": "Đóng"
+    },
+    "editUser": {
+      "title": "Chỉnh sửa thông tin người dùng",
+      "name": "Tên",
+      "phone": "Số điện thoại",
+      "department": "Bộ phận",
+      "role": "Vai trò",
+      "activeStatus": "Trạng thái hoạt động",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "saving": "Đang lưu..."
+    },
+    "deleteConfirm": "Bạn có chắc chắn muốn xóa người dùng {{name}}?"
+  },
+  "messages": {
+    "noPermission": "Bạn không có quyền quản lý người dùng.",
+    "fetchError": "Không thể tải danh sách người dùng",
+    "updateSuccess": {
+      "title": "Cập nhật thông tin người dùng",
+      "message": "Thông tin người dùng đã được cập nhật thành công."
+    },
+    "updateError": {
+      "title": "Cập nhật thất bại",
+      "message": "Không thể cập nhật thông tin người dùng."
+    },
+    "deleteSuccess": {
+      "title": "Xóa người dùng",
+      "message": "Người dùng đã được xóa thành công."
+    },
+    "deleteError": {
+      "title": "Xóa thất bại",
+      "message": "Không thể xóa người dùng."
+    }
+  },
+  "createUser": {
+    "title": "Tạo người dùng mới",
+    "subtitle": "Nhập thông tin người dùng mới",
+    "form": {
+      "email": "Địa chỉ email",
+      "emailPlaceholder": "user@example.com",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu an toàn",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
+      "fullName": "Họ và tên",
+      "fullNamePlaceholder": "Nguyễn Văn A",
+      "phone": "Số điện thoại",
+      "phonePlaceholder": "0123456789",
+      "department": "Bộ phận",
+      "departmentPlaceholder": "Ví dụ: Phòng sản xuất",
+      "role": "Vai trò",
+      "roleOptions": {
+        "user": "Người dùng thông thường",
+        "manager": "Quản lý",
+        "systemAdmin": "Quản trị hệ thống"
+      },
+      "activeStatus": "Kích hoạt tài khoản ngay"
+    },
+    "validation": {
+      "emailRequired": "Email là bắt buộc",
+      "emailInvalid": "Email không hợp lệ",
+      "passwordRequired": "Mật khẩu là bắt buộc",
+      "passwordMinLength": "Mật khẩu phải có ít nhất 6 ký tự",
+      "passwordMismatch": "Mật khẩu xác nhận không khớp",
+      "nameRequired": "Họ và tên là bắt buộc"
+    },
+    "buttons": {
+      "cancel": "Hủy",
+      "create": "Tạo người dùng",
+      "creating": "Đang tạo..."
+    },
+    "messages": {
+      "success": {
+        "title": "Tạo người dùng thành công",
+        "message": "Người dùng mới đã được tạo thành công.",
+        "details": "✅ Người dùng đã được tạo thành công!\n📧 Email: {{email}}\n{{passwordInfo}}\n👤 Vai trò: {{role}}\n🔗 Kết nối Auth: {{authStatus}}\n{{loginStatus}}"
+      },
+      "error": {
+        "title": "Tạo người dùng thất bại",
+        "message": "Không thể tạo người dùng mới."
+      },
+      "authTokenNotFound": "Không tìm thấy token xác thực",
+      "roleLabels": {
+        "manager": "Quản lý",
+        "user": "Người dùng thông thường"
+      },
+      "authStatus": {
+        "completed": "Hoàn tất",
+        "incomplete": "Chưa hoàn tất",
+        "canLogin": "✅ Có thể đăng nhập",
+        "waitingAuth": "⏳ Chờ cấp quyền đăng nhập"
+      },
+      "passwordInfo": {
+        "withPassword": "🔐 Mật khẩu tạm thời: {{password}}",
+        "withoutPassword": "🔐 Quyền đăng nhập: Chờ (quản trị viên sẽ cấp sau)"
+      }
+    }
+  }
+}

@@ -62,7 +62,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
               </Card.Header>
               <Card.Content>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">전체 준수율</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.overall')}</span>
                   <span className="text-2xl font-bold text-green-600 dark:text-green-400">91.7%</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-6">
@@ -80,7 +80,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
                       <div className="flex items-center space-x-4">
                         <span className="font-medium text-gray-900 dark:text-white">{item.equipment}</span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {item.completed}/{item.planned} 완료
+                          {t('maintenance.schedule.completedTasks', { completed: item.completed, planned: item.planned })}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -103,14 +103,14 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
             {/* 예정된 정비 */}
             <Card>
               <Card.Header>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">예정된 정비 작업</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('maintenance.schedule.upcoming.title')}</h4>
               </Card.Header>
               <Card.Content>
                 <div className="space-y-3">
                   {[
-                    { equipment: 'CNC-GR-001', type: '정기 점검', date: '2024-01-16', status: 'pending', priority: 'high' },
-                    { equipment: 'CNC-DR-001', type: '부품 교체', date: '2024-01-18', status: 'scheduled', priority: 'medium' },
-                    { equipment: 'CNC-LT-001', type: '오일 교체', date: '2024-01-20', status: 'scheduled', priority: 'low' }
+                    { equipment: 'CNC-GR-001', type: t('maintenance.schedule.upcoming.types.inspection'), date: '2024-01-16', status: 'pending', priority: 'high' },
+                    { equipment: 'CNC-DR-001', type: t('maintenance.schedule.upcoming.types.replacement'), date: '2024-01-18', status: 'scheduled', priority: 'medium' },
+                    { equipment: 'CNC-LT-001', type: t('maintenance.schedule.upcoming.types.oilChange'), date: '2024-01-20', status: 'scheduled', priority: 'low' }
                   ].map((task, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center space-x-4">

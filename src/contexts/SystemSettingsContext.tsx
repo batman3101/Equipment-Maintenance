@@ -76,6 +76,12 @@ export interface SystemSettings {
     maxLoginAttempts: number
     lockoutDuration: number // minutes
   }
+
+  // 브랜딩 설정
+  branding: {
+    symbolUrl: string | null
+    logoUrl: string | null
+  }
 }
 
 // 기본 설정값
@@ -181,6 +187,11 @@ export const defaultSettings: SystemSettings = {
     passwordMinLength: 8,
     maxLoginAttempts: 5,
     lockoutDuration: 15
+  },
+
+  branding: {
+    symbolUrl: null,
+    logoUrl: null
   }
 }
 
@@ -427,7 +438,7 @@ function validateSettingsSchema(obj: unknown): obj is SystemSettings {
     const settings = obj as Record<string, unknown>
 
     // 필수 최상위 속성 체크
-    const requiredKeys = ['general', 'equipment', 'breakdown', 'repair', 'notifications', 'data', 'ui', 'security']
+    const requiredKeys = ['general', 'equipment', 'breakdown', 'repair', 'notifications', 'data', 'ui', 'security', 'branding']
     for (const key of requiredKeys) {
       if (!(key in settings) || !settings[key] || typeof settings[key] !== 'object') {
         return false
@@ -505,6 +516,15 @@ function validateSettingsSchema(obj: unknown): obj is SystemSettings {
       return false
     }
     if (typeof security.lockoutDuration !== 'number' || security.lockoutDuration < 5 || security.lockoutDuration > 1440) {
+      return false
+    }
+
+    // branding 섹션 검증
+    const branding = settings.branding as Record<string, unknown>
+    if (branding.symbolUrl !== null && typeof branding.symbolUrl !== 'string') {
+      return false
+    }
+    if (branding.logoUrl !== null && typeof branding.logoUrl !== 'string') {
       return false
     }
 

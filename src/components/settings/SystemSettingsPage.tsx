@@ -4,10 +4,11 @@ import React, { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Card, Input } from '@/components/ui'
 import { useSystemSettings, SystemSettings } from '@/contexts/SystemSettingsContext'
+import { supabase } from '@/lib/supabase'
 // import { useI18n } from '@/contexts/I18nContext' // Available for future language switching features
 // import { useToast } from '@/contexts/ToastContext' // Available for future use
 
-type SettingsTab = 'general' | 'equipment' | 'breakdown' | 'repair' | 'notifications' | 'data' | 'ui' | 'security'
+type SettingsTab = 'general' | 'branding' | 'equipment' | 'breakdown' | 'repair' | 'notifications' | 'data' | 'ui' | 'security'
 
 interface SettingsSectionProps {
   settings: SystemSettings
@@ -26,6 +27,7 @@ export function SystemSettingsPage() {
 
   const tabs = [
     { id: 'general', label: t('sections.general.title'), icon: '⚙️' },
+    { id: 'branding', label: t('sections.branding.title', '브랜딩'), icon: '🎨' },
     { id: 'equipment', label: t('common:equipment.title', '설비 설정'), icon: '🏭' },
     { id: 'breakdown', label: t('common:breakdown.title', '고장 신고'), icon: '🚨' },
     { id: 'repair', label: t('common:repair.title', '수리 관리'), icon: '🔧' },
@@ -137,6 +139,7 @@ export function SystemSettingsPage() {
       {/* 설정 내용 */}
       <div className="space-y-6">
         {activeTab === 'general' && <GeneralSettings settings={settings} updateSettings={updateSettings} />}
+        {activeTab === 'branding' && <BrandingSettings settings={settings} updateSettings={updateSettings} />}
         {activeTab === 'equipment' && <EquipmentSettings settings={settings} updateSettings={updateSettings} />}
         {activeTab === 'breakdown' && <BreakdownSettings settings={settings} updateSettings={updateSettings} />}
         {activeTab === 'repair' && <RepairSettings settings={settings} updateSettings={updateSettings} />}
@@ -240,8 +243,8 @@ function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
               })}
               className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="Asia/Seoul">서울 (UTC+9)</option>
-              <option value="Asia/Ho_Chi_Minh">호치민 (UTC+7)</option>
+              <option value="Asia/Seoul">{t('common:timezone.seoul', '서울')} (UTC+9)</option>
+              <option value="Asia/Ho_Chi_Minh">{t('common:timezone.hochiminh', '호치민')} (UTC+7)</option>
               <option value="UTC">UTC</option>
             </select>
           </div>
@@ -493,16 +496,16 @@ function RepairSettings({ settings, updateSettings }: SettingsSectionProps) {
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">수리 관리 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:repair.settings', '수리 관리 설정')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          수리 작업과 관련된 설정을 관리합니다
+          {t('common:repair.settingsDesc', '수리 작업과 관련된 설정을 관리합니다')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Input
-              label="최대 작업 시간"
+              label={t('common:repair.maxTimeSpent', '최대 작업 시간')}
               type="number"
               value={settings.repair.maxTimeSpent.toString()}
               onChange={(e) => updateSettings({
@@ -514,7 +517,7 @@ function RepairSettings({ settings, updateSettings }: SettingsSectionProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              시간 단위
+              {t('common:repair.timeUnit', '시간 단위')}
             </label>
             <select
               value={settings.repair.defaultTimeUnit}
@@ -523,8 +526,8 @@ function RepairSettings({ settings, updateSettings }: SettingsSectionProps) {
               })}
               className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="hours">시간</option>
-              <option value="minutes">분</option>
+              <option value="hours">{t('common:units.hours', '시간')}</option>
+              <option value="minutes">{t('common:units.minutes', '분')}</option>
             </select>
           </div>
         </div>
@@ -597,10 +600,10 @@ function NotificationSettings({ settings, updateSettings }: SettingsSectionProps
             })}
             className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="top-right">우측 상단</option>
-            <option value="top-left">좌측 상단</option>
-            <option value="bottom-right">우측 하단</option>
-            <option value="bottom-left">좌측 하단</option>
+            <option value="top-right">{t('common:notifications.topRight', '우측 상단')}</option>
+            <option value="top-left">{t('common:notifications.topLeft', '좌측 상단')}</option>
+            <option value="bottom-right">{t('common:notifications.bottomRight', '우측 하단')}</option>
+            <option value="bottom-left">{t('common:notifications.bottomLeft', '좌측 하단')}</option>
           </select>
         </div>
 
@@ -770,9 +773,9 @@ function UISettings({ settings, updateSettings }: SettingsSectionProps) {
               })}
               className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="small">작게</option>
-              <option value="medium">보통</option>
-              <option value="large">크게</option>
+              <option value="small">{t('common:ui.small', '작게')}</option>
+              <option value="medium">{t('common:ui.medium', '보통')}</option>
+              <option value="large">{t('common:ui.large', '크게')}</option>
             </select>
           </div>
         </div>
@@ -905,6 +908,273 @@ function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
           <label htmlFor="requireTwoFactor" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
             {t('settings.users.twoFactorAuth')}
           </label>
+        </div>
+      </Card.Content>
+    </Card>
+  )
+}
+
+// 브랜딩 설정 컴포넌트
+function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
+  const [uploading, setUploading] = useState({ symbol: false, logo: false })
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSuccess, setUploadSuccess] = useState('')
+
+  const handleImageUpload = async (file: File, type: 'symbol' | 'logo') => {
+    try {
+      setUploading({ ...uploading, [type]: true })
+      setUploadError('')
+      setUploadSuccess('')
+
+      // 파일 유효성 검사
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('지원되지 않는 파일 형식입니다. JPG, PNG, WebP 파일만 업로드 가능합니다.')
+      }
+
+      // 파일 크기 제한 (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('파일 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.')
+      }
+
+      // 파일명 생성 (고유한 이름)
+      const fileExt = file.name.split('.').pop()
+      const fileName = `branding/${type}_${Date.now()}.${fileExt}`
+
+      // Supabase Storage에 업로드
+      const { error: uploadError } = await supabase.storage
+        .from('company-assets')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) throw uploadError
+
+      // 공개 URL 가져오기
+      const { data: publicUrlData } = supabase.storage
+        .from('company-assets')
+        .getPublicUrl(fileName)
+
+      // 설정 업데이트
+      updateSettings({
+        branding: {
+          ...settings.branding,
+          [type === 'symbol' ? 'symbolUrl' : 'logoUrl']: publicUrlData.publicUrl
+        }
+      })
+
+      setUploadSuccess(`${type === 'symbol' ? '심볼' : '로고'} 이미지가 성공적으로 업로드되었습니다.`)
+      
+      // 로그인 페이지 이미지 업데이트
+      updateLoginImage(type, publicUrlData.publicUrl)
+
+    } catch (error) {
+      console.error('Image upload error:', error)
+      setUploadError(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.')
+    } finally {
+      setUploading({ ...uploading, [type]: false })
+    }
+  }
+
+  const updateLoginImage = (type: 'symbol' | 'logo', url: string) => {
+    // 로그인 페이지의 이미지를 동적으로 업데이트
+    const img = document.getElementById(`login-${type}`) as HTMLImageElement
+    const placeholder = document.getElementById(`${type}-placeholder`)
+    
+    if (img && placeholder) {
+      img.src = url
+      img.classList.remove('hidden')
+      placeholder.classList.add('hidden')
+    }
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: 'symbol' | 'logo') => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handleImageUpload(file, type)
+    }
+    // 파일 인풋 리셋
+    event.target.value = ''
+  }
+
+  const triggerFileInput = (type: 'symbol' | 'logo') => {
+    const fileInput = document.getElementById(`${type}-file-input`) as HTMLInputElement
+    if (fileInput) {
+      fileInput.click()
+    }
+  }
+
+  const removeImage = async (type: 'symbol' | 'logo') => {
+    try {
+      // 설정에서 URL 제거
+      updateSettings({
+        branding: {
+          ...settings.branding,
+          [type === 'symbol' ? 'symbolUrl' : 'logoUrl']: null
+        }
+      })
+
+      // 로그인 페이지에서 이미지 제거
+      const img = document.getElementById(`login-${type}`) as HTMLImageElement
+      const placeholder = document.getElementById(`${type}-placeholder`)
+      
+      if (img && placeholder) {
+        img.classList.add('hidden')
+        placeholder.classList.remove('hidden')
+      }
+
+      setUploadSuccess(`${type === 'symbol' ? '심볼' : '로고'} 이미지가 제거되었습니다.`)
+
+    } catch (error) {
+      console.error('Remove image error:', error)
+      setUploadError('이미지 제거에 실패했습니다.')
+    }
+  }
+
+  return (
+    <Card>
+      <Card.Header>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">브랜딩 설정</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          회사 심볼과 로고를 설정하여 로그인 페이지와 시스템 전반에 표시됩니다
+        </p>
+      </Card.Header>
+      <Card.Content className="space-y-6">
+        {uploadError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="text-red-800 text-sm">{uploadError}</div>
+          </div>
+        )}
+
+        {uploadSuccess && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="text-green-800 text-sm">{uploadSuccess}</div>
+          </div>
+        )}
+
+        {/* 심볼 업로드 */}
+        <div>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">회사 심볼</h4>
+          <div className="flex items-start space-x-4">
+            <div className="flex-shrink-0">
+              <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center overflow-hidden">
+                {settings.branding?.symbolUrl ? (
+                  <img 
+                    src={settings.branding.symbolUrl} 
+                    alt="Company Symbol" 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-xs text-center px-2">심볼</span>
+                )}
+              </div>
+            </div>
+            <div className="flex-1 space-y-2">
+              <div className="flex space-x-2">
+                <input
+                  id="symbol-file-input"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={(e) => handleFileSelect(e, 'symbol')}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={uploading.symbol}
+                  onClick={() => triggerFileInput('symbol')}
+                >
+                  {uploading.symbol ? '업로드 중...' : '📁 파일 선택'}
+                </Button>
+                {settings.branding?.symbolUrl && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => removeImage('symbol')}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    🗑️ 제거
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                권장: 정사각형, 최대 5MB, JPG/PNG/WebP
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 로고 업로드 */}
+        <div>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">회사 로고</h4>
+          <div className="flex items-start space-x-4">
+            <div className="flex-shrink-0">
+              <div className="w-48 h-16 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center overflow-hidden px-4">
+                {settings.branding?.logoUrl ? (
+                  <img 
+                    src={settings.branding.logoUrl} 
+                    alt="Company Logo" 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-xs text-center">회사 로고</span>
+                )}
+              </div>
+            </div>
+            <div className="flex-1 space-y-2">
+              <div className="flex space-x-2">
+                <input
+                  id="logo-file-input"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={(e) => handleFileSelect(e, 'logo')}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={uploading.logo}
+                  onClick={() => triggerFileInput('logo')}
+                >
+                  {uploading.logo ? '업로드 중...' : '📁 파일 선택'}
+                </Button>
+                {settings.branding?.logoUrl && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => removeImage('logo')}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    🗑️ 제거
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                권장: 가로형, 최대 5MB, JPG/PNG/WebP
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-start">
+            <span className="text-blue-400 text-lg mr-2">💡</span>
+            <div className="text-sm text-blue-800 dark:text-blue-300">
+              <p className="font-medium mb-1">이미지 업로드 안내:</p>
+              <ul className="text-xs space-y-1 text-blue-700 dark:text-blue-400">
+                <li>• 업로드한 이미지는 로그인 페이지에 즉시 반영됩니다</li>
+                <li>• 심볼: 정사각형 비율 권장 (예: 200x200px)</li>
+                <li>• 로고: 가로형 비율 권장 (예: 300x100px)</li>
+                <li>• 투명 배경 PNG 파일 사용 시 더 자연스러운 표현이 가능합니다</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </Card.Content>
     </Card>
