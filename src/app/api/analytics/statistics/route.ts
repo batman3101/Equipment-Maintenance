@@ -8,6 +8,9 @@ import type {
   MaintenanceSchedule,
 } from '@/lib/analytics'
 
+// 기간 타입(모듈 스코프)
+type Period = 'weekly' | 'monthly' | 'yearly'
+
 /**
  * 통계 분석 페이지용 고급 분석 데이터 API
  * GET /api/analytics/statistics?period=monthly&category=performance
@@ -16,7 +19,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || 'monthly'
-    type Period = 'weekly' | 'monthly' | 'yearly'
     const periodParam: Period = (['weekly', 'monthly', 'yearly'] as const).includes(period as Period)
       ? (period as Period)
       : 'monthly'
