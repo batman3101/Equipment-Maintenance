@@ -916,7 +916,6 @@ function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
 
 // 브랜딩 설정 컴포넌트
 function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
-  const { t } = useTranslation(['settings', 'common'])
   const [uploading, setUploading] = useState({ symbol: false, logo: false })
   const [uploadError, setUploadError] = useState('')
   const [uploadSuccess, setUploadSuccess] = useState('')

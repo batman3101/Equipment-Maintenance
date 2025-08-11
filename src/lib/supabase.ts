@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
+import { validateEnvironmentVariables } from '@/utils/env-validator'
 
 // 환경 변수 검증 (서버 사이드에서만 실행)
 if (typeof window === 'undefined') {
-  const { validateEnvironmentVariables } = require('@/utils/env-validator')
   
   // [DIP] Rule: 환경변수 검증 서비스에 의존하여 런타임 보안 강화
   const envValidation = validateEnvironmentVariables()
