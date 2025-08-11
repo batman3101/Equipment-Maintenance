@@ -66,7 +66,7 @@ const nextConfig: NextConfig = {
   ],
 
   // 다이내믹 임포트 최적화
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+  webpack: (config, { dev, isServer }) => {
     // 개발 환경에서만 번들 크기 분석 활성화
     if (dev) {
       config.optimization = {
