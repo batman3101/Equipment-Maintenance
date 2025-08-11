@@ -40,13 +40,20 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
     }
   }, [statisticsData])
 
+  type EquipmentScoreItem = {
+    id: string
+    equipment_number: string
+    score: number
+    grade: string
+  }
+
   const equipmentScores = useMemo(() => {
     const data = statisticsData?.data
     if (!data?.topPerformers) {
       return []
     }
 
-    return data.topPerformers.map((equipment: any) => ({
+    return (data.topPerformers as EquipmentScoreItem[]).map((equipment) => ({
       id: equipment.id,
       name: equipment.equipment_number,
       score: equipment.score,
@@ -96,11 +103,19 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
   }
 
   // 안전한 기본값(데이터 없는 경우에도 화면이 깨지지 않도록)
-  const reportData = (statisticsData?.data || {}) as any
-  const maintenanceData: any[] = Array.isArray(reportData.maintenance) ? reportData.maintenance : []
-  const repairData: any[] = Array.isArray(reportData.repairs) ? reportData.repairs : []
-  const breakdownData: any[] = Array.isArray(reportData.breakdowns) ? reportData.breakdowns : []
-  const equipmentData: any[] = Array.isArray(reportData.equipment) ? reportData.equipment : []
+  interface MaintenanceItem { status?: string; type?: string }
+  interface EquipmentItem { id: string; equipment_number: string; equipment_name?: string }
+  interface ReportDataShape {
+    maintenance?: MaintenanceItem[]
+    repairs?: unknown[]
+    breakdowns?: unknown[]
+    equipment?: EquipmentItem[]
+  }
+  const reportData = (statisticsData?.data || {}) as ReportDataShape
+  const maintenanceData: MaintenanceItem[] = Array.isArray(reportData.maintenance) ? reportData.maintenance : []
+  const repairData: unknown[] = Array.isArray(reportData.repairs) ? reportData.repairs : []
+  const breakdownData: unknown[] = Array.isArray(reportData.breakdowns) ? reportData.breakdowns : []
+  const equipmentData: EquipmentItem[] = Array.isArray(reportData.equipment) ? reportData.equipment : []
 
   const renderContent = () => {
     switch (subOption) {

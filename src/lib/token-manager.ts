@@ -67,10 +67,11 @@ export class TokenManager {
         const raw = localStorage.getItem(key)
         if (!raw) continue
         try {
-          const parsed = JSON.parse(raw) as any
-          const session = parsed?.currentSession ?? parsed
-          const refreshToken = session?.refresh_token
-          const expiresAtSec: number | undefined = session?.expires_at
+          const parsed = JSON.parse(raw) as unknown
+          const session = (parsed as { currentSession?: unknown })?.currentSession ?? parsed
+          const sess = session as { refresh_token?: unknown; expires_at?: unknown }
+          const refreshToken = typeof sess.refresh_token === 'string' ? sess.refresh_token : undefined
+          const expiresAtSec: number | undefined = typeof sess.expires_at === 'number' ? sess.expires_at : undefined
           const nowSec = Math.floor(Date.now() / 1000)
 
           const isMissingRefresh = !refreshToken || typeof refreshToken !== 'string'

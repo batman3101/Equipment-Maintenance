@@ -624,7 +624,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
               </label>
               <select
                 value={editFormData.priority || ''}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, priority: e.target.value as any }))}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, priority: e.target.value as BreakdownReport['priority'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="low">{t('breakdown:urgency.low')}</option>
@@ -640,7 +640,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
               </label>
               <select
                 value={editFormData.status || ''}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value as BreakdownReport['status'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="reported">{t('breakdown:status.reported')}</option>

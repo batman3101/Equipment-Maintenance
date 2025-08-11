@@ -598,7 +598,7 @@ export function RepairList({ onRepairClick }: RepairListProps) {
               </label>
               <select
                 value={editFormData.repairType || ''}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, repairType: e.target.value as any }))}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, repairType: e.target.value as RepairReport['repairType'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="preventive">{t('repair:types.preventive')}</option>
@@ -614,7 +614,7 @@ export function RepairList({ onRepairClick }: RepairListProps) {
               </label>
               <select
                 value={editFormData.completionStatus || ''}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, completionStatus: e.target.value as any }))}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, completionStatus: e.target.value as RepairReport['completionStatus'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="completed">{t('repair:status.completed')}</option>

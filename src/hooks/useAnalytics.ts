@@ -320,8 +320,9 @@ export function useRealtimeData(enabled: boolean = true) {
 }
 
 // 차트 데이터 변환 유틸리티
-export function transformTrendDataForChart(trendData: any[]) {
-  return trendData.map(item => ({
+type TrendItem = { period: string | number; breakdowns: number; repairs: number }
+export function transformTrendDataForChart(trendData: TrendItem[]) {
+  return trendData.map((item) => ({
     name: item.period,
     breakdowns: item.breakdowns,
     repairs: item.repairs,

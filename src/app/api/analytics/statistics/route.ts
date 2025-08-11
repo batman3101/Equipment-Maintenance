@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
           DataFetcher.getAllMaintenanceSchedules()
         ])
 
-        let analysisData: any = {}
+        let analysisData: unknown = {}
 
         switch (category) {
           case 'performance':
@@ -81,12 +81,18 @@ export async function GET(request: NextRequest) {
 }
 
 // 성능 분석 데이터 생성
+type Equipment = { id: string; equipment_number: string; equipment_name?: string; category?: string; location?: string }
+type EquipmentStatus = { equipment_id: string; status: string }
+type Breakdown = { equipment_id: string; occurred_at?: string }
+type Repair = { equipment_id: string }
+type Maintenance = { equipment_id: string; status?: string; completed_date?: string; scheduled_date?: string; type?: string }
+
 async function generatePerformanceAnalysis(
-  equipment: any[],
-  statusData: any[],
-  breakdowns: any[],
-  repairs: any[],
-  maintenance: any[],
+  equipment: Equipment[],
+  statusData: EquipmentStatus[],
+  breakdowns: Breakdown[],
+  repairs: Repair[],
+  maintenance: Maintenance[],
   period: string
 ) {
   const metrics = AnalyticsEngine.generateComprehensiveMetrics(
@@ -152,17 +158,17 @@ async function generatePerformanceAnalysis(
     overview: metrics,
     equipmentAnalysis,
     categoryAnalysis,
-    trendData: AnalyticsEngine.generateTrendData(breakdowns, repairs, period as any)
+    trendData: AnalyticsEngine.generateTrendData(breakdowns, repairs, period)
   }
 }
 
 // 정비 분석 데이터 생성  
 async function generateMaintenanceAnalysis(
-  equipment: any[],
-  statusData: any[],
-  breakdowns: any[],
-  repairs: any[],
-  maintenance: any[],
+  equipment: Equipment[],
+  statusData: EquipmentStatus[],
+  breakdowns: Breakdown[],
+  repairs: Repair[],
+  maintenance: Maintenance[],
   period: string
 ) {
   // 정비 완료율 계산
@@ -236,11 +242,11 @@ async function generateMaintenanceAnalysis(
 
 // 종합 리포트 데이터 생성
 async function generateComprehensiveReport(
-  equipment: any[],
-  statusData: any[],
-  breakdowns: any[],
-  repairs: any[],
-  maintenance: any[],
+  equipment: Equipment[],
+  statusData: EquipmentStatus[],
+  breakdowns: Breakdown[],
+  repairs: Repair[],
+  maintenance: Maintenance[],
   period: string
 ) {
   const metrics = AnalyticsEngine.generateComprehensiveMetrics(
@@ -294,6 +300,6 @@ async function generateComprehensiveReport(
     bottomPerformers,
     costAnalysis,
     predictions,
-    trendData: AnalyticsEngine.generateTrendData(breakdowns, repairs, period as any)
+    trendData: AnalyticsEngine.generateTrendData(breakdowns, repairs, period)
   }
 }
