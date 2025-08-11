@@ -93,6 +93,10 @@
     "title": "🔥 Giám sát thời gian thực",
     "realtimeUpdate": "Cập nhật thời gian thực",
     "loading": "Đang tải dữ liệu mục phân tích đã chọn...",
+    "noEquipmentTitle": "Chưa có thiết bị được đăng ký",
+    "noEquipmentDescription": "Hãy đăng ký thiết bị để bắt đầu giám sát thời gian thực",
+    "selectOption": "Vui lòng chọn mục phân tích chi tiết",
+    "noLocation": "Chưa có vị trí",
     "status": {
       "normal": "Bình thường",
       "warning": "Cảnh báo",

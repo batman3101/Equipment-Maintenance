@@ -38,18 +38,24 @@
   "fields": {
     "equipmentType": "Loại thiết bị",
     "equipmentNumber": "Số thiết bị",
+    "equipmentName": "Tên thiết bị",
     "location": "Vị trí thiết bị",
     "installDate": "Ngày lắp đặt",
     "status": "Trạng thái",
     "category": "Danh mục",
     "manufacturer": "Nhà sản xuất",
-    "model": "Tên mẫu",
+    "model": "Mô hình",
+    "specifications": "Thông số kỹ thuật",
     "purchaseDate": "Ngày mua"
   },
   "placeholders": {
     "selectEquipmentType": "Chọn loại thiết bị",
     "equipmentNumberExample": "Ví dụ: CNC-001",
-    "selectLocation": "Chọn vị trí"
+    "selectLocation": "Chọn vị trí",
+    "equipmentNamePlaceholder": "Nhập tên thiết bị",
+    "manufacturerPlaceholder": "Nhập nhà sản xuất",
+    "modelPlaceholder": "Nhập tên mô hình",
+    "specificationsPlaceholder": "Nhập thông số kỹ thuật thiết bị"
   },
   "filters": {
     "all": "Tất cả",
@@ -67,8 +73,10 @@
     "excelProcessingErrorDetail": "Đã xảy ra lỗi khi xử lý tệp Excel. Vui lòng kiểm tra định dạng tệp.",
     "registerSuccess": "Đăng ký thành công",
     "registerSuccessDetail": "Thiết bị '{{equipmentNumber}}' đã được đăng ký thành công.",
+    "registerFailed": "Đăng ký thất bại",
+    "loadFailed": "Không thể tải danh sách thiết bị",
     "requiredFields": "Thiếu thông tin bắt buộc",
-    "requiredFieldsDetail": "Loại thiết bị và số thiết bị là các mục nhập bắt buộc.",
+    "requiredFieldsDetail": "Tên thiết bị, số thiết bị và danh mục là các mục nhập bắt buộc.",
     "duplicateEquipmentNumber": "Số thiết bị trùng lặp",
     "duplicateEquipmentNumberDetail": "Số thiết bị '{{equipmentNumber}}' đã tồn tại.",
     "saved": "Đã lưu",

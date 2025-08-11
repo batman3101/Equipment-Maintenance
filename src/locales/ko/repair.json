@@ -1,4 +1,43 @@
 {
+  "loading": "수리 내역을 불러오는 중...",
+  "showing": "표시 중",
+  "technician": "기술자",
+  "timeSpent": "작업 시간",
+  "status": {
+    "completed": "완료",
+    "partial": "부분 완료",
+    "failed": "실패/보류",
+    "inProgress": "진행 중"
+  },
+  "types": {
+    "preventive": "예방 정비",
+    "corrective": "사후 정비",
+    "emergency": "긴급 수리",
+    "upgrade": "개선/업그레이드"
+  },
+  "statistics": {
+    "total": "전체",
+    "completed": "완료",
+    "partial": "부분 완료",
+    "failed": "실패/보류"
+  },
+  "filters": {
+    "title": "필터",
+    "search": "검색",
+    "searchPlaceholder": "설비 ID/기술자/작업 내용 검색",
+    "type": "유형",
+    "status": "상태",
+    "all": "전체"
+  },
+  "fields": {
+    "equipmentId": "설비 ID",
+    "repairType": "수리 유형",
+    "status": "상태",
+    "completedAt": "완료일시",
+    "workDescription": "수행한 작업 내용",
+    "testResults": "테스트 결과",
+    "notes": "참고사항"
+  },
   "management": {
     "title": "수리 내역 관리",
     "description": "완료된 수리 작업 내역을 확인하고 새로운 수리 완료를 등록할 수 있습니다",
@@ -59,6 +98,9 @@
   "list": {
     "title": "수리 완료 내역",
     "totalRepairs": "총 {{count}}건의 수리 내역",
+    "empty": "수리 내역이 없습니다",
+    "noResults": "해당 조건에 맞는 결과가 없습니다",
+    "addFirst": "첫 수리 내역을 등록하기",
     "statistics": {
       "completed": "완료",
       "partial": "부분 완료",

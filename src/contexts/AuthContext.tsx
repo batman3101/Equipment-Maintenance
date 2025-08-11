@@ -57,6 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user])
 
   useEffect(() => {
+    // 브라우저 진입 시 손상/만료 토큰을 사전 정리하여 리프레시 실패를 예방
+    TokenManager.sanitizeAuthTokens()
     // 오프라인 모드에서는 빠른 로딩
     if (isOfflineMode) {
       console.log('AuthContext: Running in offline mode, skipping Supabase auth')

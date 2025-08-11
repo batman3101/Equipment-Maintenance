@@ -6,9 +6,13 @@
  */
 export class TokenManager {
   private static readonly SUPABASE_TOKEN_KEYS = [
+    // 구버전/일반 키 패턴
     'supabase.auth.',
     'refresh_token',
-    'access_token'
+    'access_token',
+    // supabase-js v2 기본 localStorage 키 패턴: sb-<project-ref>-auth-token
+    'sb-',
+    '-auth-token'
   ]
 
   /**
@@ -21,11 +25,15 @@ export class TokenManager {
       }
 
       const keys = Object.keys(localStorage)
-      const supabaseKeys = keys.filter(key => 
-        this.SUPABASE_TOKEN_KEYS.some(tokenKey => 
+      const supabaseKeys = keys.filter(key => {
+        // 신형 키: sb-<project-ref>-auth-token
+        const isNewStyleKey = key.startsWith('sb-') && key.endsWith('-auth-token')
+        // 보편 키 포함 검사
+        const matchesGeneralPatterns = this.SUPABASE_TOKEN_KEYS.some(tokenKey =>
           key.startsWith(tokenKey) || key.includes(tokenKey)
         )
-      )
+        return isNewStyleKey || matchesGeneralPatterns
+      })
       
       supabaseKeys.forEach(key => {
         localStorage.removeItem(key)
@@ -39,6 +47,60 @@ export class TokenManager {
       }
     } catch (error) {
       console.error('TokenManager: Error clearing expired tokens:', error)
+    }
+  }
+
+  /**
+   * 잘못된/손상된 Supabase 브라우저 세션 토큰 정리
+   * - refresh_token 누락
+   * - 만료 시간 경과
+   */
+  static sanitizeAuthTokens(): void {
+    try {
+      if (typeof window === 'undefined') return
+
+      const keys = Object.keys(localStorage)
+      const authTokenKeys = keys.filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
+
+      let removed = 0
+      for (const key of authTokenKeys) {
+        const raw = localStorage.getItem(key)
+        if (!raw) continue
+        try {
+          const parsed = JSON.parse(raw) as any
+          const session = parsed?.currentSession ?? parsed
+          const refreshToken = session?.refresh_token
+          const expiresAtSec: number | undefined = session?.expires_at
+          const nowSec = Math.floor(Date.now() / 1000)
+
+          const isMissingRefresh = !refreshToken || typeof refreshToken !== 'string'
+          const isExpired = typeof expiresAtSec === 'number' && expiresAtSec <= nowSec
+
+          if (isMissingRefresh || isExpired) {
+            localStorage.removeItem(key)
+            removed++
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('TokenManager: Sanitized invalid token:', key, {
+                isMissingRefresh,
+                isExpired,
+              })
+            }
+          }
+        } catch {
+          // 파싱 실패 시 손상된 토큰으로 간주하고 삭제
+          localStorage.removeItem(key)
+          removed++
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('TokenManager: Removed corrupted token:', key)
+          }
+        }
+      }
+
+      if (removed > 0 && process.env.NODE_ENV !== 'production') {
+        console.log(`TokenManager: Sanitized ${removed} invalid/corrupted tokens`)
+      }
+    } catch (error) {
+      console.error('TokenManager: Error sanitizing tokens:', error)
     }
   }
 
@@ -72,11 +134,9 @@ export class TokenManager {
       }
 
       const keys = Object.keys(localStorage)
-      const supabaseAuthKeys = keys.filter(key => 
-        key.startsWith('supabase.auth.') && key.includes('session')
-      )
-
-      return supabaseAuthKeys.length > 0
+      const oldStyle = keys.some(key => key.startsWith('supabase.auth.') && key.includes('session'))
+      const newStyle = keys.some(key => key.startsWith('sb-') && key.endsWith('-auth-token'))
+      return oldStyle || newStyle
     } catch (error) {
       console.error('TokenManager: Error checking token validity:', error)
       return false

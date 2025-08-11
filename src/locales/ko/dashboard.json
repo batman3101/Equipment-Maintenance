@@ -41,7 +41,8 @@
       "urgent": "긴급",
       "pending": "대기중",
       "comparison": "전일 대비",
-      "recent": "최근 고장: {{equipment}} ({{time}})"
+      "recent": "최근 고장: {{equipment}} ({{time}})",
+      "noRecent": "최근 고장 없음"
     },
     "repairs": {
       "title": "금일 수리 완료", 
@@ -49,7 +50,8 @@
       "inProgress": "진행중",
       "scheduled": "예정",
       "comparison": "전일 대비",
-      "recent": "최근 완료: {{equipment}} ({{time}})"
+      "recent": "최근 완료: {{equipment}} ({{time}})",
+      "noRecent": "최근 완료 없음"
     },
     "equipmentStatus": {
       "title": "설비 가동 현황",

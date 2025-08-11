@@ -93,21 +93,37 @@
     "title": "🔥 실시간 모니터링",
     "realtimeUpdate": "실시간 업데이트",
     "loading": "선택한 분석 항목의 데이터를 불러오는 중...",
+    "noEquipmentTitle": "등록된 설비가 없습니다",
+    "noEquipmentDescription": "설비를 등록하여 실시간 모니터링을 시작하세요",
+    "selectOption": "세부 분석 항목을 선택해주세요",
+    "noLocation": "위치 미지정",
     "status": {
       "normal": "정상",
       "warning": "주의",
       "critical": "이상",
-      "emergency": "긴급 정지"
+      "emergency": "긴급 정지",
+      "running": "가동중",
+      "maintenance": "정비중",
+      "breakdown": "고장",
+      "standby": "대기",
+      "stopped": "정지",
+      "unknown": "상태 확인 불가"
     },
     "metrics": {
       "operationRate": "가동률",
       "temperature": "온도",
-      "vibration": "진동"
+      "vibration": "진동",
+      "category": "분류",
+      "manufacturer": "제조사",
+      "model": "모델명",
+      "lastUpdate": "최종 업데이트"
     },
     "alarms": {
       "title": "실시간 알람 현황",
       "emergency": "긴급",
       "warning": "주의",
+      "noAlarmsTitle": "현재 알람이 없습니다",
+      "noAlarmsDescription": "모든 설비가 정상 상태로 운영 중입니다",
       "priority": {
         "high": "긴급",
         "medium": "주의",
@@ -128,6 +144,8 @@
       "title": "긴급 조치 필요 설비",
       "immediateAction": "즉시 대응",
       "inspectionNeeded": "점검 필요",
+      "noUrgentTitle": "긴급 조치가 필요한 설비가 없습니다",
+      "noUrgentDescription": "모든 설비가 정상적으로 운영되고 있습니다",
       "causes": {
         "coolantIssue": "냉각수 순환 이상",
         "filterCleaning": "필터 청소 필요"
@@ -148,6 +166,11 @@
       "highest": "최고 가동률",
       "needsImprovement": "개선 필요",
       "change": "전 기간 대비",
+      "basedOnData": "등록된 설비 데이터 기준",
+      "noData": "데이터 없음",
+      "noEquipment": "설비 없음",
+      "noDataTitle": "가동률 데이터가 없습니다",
+      "noDataDescription": "설비를 등록하고 상태 정보를 추가하여 가동률 분석을 시작하세요",
       "trend": {
         "up": "↗️ +{{value}}%",
         "down": "↘️ {{value}}%"

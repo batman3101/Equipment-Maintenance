@@ -1,76 +1,34 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card, StatusBadge } from '@/components/ui'
+import React, { useState, useMemo, useEffect } from 'react'
+import { Card, StatusBadge, Modal, Button } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
+import { supabase } from '@/lib/supabase'
+import { useToast } from '@/contexts/ToastContext'
 
 interface BreakdownReport {
   id: string
-  equipmentCategory: string
-  equipmentNumber: string
-  reporterName: string
-  urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
-  issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
-  description: string
-  symptoms: string
-  status: 'reported' | 'assigned' | 'in_progress' | 'resolved' | 'rejected'
-  reportedAt: string
-  updatedAt: string
+  equipmentId: string
+  breakdownTitle: string
+  breakdownDescription: string
+  breakdownType?: string
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  occurredAt: string
+  reportedBy: string
+  status: 'reported' | 'assigned' | 'in_progress' | 'completed'
   assignedTo?: string
+  symptoms?: string
+  createdAt: string
+  updatedAt: string
 }
 
-// Mock breakdown reports data
-const mockBreakdownReports: BreakdownReport[] = [
-  {
-    id: '1',
-    equipmentCategory: '선반',
-    equipmentNumber: 'CNC-LT-001',
-    reporterName: '김기술자',
-    urgencyLevel: 'high',
-    issueType: 'mechanical',
-    description: '스핀들에서 이상한 소음이 발생하며 진동이 심합니다. 가공 정확도에 영향을 주고 있어 즉시 점검이 필요합니다.',
-    symptoms: '고주파 소음, 비정상적 진동, 가공면 거칠기 증가',
-    status: 'in_progress',
-    reportedAt: '2024-01-15 13:45:00',
-    updatedAt: '2024-01-15 14:30:00',
-    assignedTo: '박정비사'
-  },
-  {
-    id: '2',
-    equipmentCategory: '드릴링머신',
-    equipmentNumber: 'CNC-DR-001',
-    reporterName: '이현장',
-    urgencyLevel: 'medium',
-    issueType: 'electrical',
-    description: '제어판에 에러 코드 E-203이 간헐적으로 표시됩니다. 작업은 계속 가능하지만 점검이 필요해 보입니다.',
-    symptoms: '간헐적 에러 코드 표시, 작업 중단 없음',
-    status: 'assigned',
-    reportedAt: '2024-01-15 11:20:00',
-    updatedAt: '2024-01-15 12:00:00',
-    assignedTo: '최전기기사'
-  },
-  {
-    id: '3',
-    equipmentCategory: '밀링머신',
-    equipmentNumber: 'CNC-ML-001',
-    reporterName: '정기술자',
-    urgencyLevel: 'critical',
-    issueType: 'safety',
-    description: '안전 커버가 완전히 닫히지 않아 안전 센서가 작동하지 않습니다. 작업자 안전을 위해 즉시 사용 중단했습니다.',
-    symptoms: '안전 커버 오작동, 안전 센서 미작동, 작업 불가',
-    status: 'resolved',
-    reportedAt: '2024-01-14 16:30:00',
-    updatedAt: '2024-01-15 09:15:00',
-    assignedTo: '김안전관리사'
-  }
-]
 
-const getUrgencyColor = (level: string): 'success' | 'warning' | 'danger' | 'secondary' => {
-  switch (level) {
+const getPriorityColor = (priority: string): 'success' | 'warning' | 'danger' | 'secondary' => {
+  switch (priority) {
     case 'low': return 'success'
     case 'medium': return 'warning'
     case 'high': return 'danger'
-    case 'critical': return 'danger'
+    case 'urgent': return 'danger'
     default: return 'secondary'
   }
 }
@@ -80,8 +38,7 @@ const getStatusColor = (status: string): 'secondary' | 'info' | 'warning' | 'suc
     case 'reported': return 'secondary'
     case 'assigned': return 'info'
     case 'in_progress': return 'warning'
-    case 'resolved': return 'success'
-    case 'rejected': return 'danger'
+    case 'completed': return 'success'
     default: return 'secondary'
   }
 }
@@ -92,20 +49,230 @@ interface BreakdownListProps {
 
 export function BreakdownList({ onReportClick }: BreakdownListProps) {
   const { t } = useTranslation(['breakdown', 'common'])
-  const [reports] = useState<BreakdownReport[]>(mockBreakdownReports)
+  const { showSuccess, showError } = useToast()
+  const [reports, setReports] = useState<BreakdownReport[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [urgencyFilter, setUrgencyFilter] = useState<string>('all')
+  const [priorityFilter, setPriorityFilter] = useState<string>('all')
+  
+  // 모달 상태
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedReport, setSelectedReport] = useState<BreakdownReport | null>(null)
+  const [editFormData, setEditFormData] = useState<Partial<BreakdownReport>>({})
 
-  const filteredReports = reports.filter(report => {
-    if (statusFilter !== 'all' && report.status !== statusFilter) return false
-    if (urgencyFilter !== 'all' && report.urgencyLevel !== urgencyFilter) return false
-    return true
-  })
+  // Supabase에서 고장 데이터 가져오기
+  useEffect(() => {
+    fetchReports()
+  }, [])
 
-  const statusCounts = reports.reduce((acc, report) => {
-    acc[report.status] = (acc[report.status] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const fetchReports = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const { data, error: fetchError } = await supabase
+        .from('breakdown_reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (fetchError) {
+        console.error('Error fetching breakdown reports:', fetchError)
+        setError('고장 신고 목록을 불러오는데 실패했습니다.')
+        return
+      }
+
+      // Supabase 데이터를 컴포넌트 인터페이스에 맞게 변환
+      const formattedReports: BreakdownReport[] = (data || []).map(report => ({
+        id: report.id,
+        equipmentId: report.equipment_id,
+        breakdownTitle: report.breakdown_title,
+        breakdownDescription: report.breakdown_description,
+        breakdownType: report.breakdown_type,
+        priority: report.priority,
+        occurredAt: report.occurred_at,
+        reportedBy: report.reported_by,
+        status: report.status,
+        assignedTo: report.assigned_to,
+        symptoms: report.symptoms,
+        createdAt: report.created_at,
+        updatedAt: report.updated_at
+      }))
+
+      setReports(formattedReports)
+    } catch (err) {
+      console.error('Unexpected error fetching breakdown reports:', err)
+      setError('예상치 못한 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredReports = useMemo(() => {
+    return reports.filter(report => {
+      if (statusFilter !== 'all' && report.status !== statusFilter) return false
+      if (priorityFilter !== 'all' && report.priority !== priorityFilter) return false
+      return true
+    })
+  }, [reports, statusFilter, priorityFilter])
+
+  const statusCounts = useMemo(() => {
+    return reports.reduce((acc, report) => {
+      acc[report.status] = (acc[report.status] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+  }, [reports])
+
+  // CRUD 핸들러들
+  const handleViewDetails = (report: BreakdownReport) => {
+    setSelectedReport(report)
+    setShowDetailsModal(true)
+  }
+
+  const handleEdit = (report: BreakdownReport) => {
+    setSelectedReport(report)
+    setEditFormData({
+      breakdownTitle: report.breakdownTitle,
+      breakdownDescription: report.breakdownDescription,
+      breakdownType: report.breakdownType,
+      priority: report.priority,
+      status: report.status,
+      assignedTo: report.assignedTo,
+      symptoms: report.symptoms
+    })
+    setShowEditModal(true)
+  }
+
+  const handleDelete = (report: BreakdownReport) => {
+    setSelectedReport(report)
+    setShowDeleteModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedReport || !editFormData.breakdownTitle || !editFormData.breakdownDescription) {
+      showError(
+        t('common:messages.requiredFields'),
+        t('common:messages.requiredFieldsDetail')
+      )
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('breakdown_reports')
+        .update({
+          breakdown_title: editFormData.breakdownTitle,
+          breakdown_description: editFormData.breakdownDescription,
+          breakdown_type: editFormData.breakdownType,
+          priority: editFormData.priority,
+          status: editFormData.status,
+          assigned_to: editFormData.assignedTo,
+          symptoms: editFormData.symptoms,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedReport.id)
+
+      if (error) {
+        console.error('Error updating breakdown report:', error)
+        showError(
+          t('common:messages.updateFailed'),
+          error.message
+        )
+        return
+      }
+
+      // 로컬 상태 업데이트
+      setReports(prev => prev.map(report => 
+        report.id === selectedReport.id 
+          ? { ...report, ...editFormData as BreakdownReport, updatedAt: new Date().toISOString() }
+          : report
+      ))
+
+      showSuccess(
+        t('common:messages.updateSuccess'),
+        `${editFormData.breakdownTitle}`
+      )
+      
+      setShowEditModal(false)
+      setSelectedReport(null)
+      setEditFormData({})
+    } catch (err) {
+      console.error('Unexpected error updating breakdown report:', err)
+      showError(
+        t('common:messages.updateFailed'),
+        t('common:errors.unexpected')
+      )
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!selectedReport) return
+
+    try {
+      const { error } = await supabase
+        .from('breakdown_reports')
+        .delete()
+        .eq('id', selectedReport.id)
+
+      if (error) {
+        console.error('Error deleting breakdown report:', error)
+        showError(
+          t('common:messages.deleteFailed'),
+          error.message
+        )
+        return
+      }
+
+      // 로컬 상태에서 제거
+      setReports(prev => prev.filter(report => report.id !== selectedReport.id))
+      
+      showSuccess(
+        t('common:messages.deleteSuccess'),
+        `${selectedReport.breakdownTitle}`
+      )
+      
+      setShowDeleteModal(false)
+      setSelectedReport(null)
+    } catch (err) {
+      console.error('Unexpected error deleting breakdown report:', err)
+      showError(
+        t('common:messages.deleteFailed'),
+        t('common:errors.unexpected')
+      )
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <Card.Content className="text-center py-8">
+            <div className="text-gray-500">고장 신고 목록을 불러오는 중...</div>
+          </Card.Content>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <Card.Content className="text-center py-8">
+            <div className="text-red-500 mb-4">{error}</div>
+            <button 
+              onClick={fetchReports}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              다시 시도
+            </button>
+          </Card.Content>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -141,18 +308,18 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
         <Card>
           <Card.Content className="text-center py-4">
             <div className="text-2xl font-bold text-green-600">
-              {statusCounts.resolved || 0}
+              {statusCounts.completed || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.resolved')}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.completed')}</div>
           </Card.Content>
         </Card>
         
         <Card>
           <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-red-600">
-              {statusCounts.rejected || 0}
+            <div className="text-2xl font-bold text-blue-400">
+              {reports.length}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.rejected')}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.total')}</div>
           </Card.Content>
         </Card>
       </div>
@@ -177,17 +344,16 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
                 <option value="reported">{t('breakdown:status.reported')}</option>
                 <option value="assigned">{t('breakdown:status.assigned')}</option>
                 <option value="in_progress">{t('breakdown:status.in_progress')}</option>
-                <option value="resolved">{t('breakdown:status.resolved')}</option>
-                <option value="rejected">{t('breakdown:status.rejected')}</option>
+                <option value="completed">{t('breakdown:status.completed')}</option>
               </select>
               
               <select
-                value={urgencyFilter}
-                onChange={(e) => setUrgencyFilter(e.target.value)}
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
                 className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="all">{t('breakdown:list.filters.allUrgency')}</option>
-                <option value="critical">{t('breakdown:urgency.critical')}</option>
+                <option value="urgent">{t('breakdown:urgency.urgent')}</option>
                 <option value="high">{t('breakdown:urgency.high')}</option>
                 <option value="medium">{t('breakdown:urgency.medium')}</option>
                 <option value="low">{t('breakdown:urgency.low')}</option>
@@ -197,70 +363,368 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
         </Card.Header>
         
         <Card.Content>
-          <div className="space-y-4">
-            {filteredReports.map((report) => (
-              <div
-                key={report.id}
-                onClick={() => onReportClick?.(report)}
-                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-bold text-gray-900 dark:text-white">
-                        {report.equipmentCategory} ({report.equipmentNumber})
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <StatusBadge variant={getUrgencyColor(report.urgencyLevel)}>
-                      {t(`breakdown:urgency.${report.urgencyLevel}`, report.urgencyLevel)}
-                    </StatusBadge>
-                    <StatusBadge variant={getStatusColor(report.status)}>
-                      {t(`breakdown:status.${report.status}`, report.status)}
-                    </StatusBadge>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
-                    <strong>{t('breakdown:list.symptoms')}:</strong> {report.symptoms}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {report.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center space-x-4">
-                    <span><strong>{t('breakdown:list.reporter')}:</strong> {report.reporterName}</span>
-                    <span><strong>{t('breakdown:list.type')}:</strong> {t(`breakdown:issueTypes.${report.issueType}`, report.issueType)}</span>
-                    {report.assignedTo && (
-                      <span><strong>{t('breakdown:list.assignee')}:</strong> {report.assignedTo}</span>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div>{t('breakdown:list.reportedAt')}: {new Date(report.reportedAt).toLocaleString()}</div>
-                    <div>{t('breakdown:list.updatedAt')}: {new Date(report.updatedAt).toLocaleString()}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {filteredReports.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-4xl mb-4">📋</div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  {t('breakdown:list.noReports')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {t('breakdown:list.noReportsDescription')}
-                </p>
-              </div>
-            )}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {t('breakdown:list.breakdownTitle')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {t('breakdown:list.equipmentId')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {t('breakdown:list.priority')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {t('breakdown:list.status')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {t('breakdown:list.reporter')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {t('breakdown:list.reportedAt')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {t('common:actions.actions')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredReports.map((report) => (
+                  <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {report.breakdownTitle}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {report.equipmentId}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge variant={getPriorityColor(report.priority)}>
+                        {t(`breakdown:urgency.${report.priority}`, report.priority)}
+                      </StatusBadge>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge variant={getStatusColor(report.status)}>
+                        {t(`breakdown:status.${report.status}`, report.status)}
+                      </StatusBadge>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {report.reportedBy}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {new Date(report.occurredAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewDetails(report)}
+                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                          title={t('common:actions.viewDetails')}
+                        >
+                          👁️
+                        </button>
+                        <button
+                          onClick={() => handleEdit(report)}
+                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                          title={t('common:actions.editItem')}
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDelete(report)}
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                          title={t('common:actions.deleteItem')}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          
+          {filteredReports.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">📋</div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {t('breakdown:list.noReports')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('breakdown:list.noReportsDescription')}
+              </p>
+            </div>
+          )}
         </Card.Content>
       </Card>
+
+      {/* 상세보기 모달 */}
+      {showDetailsModal && selectedReport && (
+        <Modal
+          isOpen={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false)
+            setSelectedReport(null)
+          }}
+          title={t('common:modals.viewDetails')}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.breakdownTitle')}
+              </label>
+              <p className="text-gray-900 dark:text-white">{selectedReport.breakdownTitle}</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.equipmentId')}
+              </label>
+              <p className="text-gray-900 dark:text-white">{selectedReport.equipmentId}</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.description')}
+              </label>
+              <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedReport.breakdownDescription}</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.symptoms')}
+              </label>
+              <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedReport.symptoms || '-'}</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.type')}
+              </label>
+              <p className="text-gray-900 dark:text-white">{selectedReport.breakdownType || '-'}</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.priority')}
+              </label>
+              <StatusBadge variant={getPriorityColor(selectedReport.priority)}>
+                {t(`breakdown:urgency.${selectedReport.priority}`, selectedReport.priority)}
+              </StatusBadge>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.status')}
+              </label>
+              <StatusBadge variant={getStatusColor(selectedReport.status)}>
+                {t(`breakdown:status.${selectedReport.status}`, selectedReport.status)}
+              </StatusBadge>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.reporter')}
+              </label>
+              <p className="text-gray-900 dark:text-white">{selectedReport.reportedBy}</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.assignee')}
+              </label>
+              <p className="text-gray-900 dark:text-white">{selectedReport.assignedTo || '-'}</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.reportedAt')}
+              </label>
+              <p className="text-gray-900 dark:text-white">
+                {new Date(selectedReport.occurredAt).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 편집 모달 */}
+      {showEditModal && selectedReport && (
+        <Modal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setSelectedReport(null)
+            setEditFormData({})
+          }}
+          title={t('common:modals.editItem')}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.breakdownTitle')} *
+              </label>
+              <input
+                type="text"
+                value={editFormData.breakdownTitle || ''}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, breakdownTitle: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.description')} *
+              </label>
+              <textarea
+                value={editFormData.breakdownDescription || ''}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, breakdownDescription: e.target.value }))}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.symptoms')}
+              </label>
+              <textarea
+                value={editFormData.symptoms || ''}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, symptoms: e.target.value }))}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.type')}
+              </label>
+              <input
+                type="text"
+                value={editFormData.breakdownType || ''}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, breakdownType: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.priority')}
+              </label>
+              <select
+                value={editFormData.priority || ''}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, priority: e.target.value as any }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                <option value="low">{t('breakdown:urgency.low')}</option>
+                <option value="medium">{t('breakdown:urgency.medium')}</option>
+                <option value="high">{t('breakdown:urgency.high')}</option>
+                <option value="urgent">{t('breakdown:urgency.urgent')}</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.status')}
+              </label>
+              <select
+                value={editFormData.status || ''}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                <option value="reported">{t('breakdown:status.reported')}</option>
+                <option value="assigned">{t('breakdown:status.assigned')}</option>
+                <option value="in_progress">{t('breakdown:status.in_progress')}</option>
+                <option value="completed">{t('breakdown:status.completed')}</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('breakdown:list.assignee')}
+              </label>
+              <input
+                type="text"
+                value={editFormData.assignedTo || ''}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowEditModal(false)
+                  setSelectedReport(null)
+                  setEditFormData({})
+                }}
+              >
+                {t('common:actions.cancel')}
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                {t('common:actions.save')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && selectedReport && (
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false)
+            setSelectedReport(null)
+          }}
+          title={t('common:modals.deleteConfirm')}
+        >
+          <div className="space-y-4">
+            <p className="text-gray-700 dark:text-gray-300">
+              {t('common:modals.deleteConfirmMessage')}
+            </p>
+            
+            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {t('breakdown:list.breakdownTitle')}: <span className="font-medium text-gray-900 dark:text-white">{selectedReport.breakdownTitle}</span>
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t('breakdown:list.equipmentId')}: <span className="font-medium text-gray-900 dark:text-white">{selectedReport.equipmentId}</span>
+              </p>
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setSelectedReport(null)
+                }}
+              >
+                {t('common:actions.cancel')}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleConfirmDelete}
+              >
+                {t('common:actions.delete')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

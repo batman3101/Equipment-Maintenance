@@ -1,8 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
+import { supabase } from '@/lib/supabase'
 
 interface MaintenanceAnalysisProps {
   subOption: string
@@ -11,6 +12,62 @@ interface MaintenanceAnalysisProps {
 
 export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisProps) {
   const { t } = useTranslation('statistics')
+  const [equipmentData, setEquipmentData] = useState<any[]>([])
+  const [maintenanceData, setMaintenanceData] = useState<any[]>([])
+  const [repairData, setRepairData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchData()
+  }, [period])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // 설비 정보, 정비 계획, 수리 내역을 동시에 가져오기
+      const [equipmentResult, maintenanceResult, repairResult] = await Promise.all([
+        supabase.from('equipment_info').select('*'),
+        supabase.from('maintenance_schedules').select('*'),
+        supabase.from('repair_reports').select('*')
+      ])
+
+      if (equipmentResult.error) throw equipmentResult.error
+      if (maintenanceResult.error) throw maintenanceResult.error  
+      if (repairResult.error) throw repairResult.error
+
+      setEquipmentData(equipmentResult.data || [])
+      setMaintenanceData(maintenanceResult.data || [])
+      setRepairData(repairResult.data || [])
+    } catch (err) {
+      console.error('Error fetching maintenance data:', err)
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const maintenanceMetrics = useMemo(() => {
+    if (!maintenanceData.length) {
+      return {
+        planned: 0,
+        completed: 0,
+        inProgress: 0,
+        delayed: 0,
+        overallRate: 0
+      }
+    }
+
+    const planned = maintenanceData.length
+    const completed = maintenanceData.filter(m => m.status === 'completed').length
+    const inProgress = maintenanceData.filter(m => m.status === 'in_progress').length
+    const delayed = maintenanceData.filter(m => m.status === 'delayed' || m.status === 'overdue').length
+    const overallRate = planned > 0 ? Math.round((completed / planned) * 100 * 10) / 10 : 0
+
+    return { planned, completed, inProgress, delayed, overallRate }
+  }, [maintenanceData])
   
   const getPeriodLabel = (period: string) => {
     const labels: { [key: string]: string } = {
@@ -22,6 +79,36 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
     return labels[period] || t('periods.daily')
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <Card.Content className="text-center py-8">
+            <div className="text-gray-500">{t('common:loading')}</div>
+          </Card.Content>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <Card.Content className="text-center py-8">
+            <div className="text-red-500 mb-4">{error}</div>
+            <button 
+              onClick={fetchData}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              {t('common:actions.retry')}
+            </button>
+          </Card.Content>
+        </Card>
+      </div>
+    )
+  }
+
   const renderContent = () => {
     switch (subOption) {
       case 'schedule-analysis':
@@ -31,25 +118,25 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
                 <Card.Content className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">24</div>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{maintenanceMetrics.planned}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.planned')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
                 <Card.Content className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">22</div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">{maintenanceMetrics.completed}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.completed')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20">
                 <Card.Content className="p-4 text-center">
-                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">1</div>
+                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{maintenanceMetrics.inProgress}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.inProgress')}</div>
                 </Card.Content>
               </Card>
               <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
                 <Card.Content className="p-4 text-center">
-                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">1</div>
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">{maintenanceMetrics.delayed}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.delayed')}</div>
                 </Card.Content>
               </Card>
@@ -63,39 +150,47 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
               <Card.Content>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-600 dark:text-gray-400">{t('maintenance.schedule.overall')}</span>
-                  <span className="text-2xl font-bold text-green-600 dark:text-green-400">91.7%</span>
+                  <span className="text-2xl font-bold text-green-600 dark:text-green-400">{maintenanceMetrics.overallRate}%</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-6">
-                  <div className="bg-green-500 h-4 rounded-full" style={{ width: '91.7%' }}></div>
+                  <div className="bg-green-500 h-4 rounded-full" style={{ width: `${maintenanceMetrics.overallRate}%` }}></div>
                 </div>
 
                 <div className="space-y-4">
-                  {[
-                    { equipment: 'CNC-LT-001', planned: 6, completed: 6, rate: 100 },
-                    { equipment: 'CNC-ML-001', planned: 6, completed: 6, rate: 100 },
-                    { equipment: 'CNC-DR-001', planned: 6, completed: 5, rate: 83.3 },
-                    { equipment: 'CNC-GR-001', planned: 6, completed: 5, rate: 83.3 }
-                  ].map((item) => (
-                    <div key={item.equipment} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <span className="font-medium text-gray-900 dark:text-white">{item.equipment}</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {t('maintenance.schedule.completedTasks', { completed: item.completed, planned: item.planned })}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${item.rate === 100 ? 'bg-green-500' : item.rate >= 80 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${item.rate}%` }}
-                          ></div>
-                        </div>
-                        <span className={`text-sm font-semibold ${item.rate === 100 ? 'text-green-600' : item.rate >= 80 ? 'text-yellow-600' : 'text-red-600'}`}>
-                          {item.rate}%
-                        </span>
-                      </div>
+                  {equipmentData.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600 dark:text-gray-400">{t('common.noData')}</p>
                     </div>
-                  ))}
+                  ) : (
+                    equipmentData.map((equipment) => {
+                      const equipmentMaintenance = maintenanceData.filter(m => m.equipment_id === equipment.id)
+                      const planned = equipmentMaintenance.length
+                      const completed = equipmentMaintenance.filter(m => m.status === 'completed').length
+                      const rate = planned > 0 ? Math.round((completed / planned) * 100 * 10) / 10 : 0
+                      
+                      return (
+                        <div key={equipment.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div className="flex items-center space-x-4">
+                            <span className="font-medium text-gray-900 dark:text-white">{equipment.equipment_number}</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {t('maintenance.schedule.completedTasks', { completed, planned })}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${rate === 100 ? 'bg-green-500' : rate >= 80 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                style={{ width: `${Math.min(rate, 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className={`text-sm font-semibold ${rate === 100 ? 'text-green-600' : rate >= 80 ? 'text-yellow-600' : 'text-red-600'}`}>
+                              {rate}%
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </Card.Content>
             </Card>

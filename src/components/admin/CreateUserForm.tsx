@@ -42,7 +42,7 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
       <Card>
         <Card.Content className="text-center py-8">
           <div className="text-red-500 text-lg mb-2">❌</div>
-          <p className="text-gray-600">{t('messages.noPermission')}</p>
+          <p className="text-gray-700 dark:text-gray-300">{t('messages.noPermission')}</p>
         </Card.Content>
       </Card>
     )
@@ -151,8 +151,8 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
   return (
     <Card>
       <Card.Header>
-        <h2 className="text-xl font-bold text-gray-900">👥 {t('createUser.title')}</h2>
-        <p className="text-sm text-gray-600">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">👥 {t('createUser.title')}</h2>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
           {t('createUser.subtitle')}
         </p>
       </Card.Header>
@@ -182,13 +182,13 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
                 {t('createUser.form.role')} *
               </label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'manager' | 'user' }))}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               >
                 <option value="user">{t('createUser.form.roleOptions.user')}</option>
@@ -229,7 +229,7 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
           <div className="space-y-4">
             {/* 로그인 권한 설정 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                 {t('createUser.form.loginSettings', '로그인 권한 설정')}
               </label>
               <div className="space-y-2">
@@ -242,8 +242,8 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
                     className="mt-1"
                   />
                   <div>
-                    <div className="font-medium text-sm">{t('createUser.form.immediateLogin', '즉시 로그인 가능')}</div>
-                    <div className="text-xs text-gray-500">{t('createUser.form.immediateLoginDesc', '비밀번호를 설정하고 바로 로그인할 수 있는 계정을 생성합니다')}</div>
+                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{t('createUser.form.immediateLogin', '즉시 로그인 가능')}</div>
+                    <div className="text-xs text-gray-700 dark:text-gray-300">{t('createUser.form.immediateLoginDesc', '비밀번호를 설정하고 바로 로그인할 수 있는 계정을 생성합니다')}</div>
                   </div>
                 </label>
                 
@@ -256,8 +256,8 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
                     className="mt-1"
                   />
                   <div>
-                    <div className="font-medium text-sm">{t('createUser.form.profileOnly', '프로필만 생성 (권한 부여 대기)')}</div>
-                    <div className="text-xs text-gray-500">{t('createUser.form.profileOnlyDesc', '시스템에 사용자 정보만 등록하고, 로그인 권한은 나중에 부여합니다')}</div>
+                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{t('createUser.form.profileOnly', '프로필만 생성 (권한 부여 대기)')}</div>
+                    <div className="text-xs text-gray-700 dark:text-gray-300">{t('createUser.form.profileOnlyDesc', '시스템에 사용자 정보만 등록하고, 로그인 권한은 나중에 부여합니다')}</div>
                   </div>
                 </label>
               </div>
@@ -266,7 +266,7 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
             {/* 비밀번호 설정 (로그인 권한 부여시에만) */}
             {formData.create_auth_user && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
                   {t('createUser.form.password')} *
                 </label>
                 <div className="flex gap-2">
@@ -287,7 +287,7 @@ export function CreateUserForm({ onUserCreated }: CreateUserFormProps) {
                     🎲 {t('common:actions.generate', '생성')}
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
                   {t('createUser.form.passwordHint', '8자 이상, 대소문자, 숫자, 특수문자 포함 필요')}
                 </p>
               </div>

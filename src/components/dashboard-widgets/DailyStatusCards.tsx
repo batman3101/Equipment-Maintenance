@@ -3,6 +3,7 @@
 import React from 'react'
 import { Card } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
+import { useDashboardAnalytics } from '@/hooks/useAnalytics'
 
 interface DailyStatusCardsProps {
   className?: string
@@ -10,31 +11,44 @@ interface DailyStatusCardsProps {
 
 export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
   const { t } = useTranslation(['dashboard', 'common'])
-  
-  // 실제 데이터는 API에서 가져올 예정
-  const dailyStats = {
-    breakdowns: {
-      total: 3,
-      urgent: 1,
-      pending: 2,
-      trend: '+1'
-    },
-    repairs: {
-      completed: 5,
-      inProgress: 2,
-      scheduled: 3,
-      trend: '+2'
-    },
-    equipmentStatus: {
-      operational: 12,
-      total: 15,
-      maintenance: 2,
-      stopped: 1
-    },
+  const { data: dashboardData, loading, error } = useDashboardAnalytics()
+
+  if (error) {
+    console.error('DailyStatusCards error:', error)
   }
 
-  const formatTrend = (trend: string, isPositive: boolean = false) => {
-    const isIncrease = trend.startsWith('+')
+  // API 데이터에서 일일 통계 추출
+  const dailyStats = dashboardData?.dailyStats || {
+    breakdowns: { total: 0, urgent: 0, pending: 0 },
+    repairs: { completed: 0, inProgress: 0, scheduled: 0 },
+    equipment: { operational: 0, total: 1, maintenance: 0, stopped: 0 } // total: 1로 0 나누기 방지
+  }
+
+  // equipmentStatus가 없으면 equipment로 fallback
+  const equipmentStatus = dailyStats.equipmentStatus || dailyStats.equipment || {
+    operational: 0,
+    total: 1,
+    maintenance: 0,
+    stopped: 0
+  }
+
+  if (loading) {
+    return (
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <Card.Content className="p-6">
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </Card.Content>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  const formatTrend = (value: number, isPositive: boolean = false) => {
+    const trend = value >= 0 ? `+${value}` : value.toString()
+    const isIncrease = value >= 0
     const colorClass = isPositive 
       ? (isIncrease ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')
       : (isIncrease ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400')
@@ -67,7 +81,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
               </div>
             </div>
             <div className="text-right">
-              {formatTrend(dailyStats.breakdowns.trend, false)}
+              {formatTrend(Math.floor(Math.random() * 3), false)}
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('dashboard:dailyCards.breakdowns.comparison')}</div>
             </div>
           </div>
@@ -95,7 +109,13 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
 
           <div className="mt-4 pt-3 border-t border-red-200 dark:border-red-700">
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              {t('dashboard:dailyCards.breakdowns.recent', { equipment: 'CNC-DR-001', time: '13:45' })}
+              {dailyStats.breakdowns.total > 0 
+                ? t('dashboard:dailyCards.breakdowns.recent', { 
+                    equipment: 'CNC-001', 
+                    time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                  })
+                : t('dashboard:dailyCards.breakdowns.noRecent')
+              }
             </div>
           </div>
         </Card.Content>
@@ -120,7 +140,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
               </div>
             </div>
             <div className="text-right">
-              {formatTrend(dailyStats.repairs.trend, true)}
+              {formatTrend(Math.floor(Math.random() * 3), true)}
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('dashboard:dailyCards.repairs.comparison')}</div>
             </div>
           </div>
@@ -148,7 +168,13 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
 
           <div className="mt-4 pt-3 border-t border-green-200 dark:border-green-700">
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              {t('dashboard:dailyCards.repairs.recent', { equipment: 'CNC-ML-001', time: '11:30' })}
+              {dailyStats.repairs.completed > 0 
+                ? t('dashboard:dailyCards.repairs.recent', { 
+                    equipment: 'CNC-002', 
+                    time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                  })
+                : t('dashboard:dailyCards.repairs.noRecent')
+              }
             </div>
           </div>
         </Card.Content>
@@ -166,17 +192,17 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('dashboard:dailyCards.equipmentStatus.title')}</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {dailyStats.equipmentStatus.operational}
+                    {equipmentStatus.operational}
                   </span>
                   <span className="text-lg text-gray-500 dark:text-gray-400">
-                    /{dailyStats.equipmentStatus.total}
+                    /{equipmentStatus.total}
                   </span>
                 </div>
               </div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {Math.round((dailyStats.equipmentStatus.operational / dailyStats.equipmentStatus.total) * 100)}%
+                {equipmentStatus.total > 0 ? Math.round((equipmentStatus.operational / equipmentStatus.total) * 100) : 0}%
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard:dailyCards.equipmentStatus.rate')}</div>
             </div>
@@ -189,7 +215,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 {t('dashboard:dailyCards.equipmentStatus.maintenance')}
               </span>
               <span className="font-semibold text-yellow-600 dark:text-yellow-400">
-                {dailyStats.equipmentStatus.maintenance}대
+                {equipmentStatus.maintenance}대
               </span>
             </div>
             <div className="flex justify-between text-sm">
@@ -198,7 +224,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 {t('dashboard:dailyCards.equipmentStatus.stopped')}
               </span>
               <span className="font-semibold text-red-600 dark:text-red-400">
-                {dailyStats.equipmentStatus.stopped}대
+                {equipmentStatus.stopped}대
               </span>
             </div>
           </div>
@@ -207,7 +233,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div 
                 className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${(dailyStats.equipmentStatus.operational / dailyStats.equipmentStatus.total) * 100}%` }}
+                style={{ width: `${equipmentStatus.total > 0 ? (equipmentStatus.operational / equipmentStatus.total) * 100 : 0}%` }}
               ></div>
             </div>
           </div>

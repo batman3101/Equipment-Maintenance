@@ -1,4 +1,43 @@
 {
+  "loading": "Đang tải lịch sử sửa chữa...",
+  "showing": "Hiển thị",
+  "technician": "Kỹ thuật viên",
+  "timeSpent": "Thời gian Làm việc",
+  "status": {
+    "completed": "Hoàn thành",
+    "partial": "Hoàn thành Một phần",
+    "failed": "Thất bại/Tạm hoãn",
+    "inProgress": "Đang xử lý"
+  },
+  "types": {
+    "preventive": "Bảo trì Phòng ngừa",
+    "corrective": "Bảo trì Sau sự cố",
+    "emergency": "Sửa chữa Khẩn cấp",
+    "upgrade": "Cải tiến/Nâng cấp"
+  },
+  "statistics": {
+    "total": "Tổng cộng",
+    "completed": "Hoàn thành",
+    "partial": "Hoàn thành Một phần",
+    "failed": "Thất bại/Tạm hoãn"
+  },
+  "filters": {
+    "title": "Bộ lọc",
+    "search": "Tìm kiếm",
+    "searchPlaceholder": "Tìm theo ID thiết bị/KTV/Nội dung công việc",
+    "type": "Loại",
+    "status": "Trạng thái",
+    "all": "Tất cả"
+  },
+  "fields": {
+    "equipmentId": "ID Thiết bị",
+    "repairType": "Loại Sửa chữa",
+    "status": "Trạng thái",
+    "completedAt": "Ngày giờ Hoàn thành",
+    "workDescription": "Nội dung Công việc đã Thực hiện",
+    "testResults": "Kết quả Kiểm tra",
+    "notes": "Ghi chú"
+  },
   "management": {
     "title": "Quản lý Lịch sử Sửa chữa",
     "description": "Có thể xem lịch sử sửa chữa đã hoàn thành và đăng ký hoàn thành sửa chữa mới",
@@ -59,6 +98,9 @@
   "list": {
     "title": "Lịch sử Hoàn thành Sửa chữa",
     "totalRepairs": "Tổng {{count}} lịch sử sửa chữa",
+    "empty": "Không có lịch sử sửa chữa",
+    "noResults": "Không có kết quả phù hợp với điều kiện",
+    "addFirst": "Đăng ký lịch sử sửa chữa đầu tiên",
     "statistics": {
       "completed": "Hoàn thành",
       "partial": "Hoàn thành Một phần",

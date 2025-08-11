@@ -30,7 +30,13 @@
     "back": "뒤로",
     "next": "다음",
     "previous": "이전",
-    "close": "닫기"
+    "close": "닫기",
+    "retry": "다시 시도",
+    "view": "상세보기",
+    "viewDetails": "상세 정보 보기",
+    "editItem": "수정하기",
+    "deleteItem": "삭제하기",
+    "actions": "작업"
   },
   "status": {
     "active": "활성",
@@ -49,6 +55,11 @@
     "error": "오류가 발생했습니다",
     "success": "성공적으로 처리되었습니다",
     "confirmDelete": "정말로 삭제하시겠습니까?",
+    "confirmDeleteItem": "이 항목을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "deleteSuccess": "성공적으로 삭제되었습니다",
+    "deleteFailed": "삭제에 실패했습니다",
+    "updateSuccess": "성공적으로 업데이트되었습니다",
+    "updateFailed": "업데이트에 실패했습니다",
     "unsavedChanges": "저장되지 않은 변경사항이 있습니다",
     "sessionExpired": "세션이 만료되었습니다. 다시 로그인해주세요.",
     "processing": "처리중...",
@@ -57,6 +68,17 @@
     "pleaseWait": "잠시만 기다려주세요...",
     "operationSuccessful": "작업이 성공적으로 완료되었습니다",
     "operationFailed": "작업이 실패했습니다"
+  },
+  "modals": {
+    "details": "상세 정보",
+    "editTitle": "정보 수정",
+    "deleteTitle": "삭제 확인",
+    "detailsOf": "{{name}} 상세 정보"
+  },
+  "errors": {
+    "unexpected": "예상치 못한 오류가 발생했습니다",
+    "networkError": "네트워크 오류가 발생했습니다",
+    "serverError": "서버 오류가 발생했습니다"
   },
   "validation": {
     "required": "필수 입력 항목입니다",

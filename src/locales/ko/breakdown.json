@@ -59,6 +59,7 @@
     "reported": "신고 접수",
     "assigned": "담당자 배정",
     "in_progress": "수리 중",
+    "completed": "수리 완료",
     "resolved": "해결 완료",
     "rejected": "반려",
     "current": "현재 상태"
@@ -70,6 +71,8 @@
       "reported": "신고 접수",
       "assigned": "담당자 배정",
       "inProgress": "수리 중",
+      "completed": "수리 완료",
+      "total": "전체",
       "resolved": "해결 완료",
       "rejected": "반려"
     },
@@ -77,6 +80,10 @@
       "allStatus": "모든 상태",
       "allUrgency": "모든 긴급도"
     },
+    "breakdownTitle": "고장 제목",
+    "equipmentId": "설비 ID",
+    "priority": "우선순위",
+    "status": "상태",
     "noReports": "신고 내역이 없습니다",
     "noReportsDescription": "선택한 조건에 해당하는 고장 신고가 없습니다.",
     "reporter": "신고자",

@@ -36,7 +36,15 @@ if (supabaseAnonKey.length < 100) {
   throw new Error('Invalid Supabase anon key format')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    // 브라우저에서는 세션 지속/자동 갱신을 명시적으로 활성화
+    autoRefreshToken: typeof window !== 'undefined',
+    persistSession: typeof window !== 'undefined',
+    detectSessionInUrl: typeof window !== 'undefined',
+    flowType: 'pkce'
+  }
+})
 
 export type Json =
   | string

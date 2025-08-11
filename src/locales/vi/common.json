@@ -31,7 +31,13 @@
     "next": "Tiếp theo",
     "previous": "Trước",
     "close": "Đóng",
-    "generate": "Tạo"
+    "generate": "Tạo",
+    "retry": "Thử lại",
+    "view": "Xem chi tiết",
+    "viewDetails": "Xem thông tin chi tiết",
+    "editItem": "Chỉnh sửa",
+    "deleteItem": "Xóa",
+    "actions": "Thao tác"
   },
   "status": {
     "active": "Hoạt động",
@@ -56,8 +62,24 @@
     "connecting": "Đang kết nối...",
     "authenticating": "Đang xác thực...",
     "pleaseWait": "Vui lòng đợi...",
+    "confirmDeleteItem": "Bạn có chắc chắn muốn xóa mục này không? Hành động này không thể hoàn tác.",
+    "deleteSuccess": "Đã xóa thành công",
+    "deleteFailed": "Xóa thất bại",
+    "updateSuccess": "Đã cập nhật thành công",
+    "updateFailed": "Cập nhật thất bại",
     "operationSuccessful": "Thao tác đã hoàn thành thành công",
     "operationFailed": "Thao tác đã thất bại"
+  },
+  "modals": {
+    "details": "Thông tin chi tiết",
+    "editTitle": "Chỉnh sửa thông tin",
+    "deleteTitle": "Xác nhận xóa",
+    "detailsOf": "Thông tin chi tiết {{name}}"
+  },
+  "errors": {
+    "unexpected": "Đã xảy ra lỗi không mong muốn",
+    "networkError": "Đã xảy ra lỗi mạng",
+    "serverError": "Đã xảy ra lỗi máy chủ"
   },
   "validation": {
     "required": "Đây là trường bắt buộc",

@@ -38,18 +38,24 @@
   "fields": {
     "equipmentType": "설비 종류",
     "equipmentNumber": "설비 번호",
+    "equipmentName": "설비명",
     "location": "설비 위치",
     "installDate": "설치 일자", 
     "status": "상태",
     "category": "카테고리",
-    "manufacturer": "제조사",
-    "model": "모델명",
+    "manufacturer": "제조업체",
+    "model": "모델",
+    "specifications": "사양",
     "purchaseDate": "구입일"
   },
   "placeholders": {
     "selectEquipmentType": "설비 종류를 선택하세요",
     "equipmentNumberExample": "예: CNC-001",
-    "selectLocation": "위치를 선택하세요"
+    "selectLocation": "위치를 선택하세요",
+    "equipmentNamePlaceholder": "설비명을 입력하세요",
+    "manufacturerPlaceholder": "제조업체를 입력하세요",
+    "modelPlaceholder": "모델명을 입력하세요",
+    "specificationsPlaceholder": "설비 사양을 입력하세요"
   },
   "filters": {
     "all": "전체",
@@ -67,8 +73,10 @@
     "excelProcessingErrorDetail": "Excel 파일 처리 중 오류가 발생했습니다. 파일 형식을 확인해주세요.",
     "registerSuccess": "등록 성공",
     "registerSuccessDetail": "설비 '{{equipmentNumber}}'이 성공적으로 등록되었습니다.",
+    "registerFailed": "등록 실패",
+    "loadFailed": "설비 목록을 불러오는데 실패했습니다",
     "requiredFields": "필수 정보 누락",
-    "requiredFieldsDetail": "설비종류와 설비번호는 필수 입력 항목입니다.",
+    "requiredFieldsDetail": "설비명, 설비번호, 카테고리는 필수 입력 항목입니다.",
     "duplicateEquipmentNumber": "중복된 설비번호",
     "duplicateEquipmentNumberDetail": "설비번호 '{{equipmentNumber}}'는 이미 존재합니다.",
     "saved": "저장되었습니다",
@@ -98,7 +106,9 @@
     "allCategories": "모든 카테고리",
     "category": "카테고리:",
     "location": "위치:",
-    "lastUpdate": "최종 업데이트:"
+    "lastUpdate": "최종 업데이트:",
+    "noEquipmentTitle": "등록된 설비가 없습니다",
+    "noEquipmentDescription": "설비를 등록하여 모니터링을 시작하세요"
   },
   "categories": {
     "CNC": "CNC",

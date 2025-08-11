@@ -59,6 +59,7 @@
     "reported": "Đã tiếp nhận báo cáo",
     "assigned": "Đã phân công phụ trách",
     "in_progress": "Đang sửa chữa",
+    "completed": "Hoàn tất sửa chữa",
     "resolved": "Hoàn thành giải quyết",
     "rejected": "Từ chối",
     "current": "Tình trạng hiện tại"
@@ -70,6 +71,8 @@
       "reported": "Đã tiếp nhận báo cáo",
       "assigned": "Đã phân công phụ trách",
       "inProgress": "Đang sửa chữa",
+      "completed": "Đã hoàn thành",
+      "total": "Tổng cộng",
       "resolved": "Hoàn thành giải quyết",
       "rejected": "Từ chối"
     },
@@ -77,6 +80,10 @@
       "allStatus": "Tất cả tình trạng",
       "allUrgency": "Tất cả mức độ khẩn cấp"
     },
+    "breakdownTitle": "Tiêu đề sự cố",
+    "equipmentId": "Thiết bị ID",
+    "priority": "Ưu tiên",
+    "status": "Trạng thái",
     "noReports": "Không có lịch sử báo cáo",
     "noReportsDescription": "Không có báo cáo sự cố nào phù hợp với điều kiện đã chọn.",
     "reporter": "Người báo cáo",

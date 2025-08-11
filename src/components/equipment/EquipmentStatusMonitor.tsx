@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, StatusBadge } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
+import { useRealtimeData } from '@/hooks/useAnalytics'
 
 interface Equipment {
   id: string
@@ -13,54 +14,6 @@ interface Equipment {
   status: 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped'
   lastUpdated: string
 }
-
-const mockEquipmentData: Equipment[] = [
-  {
-    id: '1',
-    equipment_number: 'CNC-ML-001',
-    equipment_name: 'CNC 밀링머신 #1',
-    category: '밀링머신',
-    location: '1공장 A라인',
-    status: 'running',
-    lastUpdated: '2024-01-15 14:30:00'
-  },
-  {
-    id: '2',
-    equipment_number: 'CNC-LT-001',
-    equipment_name: 'CNC 선반 #1',
-    category: '선반',
-    location: '1공장 B라인',
-    status: 'breakdown',
-    lastUpdated: '2024-01-15 13:45:00'
-  },
-  {
-    id: '3',
-    equipment_number: 'CNC-DR-001',
-    equipment_name: 'CNC 드릴링머신 #1',
-    category: '드릴링머신',
-    location: '2공장 A라인',
-    status: 'standby',
-    lastUpdated: '2024-01-15 14:25:00'
-  },
-  {
-    id: '4',
-    equipment_number: 'CNC-GR-001',
-    equipment_name: 'CNC 그라인딩머신 #1',
-    category: '그라인딩머신',
-    location: '2공장 B라인',
-    status: 'maintenance',
-    lastUpdated: '2024-01-15 12:00:00'
-  },
-  {
-    id: '5',
-    equipment_number: 'CNC-LC-001',
-    equipment_name: 'CNC 레이저커터 #1',
-    category: '레이저커터',
-    location: '3공장 A라인',
-    status: 'running',
-    lastUpdated: '2024-01-15 14:35:00'
-  }
-]
 
 const getStatusColor = (status: string): 'success' | 'danger' | 'warning' | 'info' | 'secondary' => {
   switch (status) {
@@ -83,17 +36,45 @@ interface EquipmentStatusMonitorProps {
 
 export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMonitorProps) {
   const { t } = useTranslation(['equipment', 'common'])
-  const [equipment] = useState<Equipment[]>(mockEquipmentData)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleString())
+  const { data: realtimeData, loading, error, lastFetch } = useRealtimeData()
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLastUpdated(new Date().toLocaleString())
-    }, 30000) // 30초마다 업데이트
+  // 실시간 데이터에서 설비 정보 추출
+  const equipment: Equipment[] = (realtimeData?.equipment || []).map(eq => {
+    const status = realtimeData?.statusData?.find(s => s.equipment_id === eq.id)
+    return {
+      id: eq.id,
+      equipment_number: eq.equipment_number,
+      equipment_name: eq.equipment_name,
+      category: eq.category,
+      location: eq.location || '위치 미지정',
+      status: status?.status || 'stopped',
+      lastUpdated: status?.updated_at || eq.created_at
+    }
+  })
 
-    return () => clearInterval(interval)
-  }, [])
+  const lastUpdated = lastFetch ? lastFetch.toLocaleString() : new Date().toLocaleString()
+
+  if (error) {
+    console.error('EquipmentStatusMonitor error:', error)
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <Card.Content className="text-center py-4">
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              </Card.Content>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   const categories = ['all', ...Array.from(new Set(equipment.map(eq => eq.category)))]
 
@@ -173,7 +154,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
                 <option value="all">{t('equipment:monitor.allCategories')}</option>
                 {categories.slice(1).map(category => (
                   <option key={category} value={category}>
-                    {t(`equipment:categories.${category}`)}
+                    {category}
                   </option>
                 ))}
               </select>
@@ -182,40 +163,52 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
         </Card.Header>
         
         <Card.Content>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredEquipment.map((eq) => (
-              <div
-                key={eq.id}
-                onClick={() => onEquipmentClick?.(eq)}
-                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="font-bold text-gray-900 dark:text-white">{eq.equipment_name}</h4>
-                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{eq.equipment_number}</p>
+          {equipment.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">🏭</div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {t('equipment:monitor.noEquipmentTitle')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('equipment:monitor.noEquipmentDescription')}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredEquipment.map((eq) => (
+                <div
+                  key={eq.id}
+                  onClick={() => onEquipmentClick?.(eq)}
+                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-900 dark:text-white">{eq.equipment_name}</h4>
+                      <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{eq.equipment_number}</p>
+                    </div>
+                    <StatusBadge variant={getStatusColor(eq.status)}>
+                      {getStatusText(eq.status, t)}
+                    </StatusBadge>
                   </div>
-                  <StatusBadge variant={getStatusColor(eq.status)}>
-                    {getStatusText(eq.status, t)}
-                  </StatusBadge>
+                  
+                  <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex justify-between">
+                      <span>{t('equipment:monitor.category')}</span>
+                      <span>{eq.category}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{t('equipment:monitor.location')}</span>
+                      <span>{eq.location}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{t('equipment:monitor.lastUpdate')}</span>
+                      <span>{new Date(eq.lastUpdated).toLocaleTimeString()}</span>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex justify-between">
-                    <span>{t('equipment:monitor.category')}</span>
-                    <span>{t(`equipment:categories.${eq.category}`)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{t('equipment:monitor.location')}</span>
-                    <span>{t(`equipment:locations.${eq.location}`)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{t('equipment:monitor.lastUpdate')}</span>
-                    <span>{new Date(eq.lastUpdated).toLocaleTimeString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Card.Content>
       </Card>
     </div>

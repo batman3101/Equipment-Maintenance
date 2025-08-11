@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next'
  */
 function DashboardComponent() {
   const { user, profile, signOut } = useAuth()
-  const { t } = useTranslation(['dashboard', 'common'])
+  const { t } = useTranslation(['dashboard', 'common', 'admin'])
   const [currentPage, setCurrentPage] = useState('dashboard')
   
   // 오프라인 모드 체크
@@ -31,6 +31,20 @@ function DashboardComponent() {
       await signOut()
     } catch (error) {
       console.error('Sign out error:', error)
+    }
+  }
+
+  // 사용자 역할 표시를 사용자 목록의 표기와 동일하게 매핑
+  const getRoleDisplay = (role?: string) => {
+    switch (role) {
+      case 'system_admin':
+        return `🔧 ${t('admin:roles.systemAdmin')}`
+      case 'manager':
+        return `👨‍💼 ${t('admin:roles.manager')}`
+      case 'user':
+        return `👷‍♂️ ${t('admin:roles.user')}`
+      default:
+        return ''
     }
   }
 
@@ -331,11 +345,7 @@ function DashboardComponent() {
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {profile?.full_name || user?.email}
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {profile?.role === 'system_admin' && t('common:navigation.admin')}
-                    {profile?.role === 'manager' && t('common:navigation.admin')}
-                    {profile?.role === 'user' && '일반 사용자'}
-                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">{getRoleDisplay(profile?.role)}</p>
                 </div>
               )}
               <LanguageToggle />
