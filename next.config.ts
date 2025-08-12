@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
-// Bundle Analyzer 설정 (개발 전용)
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-})
+// Bundle Analyzer 설정 (로컬 개발 전용)
+const withBundleAnalyzer = process.env.NODE_ENV === 'development' && process.env.ANALYZE === 'true' 
+  ? require('@next/bundle-analyzer')({ enabled: true })
+  : (config: NextConfig) => config;
 
 const nextConfig: NextConfig = {
   // 성능 최적화 설정
