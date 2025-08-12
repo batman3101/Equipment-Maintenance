@@ -9,7 +9,7 @@ import { DataFetcher, AnalyticsEngine, DataManager } from '@/lib/analytics'
  * 대시보드 분석 데이터 API
  * GET /api/analytics/dashboard
  */
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     // 캐시된 데이터 사용 (최적화된 4분 TTL)
     const dashboardData = await DataManager.getCachedData(

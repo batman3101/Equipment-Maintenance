@@ -7,7 +7,7 @@ import { RealtimeHelper, DataManager } from '@/lib/analytics'
  * POST /api/analytics/realtime - 실시간 데이터 강제 새로고침
  */
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   const startTime = Date.now()
   
   try {
@@ -47,7 +47,7 @@ export async function GET(_request: NextRequest) {
   }
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   const startTime = Date.now()
   
   try {

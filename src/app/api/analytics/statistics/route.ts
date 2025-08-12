@@ -175,7 +175,7 @@ async function generateMaintenanceAnalysis(
   breakdowns: BreakdownReport[],
   repairs: RepairReport[],
   maintenance: MaintenanceSchedule[],
-  _period: Period
+  period: Period
 ) {
   // 정비 완료율 계산
   const completionRate = AnalyticsEngine.calculateMaintenanceCompletionRate(maintenance)
