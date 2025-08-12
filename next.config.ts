@@ -21,9 +21,10 @@ const nextConfig: NextConfig = {
       '@/lib',
       '@/utils'
     ],
-    // 서버 컴포넌트 최적화
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
+
+  // 서버 컴포넌트 외부 패키지 설정
+  serverExternalPackages: ['@supabase/supabase-js'],
 
   // 이미지 최적화
   images: {

@@ -268,7 +268,7 @@ export class PerformanceMonitor {
       const p95Index = Math.floor(sorted.length * 0.95)
       const p95: number = sorted[p95Index] || 0
 
-      (report.metrics as Record<string, unknown>)[name] = {
+      ;(report.metrics as Record<string, unknown>)[name] = {
         count: metrics.length,
         average: Math.round(avg * 100) / 100,
         min: Math.round(min * 100) / 100,
@@ -304,8 +304,9 @@ export class PerformanceMonitor {
     }
 
     // 메모리 사용량 체크
-    if (report.memory.usedJSHeapSize > 100) {
-      warnings.push(`메모리 사용량이 ${report.memory.usedJSHeapSize}MB로 높습니다`)
+    const memory = report.memory as { usedJSHeapSize?: number }
+    if (memory?.usedJSHeapSize && memory.usedJSHeapSize > 100) {
+      warnings.push(`메모리 사용량이 ${memory.usedJSHeapSize}MB로 높습니다`)
     }
 
     return warnings
@@ -347,8 +348,9 @@ export const performanceDecorator = (target: unknown, propertyName: string, desc
   const method = descriptor.value
 
   descriptor.value = function (...args: unknown[]) {
+    const targetObj = target as { constructor: { name: string } }
     return PerformanceMonitor.measureComponentRender(
-      `${target.constructor.name}.${propertyName}`,
+      `${targetObj.constructor.name}.${propertyName}`,
       () => method.apply(this, args),
       (args[0] as Record<string, unknown> | undefined)
     )
@@ -358,7 +360,7 @@ export const performanceDecorator = (target: unknown, propertyName: string, desc
 // Hook 형태로 성능 측정 제공
 export function usePerformanceMonitor(componentName: string) {
   const measureRender = <T>(renderFn: () => T, props?: Record<string, unknown>) => {
-    return PerformanceMonitor.measureComponentRender(componentName, renderFn, props)
+    return PerformanceMonitor.measureComponentRender(componentName, renderFn as () => Record<string, unknown>, props) as T
   }
 
   const measureAsync = async <T>(name: string, asyncFn: () => Promise<T>) => {
