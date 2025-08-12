@@ -135,7 +135,7 @@ const TrendChartComponent: React.FC<TrendChartProps> = ({
         })}
 
         {/* Y축 라벨 */}
-        {[0, Math.ceil(maxValue * 0.25), Math.ceil(maxValue * 0.5), Math.ceil(maxValue * 0.75), maxValue].map((value, index) => {
+        {[0, Math.ceil(maxValue * 0.25), Math.ceil(maxValue * 0.5), Math.ceil(maxValue * 0.75), maxValue].map((value) => {
           const y = height - padding - (value * yScale)
           return (
             <g key={value}>
@@ -268,17 +268,6 @@ const TrendChartComponent: React.FC<TrendChartProps> = ({
             <span className="text-gray-600 dark:text-gray-300">수리 완료</span>
           </div>
         </div>
-        
-        {/* 성능 정보 (개발 모드에서만) */}
-        {process.env.NODE_ENV === 'development' && data?.performanceMetrics && (
-          <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-            <div className="text-gray-500">
-              렌더링 성능: {data.performanceMetrics.dataFetchTime}ms | 
-              데이터 포인트: {chartData.length}개 | 
-              마지막 업데이트: {new Date(data.lastUpdated).toLocaleTimeString()}
-            </div>
-          </div>
-        )}
       </Card.Content>
     </Card>
   )

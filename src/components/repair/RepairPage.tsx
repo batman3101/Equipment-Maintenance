@@ -58,11 +58,6 @@ export function RepairPage() {
     setViewMode('list')
   }
 
-  const handleRepairClick = (repair: RepairReport) => {
-    setSelectedRepair(repair)
-    setViewMode('detail')
-  }
-
   const handleCancel = () => {
     setViewMode('list')
     setSelectedRepair(null)
@@ -185,7 +180,7 @@ export function RepairPage() {
         ) : null
       default:
         return (
-          <RepairList onRepairClick={handleRepairClick} />
+          <RepairList onRepairClick={() => {}} />
         )
     }
   }

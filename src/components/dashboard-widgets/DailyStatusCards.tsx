@@ -24,8 +24,8 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
     equipment: { operational: 0, total: 1, maintenance: 0, stopped: 0 } // total: 1로 0 나누기 방지
   }
 
-  // equipmentStatus가 없으면 equipment로 fallback
-  const equipmentStatus = dailyStats.equipmentStatus || dailyStats.equipment || {
+  // equipment 데이터 사용
+  const equipmentStatus = dailyStats.equipment || {
     operational: 0,
     total: 1,
     maintenance: 0,

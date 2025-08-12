@@ -49,14 +49,8 @@ export function BreakdownPage() {
     setViewMode('list')
   }
 
-  const handleReportClick = (report: BreakdownReport) => {
-    setSelectedReport(report)
-    setViewMode('detail')
-  }
-
   const handleCancel = () => {
     setViewMode('list')
-    setSelectedReport(null)
   }
 
   const renderBreadcrumb = () => {
@@ -169,7 +163,7 @@ export function BreakdownPage() {
         ) : null
       default:
         return (
-          <BreakdownList onReportClick={handleReportClick} />
+          <BreakdownList />
         )
     }
   }

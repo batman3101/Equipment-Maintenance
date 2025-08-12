@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo, useMemo, useState, useCallback, useRef, useEffect } from 'react'
+import React, { memo, useMemo, useState, useCallback, useRef } from 'react'
 import { Card, Button } from '@/components/ui'
 
 interface Equipment {
@@ -172,8 +172,7 @@ const VirtualizedEquipmentListComponent: React.FC<VirtualizedEquipmentListProps>
             <Button
               size="sm"
               variant="secondary"
-              onClick={(e) => {
-                e.stopPropagation()
+              onClick={() => {
                 // 상세보기 등 추가 액션
               }}
             >

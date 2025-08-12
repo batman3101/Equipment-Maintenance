@@ -155,13 +155,14 @@ export class PerformanceMonitor {
     } catch (error) {
       const duration = performance.now() - startTime
       
+      const errorObj = error as { status?: number; message?: string }
       this.endMeasurement(measurementId, {
         type: 'api-call',
         endpoint,
         method,
         duration,
-        status: error.status || 500,
-        error: error.message
+        status: errorObj.status || 500,
+        error: errorObj.message || 'Unknown error'
       })
       
       throw error
@@ -170,14 +171,16 @@ export class PerformanceMonitor {
 
   // 메모리 사용량 측정
   static measureMemoryUsage(): Record<string, number> {
-    if (!this.isEnabled || !performance.memory) {
+    const perfWithMemory = performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }
+    if (!this.isEnabled || !perfWithMemory.memory) {
       return {}
     }
 
+    const perfMemory = perfWithMemory.memory
     const memory = {
-      usedJSHeapSize: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024), // MB
-      totalJSHeapSize: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024), // MB
-      jsHeapSizeLimit: Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024) // MB
+      usedJSHeapSize: Math.round(perfMemory.usedJSHeapSize / 1024 / 1024), // MB
+      totalJSHeapSize: Math.round(perfMemory.totalJSHeapSize / 1024 / 1024), // MB
+      jsHeapSizeLimit: Math.round(perfMemory.jsHeapSizeLimit / 1024 / 1024) // MB
     }
 
     this.addMetric('memory-usage', memory.usedJSHeapSize, {
@@ -195,10 +198,11 @@ export class PerformanceMonitor {
     // Largest Contentful Paint (LCP)
     const lcpObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
+        const lcpEntry = entry as PerformanceEntry & { element?: { tagName?: string } }
         this.addMetric('lcp', entry.startTime, {
           type: 'web-vital',
           metric: 'lcp',
-          element: entry.element?.tagName
+          element: lcpEntry.element?.tagName
         })
       }
     })
@@ -206,7 +210,8 @@ export class PerformanceMonitor {
     // First Input Delay (FID)
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        this.addMetric('fid', entry.processingStart - entry.startTime, {
+        const fidEntry = entry as PerformanceEntry & { processingStart?: number }
+        this.addMetric('fid', (fidEntry.processingStart || 0) - entry.startTime, {
           type: 'web-vital',
           metric: 'fid',
           eventType: entry.name
@@ -217,8 +222,9 @@ export class PerformanceMonitor {
     // Cumulative Layout Shift (CLS)
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) {
-          this.addMetric('cls', entry.value, {
+        const clsEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number }
+        if (!clsEntry.hadRecentInput) {
+          this.addMetric('cls', clsEntry.value || 0, {
             type: 'web-vital',
             metric: 'cls'
           })
@@ -260,9 +266,9 @@ export class PerformanceMonitor {
       // 95 퍼센타일 계산
       const sorted = values.sort((a, b) => a - b)
       const p95Index = Math.floor(sorted.length * 0.95)
-      const p95 = sorted[p95Index]
+      const p95: number = sorted[p95Index] || 0
 
-      report.metrics[name] = {
+      (report.metrics as Record<string, unknown>)[name] = {
         count: metrics.length,
         average: Math.round(avg * 100) / 100,
         min: Math.round(min * 100) / 100,

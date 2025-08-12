@@ -105,7 +105,7 @@ export function useDashboardAnalytics(autoRefresh: boolean = true) {
         throw new Error(result.error || 'Failed to fetch dashboard data')
       }
     } catch (err) {
-      if (err.name === 'AbortError') {
+      if (err instanceof Error && err.name === 'AbortError') {
         return // 요청 취소는 에러로 처리하지 않음
       }
       

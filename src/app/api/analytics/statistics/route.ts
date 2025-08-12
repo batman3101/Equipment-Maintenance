@@ -110,7 +110,6 @@ async function generatePerformanceAnalysis(
   const equipmentAnalysis = equipment.map(eq => {
     const status = statusData.find(s => s.equipment_id === eq.id)
     const equipmentBreakdowns = breakdowns.filter(b => b.equipment_id === eq.id)
-    const equipmentRepairs = repairs.filter(r => r.equipment_id === eq.id)
     const equipmentMaintenance = maintenance.filter(m => m.equipment_id === eq.id)
 
     // 가동률 계산 (최근 30일 기준)
@@ -172,11 +171,11 @@ async function generatePerformanceAnalysis(
 // 정비 분석 데이터 생성  
 async function generateMaintenanceAnalysis(
   equipment: Equipment[],
-  statusData: EquipmentStatus[],
+  _statusData: EquipmentStatus[],
   breakdowns: BreakdownReport[],
   repairs: RepairReport[],
   maintenance: MaintenanceSchedule[],
-  period: Period
+  _period: Period
 ) {
   // 정비 완료율 계산
   const completionRate = AnalyticsEngine.calculateMaintenanceCompletionRate(maintenance)

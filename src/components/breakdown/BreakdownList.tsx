@@ -47,7 +47,7 @@ interface BreakdownListProps {
   onReportClick?: (report: BreakdownReport) => void
 }
 
-export function BreakdownList({ onReportClick }: BreakdownListProps) {
+export function BreakdownList({ onReportClick: _onReportClick }: BreakdownListProps) {
   const { t } = useTranslation(['breakdown', 'common'])
   const { showSuccess, showError } = useToast()
   const [reports, setReports] = useState<BreakdownReport[]>([])
@@ -716,7 +716,7 @@ export function BreakdownList({ onReportClick }: BreakdownListProps) {
                 {t('common:actions.cancel')}
               </Button>
               <Button
-                variant="danger"
+                variant="error"
                 onClick={handleConfirmDelete}
               >
                 {t('common:actions.delete')}

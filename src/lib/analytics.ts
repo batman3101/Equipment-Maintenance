@@ -64,7 +64,7 @@ export class DataFetcher {
         console.warn('equipment_info table error:', error.message)
         return []
       }
-      return data || []
+      return (data as unknown as Equipment[]) || []
     } catch (_error) {
       console.warn('equipment_info fetch failed, using fallback')
       return []
@@ -82,7 +82,7 @@ export class DataFetcher {
         console.warn('equipment_status table error:', error.message)
         return []
       }
-      return data || []
+      return (data as unknown as EquipmentStatus[]) || []
     } catch (_error) {
       console.warn('equipment_status fetch failed, using fallback')
       return []
@@ -108,7 +108,7 @@ export class DataFetcher {
       if (error) throw error
       
       if (data && data.length > 0) {
-        allData = allData.concat(data)
+        allData = allData.concat(data as unknown as T[])
         start += batchSize
         hasMore = data.length === batchSize
       } else {
@@ -195,7 +195,7 @@ export class DataFetcher {
         console.warn('repair_reports period query error:', error.message)
         return []
       }
-      return data || []
+      return (data as unknown as RepairReport[]) || []
     } catch (_error) {
       console.warn('repair_reports period fetch failed')
       return []
@@ -473,9 +473,10 @@ export class DataManager {
 
     // 캐시 히트 - 압축된 데이터 해제
     if (cached && (now - cached.timestamp) < (cached.ttl * 60 * 1000)) {
-      return cached.data.compressed 
-        ? JSON.parse(cached.data.data) 
-        : cached.data
+      const cachedData = cached.data as { compressed?: boolean; data?: string } & T
+      return cachedData.compressed 
+        ? JSON.parse(cachedData.data as string) 
+        : cachedData as T
     }
 
     const data = await fetcher()
@@ -507,8 +508,8 @@ export class DataManager {
     let oldestTime = Date.now()
     
     for (const [key, entry] of this.cache.entries()) {
-      if (entry.lastAccessed < oldestTime) {
-        oldestTime = entry.lastAccessed
+      if (entry.timestamp < oldestTime) {
+        oldestTime = entry.timestamp
         oldestKey = key
       }
     }

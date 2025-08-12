@@ -271,11 +271,16 @@ export function EquipmentManagement() {
 
           const equipment: Equipment = {
             id: Date.now().toString() + index,
-            equipmentType: String(row[equipmentTypeKey]),
             equipmentNumber: String(row[equipmentNumberKey]),
+            equipmentName: String(row[equipmentTypeKey]),  // 장비 이름으로 매핑
+            category: String(row[equipmentTypeKey]),  // 카테고리로 매핑  
             location: String(row[locationKey] || settings.equipment.locations[0]?.value || ''),
-            installDate: String(row[installDateKey] || new Date().toISOString().split('T')[0]),
-            status: status as Equipment['status']
+            manufacturer: null,
+            model: null,
+            installationDate: String(row[installDateKey] || new Date().toISOString().split('T')[0]),
+            specifications: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           }
 
           newEquipments.push(equipment)
@@ -1196,7 +1201,7 @@ export function EquipmentManagement() {
                 {t('common:actions.cancel')}
               </Button>
               <Button
-                variant="danger"
+                variant="error"
                 onClick={handleConfirmDelete}
               >
                 {t('common:actions.delete')}

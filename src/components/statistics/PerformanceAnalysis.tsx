@@ -257,7 +257,7 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
                         {t('performance.operationRate.trend.up', { value: '12' })} {t('performance.efficiency.mtbf.unit')} {t('performance.operationRate.change')}
                       </p>
                       <div className="space-y-2">
-                        {equipmentData.slice(0, 4).map((equipment, index) => {
+                        {equipmentData.slice(0, 4).map((equipment) => {
                           const mtbfValue = Math.round(100 + Math.random() * 150)
                           return (
                             <div key={equipment.id} className="flex justify-between text-sm">
@@ -295,7 +295,7 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
                         {t('performance.operationRate.trend.down', { value: '0.3' })} {t('performance.efficiency.mttr.unit')} {t('performance.operationRate.change')}
                       </p>
                       <div className="space-y-2">
-                        {equipmentData.slice(0, 4).map((equipment, index) => {
+                        {equipmentData.slice(0, 4).map((equipment) => {
                           const mttrValue = (1.5 + Math.random() * 2.5).toFixed(1)
                           const isGood = parseFloat(mttrValue) <= 2.0
                           const isBad = parseFloat(mttrValue) >= 3.5

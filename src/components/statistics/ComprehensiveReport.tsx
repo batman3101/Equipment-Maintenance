@@ -22,7 +22,7 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
   }
 
   const monthlyMetrics = useMemo(() => {
-    const data = statisticsData?.data
+    const data = statisticsData?.data as { overview?: { operationRate?: number; qualityIndex?: number; maintenanceCompletionRate?: number; mtbf?: number; totalRepairs?: number } }
     if (!data?.overview) {
       return {
         averageOperationRate: 0,
@@ -48,12 +48,12 @@ export function ComprehensiveReport({ subOption, period }: ComprehensiveReportPr
   }
 
   const equipmentScores = useMemo(() => {
-    const data = statisticsData?.data
+    const data = statisticsData?.data as { topPerformers?: EquipmentScoreItem[] }
     if (!data?.topPerformers) {
       return []
     }
 
-    return (data.topPerformers as EquipmentScoreItem[]).map((equipment) => ({
+    return data.topPerformers.map((equipment) => ({
       id: equipment.id,
       name: equipment.equipment_number,
       score: equipment.score,

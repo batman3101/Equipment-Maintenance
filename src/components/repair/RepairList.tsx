@@ -25,7 +25,7 @@ interface RepairListProps {
 }
 
 // [SRP] Rule: 수리 목록 컴포넌트 - 목록 표시와 필터링만 담당
-export function RepairList({ onRepairClick }: RepairListProps) {
+export function RepairList({ onRepairClick: _onRepairClick }: RepairListProps) {
   const { t } = useTranslation(['repair', 'common'])
   const { showSuccess, showError } = useToast()
   const [repairs, setRepairs] = useState<RepairReport[]>([])
@@ -729,7 +729,7 @@ export function RepairList({ onRepairClick }: RepairListProps) {
                 {t('common:actions.cancel')}
               </Button>
               <Button
-                variant="danger"
+                variant="error"
                 onClick={handleConfirmDelete}
               >
                 {t('common:actions.delete')}

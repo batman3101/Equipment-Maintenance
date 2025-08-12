@@ -40,16 +40,25 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
   const { data: realtimeData, loading, error, lastFetch } = useRealtimeData()
 
   // 실시간 데이터에서 설비 정보 추출
-  const equipment: Equipment[] = (realtimeData?.equipment || []).map(eq => {
-    const status = realtimeData?.statusData?.find(s => s.equipment_id === eq.id)
+  const equipmentData = (realtimeData?.equipment || []) as Array<{
+    id: string;
+    equipment_number: string;
+    equipment_name: string;
+    category: string;
+    location?: string;
+    created_at?: string;
+  }>
+  const equipment: Equipment[] = equipmentData.map(eq => {
+    const statusData = realtimeData?.statusData as Array<{ equipment_id: string; status?: string; updated_at?: string }> | undefined
+    const status = statusData?.find(s => s.equipment_id === eq.id)
     return {
       id: eq.id,
       equipment_number: eq.equipment_number,
       equipment_name: eq.equipment_name,
       category: eq.category,
       location: eq.location || '위치 미지정',
-      status: status?.status || 'stopped',
-      lastUpdated: status?.updated_at || eq.created_at
+      status: (status?.status || 'stopped') as Equipment['status'],
+      lastUpdated: status?.updated_at || eq.created_at || new Date().toISOString()
     }
   })
 

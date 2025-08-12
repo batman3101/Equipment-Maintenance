@@ -17,7 +17,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
   type Repair = { id: string; equipment_id: string; repair_completed_at?: string }
   const [equipmentData, setEquipmentData] = useState<Equipment[]>([])
   const [maintenanceData, setMaintenanceData] = useState<Maintenance[]>([])
-  const [repairData, setRepairData] = useState<Repair[]>([])
+  const [_repairData, setRepairData] = useState<Repair[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
