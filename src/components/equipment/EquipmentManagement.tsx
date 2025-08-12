@@ -634,6 +634,8 @@ export function EquipmentManagement() {
             accept=".xlsx,.xls"
             onChange={handleFileUpload}
             className="hidden"
+            aria-label="Excel upload"
+            title="Excel upload"
           />
         </div>
       </div>
@@ -659,13 +661,14 @@ export function EquipmentManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 1. 설비명 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newEquipmentName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.equipmentName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newEquipment.equipmentName || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentName: e.target.value }))}
+                  id="newEquipmentName"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('equipment:placeholders.equipmentNamePlaceholder')}
                 />
@@ -673,12 +676,13 @@ export function EquipmentManagement() {
 
               {/* 2. 카테고리 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newCategory" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.category')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newEquipment.category || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, category: e.target.value }))}
+                  id="newCategory"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">{t('equipment:placeholders.selectEquipmentType')}</option>
@@ -692,13 +696,14 @@ export function EquipmentManagement() {
 
               {/* 3. 설비 번호 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newEquipmentNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.equipmentNumber')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newEquipment.equipmentNumber || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, equipmentNumber: e.target.value }))}
+                  id="newEquipmentNumber"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('equipment:placeholders.equipmentNumberExample')}
                 />
@@ -706,12 +711,13 @@ export function EquipmentManagement() {
 
               {/* 4. 설비 위치 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newLocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.location')}
                 </label>
                 <select
                   value={newEquipment.location || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, location: e.target.value || null }))}
+                  id="newLocation"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">{t('equipment:placeholders.selectLocation')}</option>
@@ -725,13 +731,14 @@ export function EquipmentManagement() {
 
               {/* 5. 제조업체 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newManufacturer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.manufacturer')}
                 </label>
                 <input
                   type="text"
                   value={newEquipment.manufacturer || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, manufacturer: e.target.value || null }))}
+                  id="newManufacturer"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('equipment:placeholders.manufacturerPlaceholder')}
                 />
@@ -739,13 +746,14 @@ export function EquipmentManagement() {
 
               {/* 6. 모델 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newModel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.model')}
                 </label>
                 <input
                   type="text"
                   value={newEquipment.model || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, model: e.target.value || null }))}
+                  id="newModel"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('equipment:placeholders.modelPlaceholder')}
                 />
@@ -753,26 +761,28 @@ export function EquipmentManagement() {
 
               {/* 7. 설치 일자 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newInstallDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.installDate')}
                 </label>
                 <input
                   type="date"
                   value={newEquipment.installationDate || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, installationDate: e.target.value || null }))}
+                  id="newInstallDate"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
               {/* 8. 사양 */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newSpecifications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.specifications')}
                 </label>
                 <textarea
                   value={newEquipment.specifications || ''}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, specifications: e.target.value || null }))}
                   rows={3}
+                  id="newSpecifications"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('equipment:placeholders.specificationsPlaceholder')}
                 />
@@ -1044,36 +1054,39 @@ export function EquipmentManagement() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editEquipmentName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.equipmentName')} *
               </label>
               <input
                 type="text"
                 value={editFormData.equipmentName || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, equipmentName: e.target.value }))}
+                id="editEquipmentName"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editEquipmentNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.equipmentNumber')} *
               </label>
               <input
                 type="text"
                 value={editFormData.equipmentNumber || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, equipmentNumber: e.target.value }))}
+                id="editEquipmentNumber"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editCategory" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.category')} *
               </label>
               <select
                 value={editFormData.category || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, category: e.target.value }))}
+                id="editCategory"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="">{t('common:select')}</option>
@@ -1084,12 +1097,13 @@ export function EquipmentManagement() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editLocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.location')}
               </label>
               <select
                 value={editFormData.location || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, location: e.target.value }))}
+                id="editLocation"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="">{t('common:select')}</option>
@@ -1100,49 +1114,53 @@ export function EquipmentManagement() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editManufacturer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.manufacturer')}
               </label>
               <input
                 type="text"
                 value={editFormData.manufacturer || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, manufacturer: e.target.value }))}
+                id="editManufacturer"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editModel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.model')}
               </label>
               <input
                 type="text"
                 value={editFormData.model || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, model: e.target.value }))}
+                id="editModel"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editInstallationDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.installationDate')}
               </label>
               <input
                 type="date"
                 value={editFormData.installationDate || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, installationDate: e.target.value }))}
+                id="editInstallationDate"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="editSpecifications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.specifications')}
               </label>
               <textarea
                 value={editFormData.specifications || ''}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, specifications: e.target.value }))}
                 rows={3}
+                id="editSpecifications"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
