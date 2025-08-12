@@ -36,7 +36,7 @@
     "@types/react-dom": "^19",
     "@types/xlsx": "^0.0.35",
     "autoprefixer": "^10.4.21",
-    "eslint": "^9.33.0",
+    "eslint": "^8.57.0",
     "eslint-config-next": "15.4.5",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "postcss": "^8.5.6",

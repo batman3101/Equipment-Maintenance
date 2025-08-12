@@ -65,8 +65,8 @@ export class DataFetcher {
         return []
       }
       return (data as unknown as Equipment[]) || []
-    } catch (_error) {
-      console.warn('equipment_info fetch failed, using fallback')
+    } catch (error) {
+      console.warn('equipment_info fetch failed, using fallback', error)
       return []
     }
   }
@@ -83,8 +83,8 @@ export class DataFetcher {
         return []
       }
       return (data as unknown as EquipmentStatus[]) || []
-    } catch (_error) {
-      console.warn('equipment_status fetch failed, using fallback')
+    } catch (error) {
+      console.warn('equipment_status fetch failed, using fallback', error)
       return []
     }
   }
@@ -131,8 +131,8 @@ export class DataFetcher {
         return []
       }
       return data || []
-    } catch (_error) {
-      console.warn('breakdown_reports fetch failed, using fallback')
+    } catch (error) {
+      console.warn('breakdown_reports fetch failed, using fallback', error)
       return []
     }
   }
@@ -148,8 +148,8 @@ export class DataFetcher {
         return []
       }
       return data || []
-    } catch (_error) {
-      console.warn('repair_reports fetch failed, using fallback')
+    } catch (error) {
+      console.warn('repair_reports fetch failed, using fallback', error)
       return []
     }
   }
@@ -165,8 +165,8 @@ export class DataFetcher {
         return []
       }
       return data || []
-    } catch (_error) {
-      console.warn('maintenance_schedules fetch failed, using fallback')
+    } catch (error) {
+      console.warn('maintenance_schedules fetch failed, using fallback', error)
       return []
     }
   }
@@ -196,8 +196,8 @@ export class DataFetcher {
         return []
       }
       return (data as unknown as RepairReport[]) || []
-    } catch (_error) {
-      console.warn('repair_reports period fetch failed')
+    } catch (error) {
+      console.warn('repair_reports period fetch failed', error)
       return []
     }
   }

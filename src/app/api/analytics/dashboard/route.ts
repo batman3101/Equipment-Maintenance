@@ -9,7 +9,7 @@ import { DataFetcher, AnalyticsEngine, DataManager } from '@/lib/analytics'
  * 대시보드 분석 데이터 API
  * GET /api/analytics/dashboard
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // 캐시된 데이터 사용 (최적화된 4분 TTL)
     const dashboardData = await DataManager.getCachedData(
@@ -113,14 +113,57 @@ export async function GET(request: NextRequest) {
  * 대시보드 데이터 강제 새로고침
  * POST /api/analytics/dashboard
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // 캐시 클리어
     DataManager.clearCacheKey('dashboard-analytics')
     
-    // 새 데이터 가져오기
-    const response = await GET(request)
-    return response
+    // 새 데이터 직접 생성 (GET 함수와 동일한 로직)
+    const dashboardData = await DataManager.getCachedData(
+      'dashboard-analytics',
+      async () => {
+        const startTime = Date.now()
+        
+        // 기본 데이터 조회 (필수 필드만 선택하여 성능 개선)
+        const [equipment, statusData, breakdowns, repairs, maintenance] = await Promise.all([
+          DataFetcher.getAllEquipment('id, equipment_number, equipment_name, category, location'),
+          DataFetcher.getAllEquipmentStatus('id, equipment_id, status, updated_at'),
+          DataFetcher.getAllBreakdownReports(),
+          DataFetcher.getAllRepairReports(),
+          DataFetcher.getAllMaintenanceSchedules()
+        ])
+
+        // 분석 엔진을 통한 통계 생성
+        const analytics = AnalyticsEngine.generateComprehensiveMetrics(
+          equipment, statusData, breakdowns, repairs, maintenance
+        )
+
+        const processingTime = Date.now() - startTime
+        
+        return {
+          ...analytics,
+          meta: {
+            lastUpdated: new Date().toISOString(),
+            processingTime,
+            dataPoints: {
+              equipment: equipment.length,
+              statusData: statusData.length,
+              breakdowns: breakdowns.length,
+              repairs: repairs.length,
+              maintenance: maintenance.length
+            }
+          }
+        }
+      },
+      240000 // 4분 TTL
+    )
+
+    return NextResponse.json({
+      success: true,
+      data: dashboardData,
+      lastUpdated: new Date().toISOString(),
+      cached: false
+    })
 
   } catch (error) {
     console.error('Dashboard refresh error:', error)

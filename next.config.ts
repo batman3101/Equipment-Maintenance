@@ -146,7 +146,7 @@ const nextConfig: NextConfig = {
 
   // ESLint 설정
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
 
   // 리다이렉트 최적화
