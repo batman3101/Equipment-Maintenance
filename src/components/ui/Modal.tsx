@@ -63,6 +63,8 @@ export function Modal({
               </h3>
               <button
                 onClick={onClose}
+                aria-label="Close"
+                title="Close"
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
