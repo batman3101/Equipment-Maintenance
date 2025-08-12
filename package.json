@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "CNC 현장의 설비 고장을 실시간으로 등록하고 관리하는 시스템",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +15,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
+    "@tailwindcss/postcss": "^4.1.11",
     "dotenv": "^17.2.1",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
@@ -25,7 +30,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@next/bundle-analyzer": "^15.4.6",
-    "@tailwindcss/postcss": "^4",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,8 +1,8 @@
 {
-  "buildCommand": "next build",
+  "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "yarn install",
+  "installCommand": "npm ci",
   "functions": {
     "src/app/api/**.ts": {
       "maxDuration": 10
