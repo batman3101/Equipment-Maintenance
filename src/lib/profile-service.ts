@@ -13,6 +13,8 @@ export class ProfileService {
    */
   static async getProfile(userId: string): Promise<Profile | null> {
     try {
+      console.log('ProfileService: Fetching profile for user:', userId)
+      
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -20,13 +22,37 @@ export class ProfileService {
         .single()
 
       if (error) {
-        console.error('ProfileService: Error fetching profile:', error)
+        console.error('ProfileService: Supabase error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          userId
+        })
+        
+        // 특정 에러 코드에 따른 처리
+        if (error.code === 'PGRST116') {
+          console.warn('ProfileService: No profile found for user:', userId)
+          return null
+        }
+        
+        // 500 에러나 RLS 정책 관련 에러 로깅
+        if (error.message?.includes('500') || error.message?.includes('policy')) {
+          console.error('ProfileService: RLS policy or server error detected')
+        }
+        
         return null
       }
 
+      console.log('ProfileService: Profile fetched successfully for:', userId)
       return profile
     } catch (error) {
-      console.error('ProfileService: Error in getProfile:', error)
+      console.error('ProfileService: Unexpected error in getProfile:', {
+        error,
+        userId,
+        errorType: typeof error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      })
       return null
     }
   }
