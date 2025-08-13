@@ -47,6 +47,7 @@ export function EquipmentManagement() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -227,8 +228,13 @@ export function EquipmentManagement() {
 
   // Excel 템플릿 다운로드
   const downloadTemplate = async () => {
-    const workbook = new ExcelJS.Workbook()
-    const worksheet = workbook.addWorksheet(t('equipment:excel.sheetName'))
+    if (isDownloadingTemplate) return
+    
+    setIsDownloadingTemplate(true)
+    try {
+      console.log('Starting template download...')
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet(t('equipment:excel.sheetName'))
 
     // 확장된 헤더 추가 - 현재 데이터베이스 구조에 맞게 업데이트
     const headers = [
@@ -333,7 +339,24 @@ export function EquipmentManagement() {
 
     const buffer = await workbook.xlsx.writeBuffer()
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    saveAs(blob, `설비관리_템플릿_${new Date().toISOString().split('T')[0]}.xlsx`)
+    const fileName = `설비관리_템플릿_${new Date().toISOString().split('T')[0]}.xlsx`
+    console.log('Downloading template file:', fileName)
+    saveAs(blob, fileName)
+    
+    showSuccess(
+      '템플릿 다운로드 완료',
+      '설비 관리 템플릿이 성공적으로 다운로드되었습니다.'
+    )
+    console.log('Template download completed successfully')
+    } catch (error) {
+      console.error('Template download failed:', error)
+      showError(
+        '템플릿 다운로드 실패', 
+        `템플릿 다운로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+      )
+    } finally {
+      setIsDownloadingTemplate(false)
+    }
   }
 
   // Excel 파일 업로드 처리
@@ -966,10 +989,11 @@ export function EquipmentManagement() {
           <Button
             variant="secondary"
             onClick={downloadTemplate}
+            disabled={isDownloadingTemplate}
             className="flex items-center space-x-2"
           >
-            <span>📁</span>
-            <span>{t('equipment:management.downloadTemplate')}</span>
+            <span>{isDownloadingTemplate ? '⏳' : '📁'}</span>
+            <span>{isDownloadingTemplate ? '다운로드 중...' : t('equipment:management.downloadTemplate')}</span>
           </Button>
           <Button
             onClick={() => fileInputRef.current?.click()}
@@ -1436,8 +1460,12 @@ export function EquipmentManagement() {
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {t('equipment:management.noEquipmentDescription')}
               </p>
-              <Button onClick={downloadTemplate} variant="secondary">
-                📁 {t('equipment:management.downloadTemplate')}
+              <Button 
+                onClick={downloadTemplate} 
+                variant="secondary"
+                disabled={isDownloadingTemplate}
+              >
+                {isDownloadingTemplate ? '⏳' : '📁'} {isDownloadingTemplate ? '다운로드 중...' : t('equipment:management.downloadTemplate')}
               </Button>
             </div>
           )}
