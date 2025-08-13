@@ -12,9 +12,9 @@ if (typeof window === 'undefined') {
     throw new Error(`Missing required environment variables: ${envValidation.missingVars.join(', ')}`)
   }
 
-  // 프로덕션 환경에서 추가 보안 검증
+  // 프로덕션 환경에서 추가 보안 검증 (단, 빌드 시에는 경고만)
   if (envValidation.warnings.length > 0) {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
       console.error('❌ Production security warnings:', envValidation.warnings)
       throw new Error(`Production security issues detected: ${envValidation.warnings.join(', ')}`)
     } else {

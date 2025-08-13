@@ -6,6 +6,7 @@ import { saveAs } from 'file-saver'
 import { Button, Card, Modal } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { Equipment, EquipmentStatusInfo as EquipmentStatus } from '@/types/equipment'
@@ -39,6 +40,7 @@ export function EquipmentManagement() {
   const { t } = useTranslation(['equipment', 'common'])
   const { showSuccess, showError, showWarning } = useToast()
   const { getTranslatedSettings } = useSystemSettings()
+  const { user } = useAuth()
   const settings = getTranslatedSettings()
   const [equipments, setEquipments] = useState<Equipment[]>([])
   const [equipmentStatuses, setEquipmentStatuses] = useState<EquipmentStatus[]>([])
@@ -437,6 +439,13 @@ export function EquipmentManagement() {
             return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
           }
 
+          // 중요도 수준 검증 함수
+          const safeCriticalityLevel = (value: any): 'low' | 'medium' | 'high' | 'critical' => {
+            const validLevels = ['low', 'medium', 'high', 'critical']
+            const level = String(value || 'medium').toLowerCase()
+            return validLevels.includes(level) ? level as 'low' | 'medium' | 'high' | 'critical' : 'medium'
+          }
+
           const equipment: Equipment = {
             id: Date.now().toString() + index,
             equipmentNumber: String(row[equipmentNumberKey]),
@@ -458,7 +467,7 @@ export function EquipmentManagement() {
             lastBreakdownDate: safeDate(row[lastBreakdownDateKey]),
             lastRepairDate: safeDate(row[lastRepairDateKey]),
             maintenanceScore: safeNumber(row[maintenanceScoreKey], 10.0),
-            criticalityLevel: String(row[criticalityLevelKey] || 'medium'),
+            criticalityLevel: safeCriticalityLevel(row[criticalityLevelKey]),
             warrantyEndDate: safeDate(row[warrantyEndDateKey]),
             supplierContact: row[supplierContactKey] ? String(row[supplierContactKey]) : null,
             purchaseCost: safeNumber(row[purchaseCostKey]),
