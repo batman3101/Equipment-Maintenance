@@ -14,6 +14,20 @@ export interface Equipment {
   specifications: string | null
   createdAt: string
   updatedAt: string
+  
+  // 추가된 통계 및 성능 추적 필드들
+  totalBreakdownCount?: number
+  totalRepairCount?: number
+  totalDowntimeHours?: number
+  totalRepairCost?: number
+  lastBreakdownDate?: string | null
+  lastRepairDate?: string | null
+  maintenanceScore?: number
+  criticalityLevel?: 'low' | 'medium' | 'high' | 'critical'
+  warrantyEndDate?: string | null
+  supplierContact?: string | null
+  purchaseCost?: number
+  annualMaintenanceCost?: number
 }
 
 export interface EquipmentStatusInfo {

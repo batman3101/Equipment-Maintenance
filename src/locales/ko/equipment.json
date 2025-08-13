@@ -114,11 +114,15 @@
     "templateName": "설비목록_템플릿.xlsx",
     "sheetName": "설비목록",
     "columns": {
-      "equipmentType": "설비종류",
-      "equipmentNumber": "설비번호", 
+      "equipmentName": "설비명",
+      "equipmentNumber": "설비번호",
+      "category": "카테고리",
       "location": "설비위치",
       "installDate": "설치일자",
-      "status": "상태"
+      "status": "상태",
+      "manufacturer": "제조사",
+      "model": "모델명",
+      "specifications": "사양"
     }
   },
   "monitor": {
