@@ -42,8 +42,10 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [availableEquipment, setAvailableEquipment] = useState<Array<{id: string, equipment_number: string, equipment_name: string}>>([])
+  const [availableUsers, setAvailableUsers] = useState<Array<{id: string, full_name: string, email: string}>>([])
+  const [selectedReporter, setSelectedReporter] = useState<string>('')
 
-  // 컴포넌트 로드 시 사용 가능한 설비 목록 가져오기
+  // 컴포넌트 로드 시 사용 가능한 설비 목록과 사용자 목록 가져오기
   useEffect(() => {
     const fetchEquipment = async () => {
       try {
@@ -64,7 +66,28 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
       }
     }
 
+    const fetchUsers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .eq('is_active', true)
+          .order('full_name')
+
+        if (error) {
+          console.error('Error fetching users:', error)
+          return
+        }
+
+        console.log('Available users:', data)
+        setAvailableUsers(data || [])
+      } catch (err) {
+        console.error('Unexpected error fetching users:', err)
+      }
+    }
+
     fetchEquipment()
+    fetchUsers()
   }, [])
 
   const validateForm = (): boolean => {
@@ -76,7 +99,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     if (!formData.equipmentNumber?.trim()) {
       newErrors.equipmentNumber = t('breakdown:validation.equipmentNumberRequired')
     }
-    if (!formData.reporterName?.trim()) {
+    if (!selectedReporter) {
       newErrors.reporterName = t('breakdown:validation.reporterNameRequired')
     }
     if (!formData.description?.trim()) {
@@ -122,8 +145,14 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
         return
       }
 
-      // 현재 로그인된 사용자 ID 가져오기 (임시로 가짜 UUID 사용)
-      const currentUserId = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' // 임시 UUID, 나중에 실제 auth.uid() 사용
+      // 선택된 사용자 ID 사용
+      if (!selectedReporter) {
+        showError(
+          t('breakdown:messages.reportError'),
+          '신고자를 선택해주세요.'
+        )
+        return
+      }
       
       // Supabase에 데이터 저장
       const { data, error } = await supabase
@@ -131,11 +160,11 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
         .insert({
           equipment_id: equipmentData.id, // 실제 equipment_info의 UUID
           breakdown_title: `${reportData.equipmentCategory} - ${reportData.equipmentNumber} 고장 신고`,
-          breakdown_description: `[신고자: ${reportData.reporterName}]\n\n${reportData.description}`,
+          breakdown_description: reportData.description,
           breakdown_type: reportData.issueType,
           priority: reportData.urgencyLevel === 'critical' ? 'urgent' : reportData.urgencyLevel, // critical -> urgent 매핑
           occurred_at: new Date().toISOString(),
-          reported_by: currentUserId, // UUID 타입으로 저장
+          reported_by: selectedReporter, // 선택된 사용자의 UUID
           status: 'reported',
           symptoms: reportData.symptoms,
           created_at: new Date().toISOString(),
@@ -173,6 +202,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
         description: '',
         symptoms: ''
       })
+      setSelectedReporter('')
       
     } catch (error) {
       console.error('고장 신고 제출 실패:', error)
@@ -257,16 +287,40 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
             </div>
 
-            {/* 3. 신고자 이름 */}
+            {/* 3. 신고자 선택 */}
             <div>
-              <Input
-                label={t('breakdown:form.reporterName')}
-                value={formData.reporterName || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, reporterName: e.target.value }))}
-                placeholder={t('breakdown:form.reporterNamePlaceholder')}
-                required
-                error={errors.reporterName}
-              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('breakdown:form.reporterName')} <span className="text-red-500">{t('breakdown:form.required')}</span>
+              </label>
+              <select
+                value={selectedReporter}
+                onChange={(e) => setSelectedReporter(e.target.value)}
+                className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                  errors.reporterName 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
+                } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
+              >
+                <option value="">신고자를 선택해주세요</option>
+                {availableUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name} ({user.email})
+                  </option>
+                ))}
+              </select>
+              {errors.reporterName && <p className="mt-1 text-sm text-red-600">{errors.reporterName}</p>}
+              
+              {/* 사용자 목록 디버깅 정보 */}
+              {availableUsers.length === 0 && (
+                <p className="mt-1 text-sm text-yellow-600">
+                  사용자 목록을 불러오는 중입니다...
+                </p>
+              )}
+              {availableUsers.length > 0 && (
+                <p className="mt-1 text-sm text-green-600">
+                  {availableUsers.length}명의 사용자를 선택할 수 있습니다.
+                </p>
+              )}
             </div>
 
             {/* 4. 긴급도 및 5. 문제 유형 */}

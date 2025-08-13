@@ -832,7 +832,7 @@ export function EquipmentManagement() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">{t('equipment:management.allStatus')}</option>
+                <option value="all">{t('equipment:management.allStatuses')}</option>
                 <option value="running">{t('equipment:status.running')}</option>
                 <option value="breakdown">{t('equipment:status.breakdown')}</option>
                 <option value="standby">{t('equipment:status.standby')}</option>

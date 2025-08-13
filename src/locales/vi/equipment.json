@@ -33,7 +33,21 @@
     "totalEquipment": "Tổng thiết bị",
     "operational": "Đang hoạt động",
     "maintenance": "Bảo trì",
-    "broken": "Hỏng hóc"
+    "broken": "Hỏng hóc",
+    "searchPlaceholder": "Tìm kiếm theo tên hoặc số thiết bị...",
+    "allCategories": "Tất cả danh mục",
+    "allStatuses": "Tất cả trạng thái",
+    "totalEquipments": "Tổng {{count}} thiết bị",
+    "sortBy": {
+      "date": "Ngày đăng ký",
+      "number": "Số thiết bị",
+      "name": "Tên thiết bị",
+      "category": "Danh mục",
+      "location": "Vị trí",
+      "status": "Trạng thái"
+    },
+    "sortAsc": "Sắp xếp tăng dần",
+    "sortDesc": "Sắp xếp giảm dần"
   },
   "fields": {
     "equipmentType": "Loại thiết bị",
@@ -113,7 +127,9 @@
     "allCategories": "Tất cả danh mục",
     "category": "Danh mục:",
     "location": "Vị trí:",
-    "lastUpdate": "Cập nhật lần cuối:"
+    "lastUpdate": "Cập nhật lần cuối:",
+    "noEquipmentTitle": "Không có thiết bị nào được đăng ký",
+    "noEquipmentDescription": "Hãy đăng ký thiết bị để bắt đầu giám sát"
   },
   "categories": {
     "CNC": "CNC",

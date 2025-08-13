@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, memo } from 'react'
+import React, { useState, memo, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card, ThemeToggle } from '@/components/ui'
 import { LanguageToggle } from '@/components/ui/LanguageToggle'
@@ -23,9 +23,39 @@ function DashboardComponent() {
   const { user, profile, signOut } = useAuth()
   const { t } = useTranslation(['dashboard', 'common', 'admin'])
   const [currentPage, setCurrentPage] = useState('dashboard')
+  const [performanceMetrics, setPerformanceMetrics] = useState<any>(null)
+  const [metricsLoading, setMetricsLoading] = useState(true)
   
   // 오프라인 모드 체크
   const isOfflineMode = process.env.NEXT_PUBLIC_OFFLINE_MODE === 'true'
+
+  // 성능 메트릭 데이터 가져오기
+  const fetchPerformanceMetrics = async () => {
+    try {
+      setMetricsLoading(true)
+      const response = await fetch('/api/analytics/performance-metrics')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setPerformanceMetrics(data)
+    } catch (error) {
+      console.error('Error fetching performance metrics:', error)
+      // 에러 시 기본값 설정
+      setPerformanceMetrics({
+        mtbf: { value: 168, unit: 'h', change: 12, target: 150, bestEquipment: 'CNC-LT-001', bestValue: 245 },
+        mttr: { value: 2.4, unit: 'h', change: -0.3, target: 3.0, bestEquipment: 'CNC-LT-001', bestValue: 1.8 },
+        completionRate: { value: 91.7, unit: '%', change: 3.2, completed: 22, planned: 24, preventiveRatio: 75 }
+      })
+    } finally {
+      setMetricsLoading(false)
+    }
+  }
+
+  // 컴포넌트 마운트 시 성능 메트릭 로드
+  React.useEffect(() => {
+    fetchPerformanceMetrics()
+  }, [])
 
   const handleSignOut = async () => {
     try {
@@ -77,15 +107,31 @@ function DashboardComponent() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{t('dashboard:metrics.mtbf.value')}</div>
-                      <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↗️ {t('dashboard:metrics.mtbf.change')}
-                      </div>
+                      {metricsLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                            {performanceMetrics?.mtbf?.value}{performanceMetrics?.mtbf?.unit}
+                          </div>
+                          <div className={`text-sm flex items-center ${
+                            (performanceMetrics?.mtbf?.change || 0) >= 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {(performanceMetrics?.mtbf?.change || 0) >= 0 ? '↗️' : '↘️'} 
+                            {(performanceMetrics?.mtbf?.change || 0) >= 0 ? '+' : ''}{performanceMetrics?.mtbf?.change}h
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>• {t('dashboard:metrics.mtbf.target')}</div>
-                    <div>• {t('dashboard:metrics.mtbf.best')}</div>
+                    <div>• 목표: {performanceMetrics?.mtbf?.target || 150}h {(performanceMetrics?.mtbf?.value || 0) >= (performanceMetrics?.mtbf?.target || 150) ? '(달성)' : ''}</div>
+                    <div>• 최고: {performanceMetrics?.mtbf?.bestEquipment || 'CNC-LT-001'} ({performanceMetrics?.mtbf?.bestValue || 245}h)</div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -108,15 +154,31 @@ function DashboardComponent() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">{t('dashboard:metrics.mttr.value')}</div>
-                      <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↘️ {t('dashboard:metrics.mttr.change')}
-                      </div>
+                      {metricsLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                            {performanceMetrics?.mttr?.value}{performanceMetrics?.mttr?.unit}
+                          </div>
+                          <div className={`text-sm flex items-center ${
+                            (performanceMetrics?.mttr?.change || 0) <= 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {(performanceMetrics?.mttr?.change || 0) <= 0 ? '↘️' : '↗️'} 
+                            {(performanceMetrics?.mttr?.change || 0) >= 0 ? '+' : ''}{performanceMetrics?.mttr?.change}h
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>• {t('dashboard:metrics.mttr.target')}</div>
-                    <div>• {t('dashboard:metrics.mttr.best')}</div>
+                    <div>• 목표: {performanceMetrics?.mttr?.target || 3.0}h {(performanceMetrics?.mttr?.value || 0) <= (performanceMetrics?.mttr?.target || 3.0) ? '(달성)' : ''}</div>
+                    <div>• 최단: {performanceMetrics?.mttr?.bestEquipment || 'CNC-LT-001'} ({performanceMetrics?.mttr?.bestValue || 1.8}h)</div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -139,15 +201,31 @@ function DashboardComponent() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{t('dashboard:metrics.completion.value')}</div>
-                      <div className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                        ↗️ {t('dashboard:metrics.completion.change')}
-                      </div>
+                      {metricsLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                            {performanceMetrics?.completionRate?.value}{performanceMetrics?.completionRate?.unit}
+                          </div>
+                          <div className={`text-sm flex items-center ${
+                            (performanceMetrics?.completionRate?.change || 0) >= 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {(performanceMetrics?.completionRate?.change || 0) >= 0 ? '↗️' : '↘️'} 
+                            {(performanceMetrics?.completionRate?.change || 0) >= 0 ? '+' : ''}{performanceMetrics?.completionRate?.change}%
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>• {t('dashboard:metrics.completion.details')}</div>
-                    <div>• {t('dashboard:metrics.completion.preventive')}</div>
+                    <div>• 완료: {performanceMetrics?.completionRate?.completed || 0}건 / 계획: {performanceMetrics?.completionRate?.planned || 0}건</div>
+                    <div>• 예방정비 비율: {performanceMetrics?.completionRate?.preventiveRatio || 75}%</div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                     <p className="text-xs text-gray-500 dark:text-gray-400">

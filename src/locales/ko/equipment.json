@@ -33,7 +33,21 @@
     "totalEquipment": "전체 설비",
     "operational": "가동중",
     "maintenance": "정비중",
-    "broken": "고장"
+    "broken": "고장",
+    "searchPlaceholder": "설비명 또는 설비번호로 검색...",
+    "allCategories": "전체 카테고리",
+    "allStatuses": "전체 상태",
+    "totalEquipments": "총 {{count}}개 설비",
+    "sortBy": {
+      "date": "등록일",
+      "number": "설비번호",
+      "name": "설비명",
+      "category": "카테고리",
+      "location": "위치",
+      "status": "상태"
+    },
+    "sortAsc": "오름차순 정렬",
+    "sortDesc": "내림차순 정렬"
   },
   "fields": {
     "equipmentType": "설비 종류",

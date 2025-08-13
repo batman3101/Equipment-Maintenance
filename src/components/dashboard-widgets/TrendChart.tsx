@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -19,29 +19,65 @@ interface TrendChartProps {
 export function TrendChart({ className = '' }: TrendChartProps) {
   const { t } = useTranslation(['dashboard'])
   const [selectedPeriod, setSelectedPeriod] = useState<TrendPeriod>('weekly')
+  const [trendData, setTrendData] = useState<TrendData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const trendData: Record<TrendPeriod, TrendData[]> = {
-    weekly: [
-      { period: '1월 1주', breakdowns: 3, repairs: 5 },
-      { period: '1월 2주', breakdowns: 2, repairs: 4 },
-      { period: '1월 3주', breakdowns: 4, repairs: 3 },
-      { period: '현재주', breakdowns: 1, repairs: 2 }
-    ],
-    monthly: [
-      { period: '10월', breakdowns: 8, repairs: 12 },
-      { period: '11월', breakdowns: 6, repairs: 10 },
-      { period: '12월', breakdowns: 9, repairs: 8 },
-      { period: '1월', breakdowns: 7, repairs: 9 }
-    ],
-    yearly: [
-      { period: '2021', breakdowns: 45, repairs: 52 },
-      { period: '2022', breakdowns: 38, repairs: 48 },
-      { period: '2023', breakdowns: 32, repairs: 41 },
-      { period: '2024', breakdowns: 7, repairs: 9 }
-    ]
+  // API에서 트렌드 데이터 가져오기
+  const fetchTrendData = async (period: TrendPeriod) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch(`/api/analytics/trend-data?period=${period}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      setTrendData(data)
+    } catch (err) {
+      console.error('Error fetching trend data:', err)
+      setError(err instanceof Error ? err.message : String(err))
+      
+      // 에러 시 기본값 설정
+      const fallbackData = {
+        weekly: [
+          { period: '3주전', breakdowns: 0, repairs: 0 },
+          { period: '2주전', breakdowns: 0, repairs: 0 },
+          { period: '1주전', breakdowns: 0, repairs: 0 },
+          { period: '현재주', breakdowns: 0, repairs: 0 }
+        ],
+        monthly: [
+          { period: '3개월전', breakdowns: 0, repairs: 0 },
+          { period: '2개월전', breakdowns: 0, repairs: 0 },
+          { period: '1개월전', breakdowns: 0, repairs: 0 },
+          { period: '이번달', breakdowns: 0, repairs: 0 }
+        ],
+        yearly: [
+          { period: '2021', breakdowns: 0, repairs: 0 },
+          { period: '2022', breakdowns: 0, repairs: 0 },
+          { period: '2023', breakdowns: 0, repairs: 0 },
+          { period: '2024', breakdowns: 0, repairs: 0 }
+        ]
+      }
+      setTrendData(fallbackData[period] || fallbackData.weekly)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const currentData = trendData[selectedPeriod]
+  // 초기 로드 및 기간 변경시 데이터 가져오기
+  useEffect(() => {
+    fetchTrendData(selectedPeriod)
+  }, [selectedPeriod])
+
+  // 기간 변경 핸들러
+  const handlePeriodChange = (period: TrendPeriod) => {
+    setSelectedPeriod(period)
+  }
+
+  const currentData = trendData
   const maxValue = Math.max(...currentData.flatMap(d => [d.breakdowns, d.repairs]))
 
   const getPeriodLabel = (period: TrendPeriod) => {
@@ -59,8 +95,9 @@ export function TrendChart({ className = '' }: TrendChartProps) {
             {(['weekly', 'monthly', 'yearly'] as TrendPeriod[]).map((period) => (
               <button
                 key={period}
-                onClick={() => setSelectedPeriod(period)}
-                className={`px-3 py-1 text-sm rounded-md transition-all duration-200 ${
+                onClick={() => handlePeriodChange(period)}
+                disabled={loading}
+                className={`px-3 py-1 text-sm rounded-md transition-all duration-200 disabled:opacity-50 ${
                   selectedPeriod === period
                     ? 'bg-blue-500 text-white shadow-sm'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -73,6 +110,23 @@ export function TrendChart({ className = '' }: TrendChartProps) {
         </div>
       </Card.Header>
       <Card.Content>
+        {loading && (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span className="ml-2 text-gray-600 dark:text-gray-400">데이터 로딩 중...</span>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4">
+            <div className="flex items-center">
+              <span className="text-red-500 mr-2">⚠️</span>
+              <span className="text-red-700 dark:text-red-300 text-sm">데이터 로딩 실패: {error}</span>
+            </div>
+          </div>
+        )}
+        
+        {!loading && (
         <div className="space-y-4">
           {/* 범례 */}
           <div className="flex items-center justify-center space-x-6 mb-6">
@@ -186,6 +240,7 @@ export function TrendChart({ className = '' }: TrendChartProps) {
             </div>
           </div>
         </div>
+        )}
       </Card.Content>
     </Card>
   )
