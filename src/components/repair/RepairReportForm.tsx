@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslation } from 'react-i18next'
+import { supabase } from '@/lib/supabase'
 
 // [SRP] Rule: 수리 보고서 타입 정의 - 데이터 구조만 담당
 interface RepairReport {
@@ -31,44 +32,6 @@ interface RepairReportFormProps {
   onCancel?: () => void
 }
 
-// [SRP] Rule: Mock 설비 데이터 생성 - 시연용 데이터만 담당
-const mockEquipmentOptions: Equipment[] = [
-  {
-    id: '1',
-    equipment_number: 'CNC-ML-001',
-    equipment_name: 'CNC Milling Machine #1',
-    category: 'Milling Machine',
-    location: 'Factory 1 Line A'
-  },
-  {
-    id: '2',
-    equipment_number: 'CNC-LAT-001',
-    equipment_name: 'CNC Lathe #1',
-    category: 'Lathe',
-    location: 'Factory 1 Line B'
-  },
-  {
-    id: '3',
-    equipment_number: 'CNC-DRL-001',
-    equipment_name: 'CNC Drilling Machine #1',
-    category: 'Drilling Machine',
-    location: 'Factory 2 Line A'
-  },
-  {
-    id: '4',
-    equipment_number: 'CNC-GRD-001',
-    equipment_name: 'CNC Grinding Machine #1',
-    category: 'Grinding Machine',
-    location: 'Factory 2 Line B'
-  },
-  {
-    id: '5',
-    equipment_number: 'CNC-LC-001',
-    equipment_name: 'CNC Laser Cutter #1',
-    category: 'Laser Cutter',
-    location: 'Factory 3 Line A'
-  }
-]
 
 // [SRP] Rule: 수리 완료 폼 컴포넌트 - 폼 렌더링과 검증만 담당
 export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) {
@@ -77,6 +40,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
   // SystemSettings context available but not needed for current implementation
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [availableEquipment, setAvailableEquipment] = useState<Equipment[]>([])
 
   // [OCP] Rule: 기본 폼 데이터를 초기화하되, 새로운 필드 추가에 열려있음
   const [formData, setFormData] = useState<Partial<RepairReport>>({
@@ -89,6 +53,29 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     testResults: '',
     notes: ''
   })
+
+  // 컴포넌트 로드 시 사용 가능한 설비 목록 가져오기
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('equipment_info')
+          .select('id, equipment_number, equipment_name, category, location')
+          .order('equipment_number')
+
+        if (error) {
+          console.error('Error fetching equipment:', error)
+          return
+        }
+
+        setAvailableEquipment(data || [])
+      } catch (err) {
+        console.error('Unexpected error fetching equipment:', err)
+      }
+    }
+
+    fetchEquipment()
+  }, [])
 
   // [SRP] Rule: 수리 유형 옵션 계산 - 번역된 수리 유형만 담당
   const repairTypeOptions = useMemo(() => [
@@ -117,7 +104,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     }
   ], [t])
 
-  const selectedEquipment = mockEquipmentOptions.find(eq => eq.id === formData.equipmentId)
+  const selectedEquipment = availableEquipment.find(eq => eq.id === formData.equipmentId)
 
   // [SRP] Rule: 폼 검증 로직 - 입력값 유효성 검사만 담당
   const validateForm = (): boolean => {
@@ -201,17 +188,22 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('repair:form.equipmentId')} <span className="text-red-500">{t('repair:form.required')}</span>
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.equipmentId || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, equipmentId: e.target.value }))}
-                placeholder={t('repair:form.equipmentIdPlaceholder')}
                 className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   errors.equipmentId 
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                     : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
                 } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
-              />
+              >
+                <option value="">{t('repair:form.selectEquipment')}</option>
+                {availableEquipment.map(equipment => (
+                  <option key={equipment.id} value={equipment.id}>
+                    {equipment.equipment_number} - {equipment.equipment_name}
+                  </option>
+                ))}
+              </select>
               {errors.equipmentId && <p className="mt-1 text-sm text-red-600">{errors.equipmentId}</p>}
             </div>
 

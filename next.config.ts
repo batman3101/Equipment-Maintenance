@@ -68,6 +68,14 @@ const nextConfig: NextConfig = {
 
   // 다이내믹 임포트 최적화
   webpack: (config, { dev, isServer }) => {
+    // ExcelJS 동적 임포트 최적화
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'exceljs': false, // 클라이언트 번들에서 제외
+      }
+    }
+
     // 개발 환경에서만 번들 크기 분석 활성화
     if (dev) {
       config.optimization = {
@@ -94,29 +102,50 @@ const nextConfig: NextConfig = {
         sideEffects: false,
         splitChunks: {
           chunks: 'all',
+          minSize: 20000,
+          maxSize: 250000,
           cacheGroups: {
             default: false,
             vendors: false,
-            // React 버전들
+            // React 청크
             react: {
               name: 'react',
               chunks: 'all',
               test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-              priority: 20,
+              priority: 30,
+              enforce: true,
             },
             // Supabase 전용 청크
             supabase: {
               name: 'supabase',
               chunks: 'all',
               test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+              priority: 25,
+              enforce: true,
+            },
+            // ExcelJS는 동적 임포트로만 로드 (번들에서 제외)
+            excel: {
+              name: 'excel',
+              chunks: 'async',
+              test: /[\\/]node_modules[\\/](exceljs|file-saver)[\\/]/,
+              priority: 20,
+              enforce: true,
+            },
+            // i18n 관련 라이브러리
+            i18n: {
+              name: 'i18n',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](i18next|react-i18next)[\\/]/,
               priority: 15,
+              enforce: true,
             },
             // 기타 라이브러리
-            lib: {
-              name: 'lib',
+            vendor: {
+              name: 'vendor',
               chunks: 'all',
               test: /[\\/]node_modules[\\/]/,
               priority: 10,
+              minChunks: 2,
             },
             // 사용자 코드
             common: {
@@ -124,6 +153,7 @@ const nextConfig: NextConfig = {
               minChunks: 2,
               chunks: 'all',
               priority: 5,
+              reuseExistingChunk: true,
             },
           },
         },

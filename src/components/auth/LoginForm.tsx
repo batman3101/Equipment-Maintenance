@@ -151,6 +151,7 @@ export function LoginForm() {
               id="login-symbol-container" 
               className="w-20 h-20 flex items-center justify-center overflow-hidden"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 id="login-symbol" 
                 className="max-w-full max-h-full object-contain hidden" 
@@ -179,6 +180,7 @@ export function LoginForm() {
               id="login-logo-container" 
               className="max-w-xs h-16 flex items-center justify-center overflow-hidden px-4"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 id="login-logo" 
                 className="max-w-full max-h-full object-contain hidden" 

@@ -12,8 +12,31 @@ interface PerformanceAnalysisProps {
 
 export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisProps) {
   const { t } = useTranslation('statistics')
-  type Equipment = { id: string; equipment_number: string; equipment_name: string }
-  type EquipmentStatus = { id: string; equipment_id: string; status: 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped'; updated_at?: string }
+  type Equipment = { 
+    id: string; 
+    equipment_number: string; 
+    equipment_name: string;
+    category?: string;
+    location?: string;
+    total_breakdowns?: number;
+    total_repairs?: number;
+    total_repair_costs?: number;
+    avg_repair_cost?: number;
+    total_downtime_minutes?: number;
+    avg_downtime_minutes?: number;
+    quality_pass_rate?: number;
+    avg_satisfaction_rating?: number;
+  }
+  type EquipmentStatus = { 
+    id: string; 
+    equipment_id: string; 
+    status: 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped'; 
+    updated_at?: string;
+    availability_percentage?: string;
+    repair_success_rate?: string;
+    active_breakdown_count?: number;
+    pending_repair_count?: number;
+  }
   const [equipmentData, setEquipmentData] = useState<Equipment[]>([])
   const [statusData, setStatusData] = useState<EquipmentStatus[]>([])
   const [loading, setLoading] = useState(true)
@@ -28,22 +51,66 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
       setLoading(true)
       setError(null)
 
-      // 설비 정보 가져오기
-      const { data: equipment, error: equipmentError } = await supabase
-        .from('equipment_info')
+      console.log('Fetching performance data with enhanced views...')
+
+      // 새로운 통계 뷰를 사용하여 설비별 성능 통계 가져오기
+      const { data: equipmentStats, error: statsError } = await supabase
+        .from('v_equipment_statistics')
         .select('*')
+        .order('total_breakdowns', { ascending: false })
 
-      if (equipmentError) throw equipmentError
+      if (statsError) {
+        console.error('Error fetching equipment statistics:', statsError)
+        throw statsError
+      }
 
-      // 설비 상태 정보 가져오기
-      const { data: status, error: statusError } = await supabase
-        .from('equipment_status')
+      console.log('Equipment statistics from view:', equipmentStats)
+
+      // 설비 대시보드 뷰에서 실시간 데이터 가져오기
+      const { data: dashboardData, error: dashboardError } = await supabase
+        .from('v_equipment_dashboard')
         .select('*')
+        .order('equipment_number')
 
-      if (statusError) throw statusError
+      if (dashboardError) {
+        console.error('Error fetching dashboard data:', dashboardError)
+        throw dashboardError
+      }
 
-      setEquipmentData(equipment || [])
-      setStatusData(status || [])
+      console.log('Dashboard data from view:', dashboardData)
+
+      // 기존 형태로 변환
+      const equipment = equipmentStats?.map(stat => ({
+        id: stat.equipment_id,
+        equipment_number: stat.equipment_number,
+        equipment_name: stat.equipment_name,
+        category: stat.category,
+        location: stat.location,
+        // 성능 지표 추가
+        total_breakdowns: stat.total_breakdowns,
+        total_repairs: stat.total_repairs,
+        total_repair_costs: stat.total_repair_costs,
+        avg_repair_cost: stat.avg_repair_cost,
+        total_downtime_minutes: stat.total_downtime_minutes,
+        avg_downtime_minutes: stat.avg_downtime_minutes,
+        quality_pass_rate: stat.quality_pass_rate,
+        avg_satisfaction_rating: stat.avg_satisfaction_rating
+      })) || []
+
+      const status = dashboardData?.map(dash => ({
+        id: dash.id,
+        equipment_id: dash.id,
+        status: dash.current_status || 'unknown',
+        updated_at: dash.status_last_updated,
+        // 추가 성능 지표
+        availability_percentage: dash.availability_percentage,
+        repair_success_rate: dash.repair_success_rate,
+        active_breakdown_count: dash.active_breakdown_count,
+        pending_repair_count: dash.pending_repair_count
+      })) || []
+
+      setEquipmentData(equipment)
+      setStatusData(status)
     } catch (err) {
       console.error('Error fetching performance data:', err)
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -64,26 +131,45 @@ export function PerformanceAnalysis({ subOption, period }: PerformanceAnalysisPr
       }
     }
 
-    // 실제 성과 계산 로직 (임시로 상태 기반으로 계산)
-    const runningCount = statusData.filter(s => s.status === 'running').length
-    const totalCount = statusData.length
-    const overallRate = totalCount > 0 ? (runningCount / totalCount) * 100 : 0
+    console.log('Calculating performance metrics with real data...')
 
-    // 장비별 가동률 계산
+    // 실제 가동률 계산 (availability_percentage 사용)
+    const availabilityRates = statusData.map(status => ({
+      equipment_id: status.equipment_id,
+      rate: parseFloat(status.availability_percentage || '95')
+    }))
+
+    const totalAvailability = availabilityRates.reduce((sum, item) => sum + item.rate, 0)
+    const overallRate = availabilityRates.length > 0 ? totalAvailability / availabilityRates.length : 0
+
+    // 장비별 가동률 계산 (실제 데이터 사용)
     const equipmentRates = equipmentData.map(equipment => {
       const status = statusData.find(s => s.equipment_id === equipment.id)
-      // 실제로는 더 복잡한 계산이 필요하지만, 여기서는 간단히 상태 기반으로 계산
-      const rate = status?.status === 'running' ? 85 + Math.random() * 15 : Math.random() * 60
+      const availability = parseFloat(status?.availability_percentage || '0')
+      
       return {
         id: equipment.id,
         name: equipment.equipment_name,
         number: equipment.equipment_number,
-        rate: Math.round(rate * 10) / 10
+        rate: Math.round(availability * 10) / 10,
+        // 추가 실제 지표들
+        totalBreakdowns: equipment.total_breakdowns || 0,
+        totalRepairs: equipment.total_repairs || 0,
+        avgDowntime: equipment.avg_downtime_minutes || 0,
+        repairSuccessRate: parseFloat(status?.repair_success_rate || '0'),
+        activeIssues: status?.active_breakdown_count || 0
       }
     }).sort((a, b) => b.rate - a.rate)
 
     const highest = equipmentRates[0]
     const lowest = equipmentRates[equipmentRates.length - 1]
+
+    console.log('Performance metrics calculated:', {
+      overallRate,
+      equipmentCount: equipmentRates.length,
+      highest: highest?.number,
+      lowest: lowest?.number
+    })
 
     return {
       overallRate: Math.round(overallRate * 10) / 10,

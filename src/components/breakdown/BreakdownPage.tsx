@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Button } from '@/components/ui'
 import { BreakdownReportForm } from './BreakdownReportForm'
 import { BreakdownList } from './BreakdownList'
+import { BreakdownListRef } from '@/types/breakdown'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslation } from 'react-i18next'
 
@@ -29,6 +30,7 @@ export function BreakdownPage() {
   const { t } = useTranslation(['breakdown', 'common'])
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedReport, setSelectedReport] = useState<BreakdownReport | null>(null)
+  const breakdownListRef = useRef<BreakdownListRef>(null)
 
   const handleNewReport = () => {
     setViewMode('form')
@@ -37,7 +39,6 @@ export function BreakdownPage() {
 
   const handleReportSubmit = (report: { equipmentCategory: string; equipmentNumber: string; reporterName: string; urgencyLevel: 'low' | 'medium' | 'high' | 'critical'; issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'; description: string; symptoms: string }) => {
     console.log('새 고장 신고 제출:', report)
-    // 여기서 실제 API 호출이나 상태 업데이트
     
     // 성공 메시지 표시
     showSuccess(
@@ -45,8 +46,13 @@ export function BreakdownPage() {
       t('breakdown:messages.reportSuccessDetail')
     )
     
-    // 목록으로 돌아가기
+    // 목록으로 돌아가기 및 데이터 새로고침
     setViewMode('list')
+    
+    // BreakdownList 데이터 새로고침
+    if (breakdownListRef.current) {
+      breakdownListRef.current.refreshData()
+    }
   }
 
   const handleCancel = () => {
@@ -163,7 +169,7 @@ export function BreakdownPage() {
         ) : null
       default:
         return (
-          <BreakdownList />
+          <BreakdownList ref={breakdownListRef} />
         )
     }
   }

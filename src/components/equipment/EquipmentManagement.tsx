@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import * as ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import { Button, Card, Modal } from '@/components/ui'
@@ -8,35 +8,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
-
-interface Equipment {
-  id: string
-  equipmentNumber: string
-  equipmentName: string
-  category: string
-  location: string | null
-  manufacturer: string | null
-  model: string | null
-  installationDate: string | null
-  specifications: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-interface EquipmentStatus {
-  id: string
-  equipmentId: string
-  status: 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped'
-  statusReason: string | null
-  updatedBy: string | null
-  statusChangedAt: string
-  lastMaintenanceDate: string | null
-  nextMaintenanceDate: string | null
-  operatingHours: number | null
-  notes: string | null
-  createdAt: string
-  updatedAt: string
-}
+import { Equipment, EquipmentStatusInfo as EquipmentStatus } from '@/types/equipment'
 
 
 const getStatusColor = (status: string) => {
@@ -79,6 +51,7 @@ export function EquipmentManagement() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [editFormData, setEditFormData] = useState<Partial<Equipment>>({})
+  const [editEquipmentStatus, setEditEquipmentStatus] = useState<string>('')
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
     equipmentName: '',
     equipmentNumber: '',
@@ -89,14 +62,22 @@ export function EquipmentManagement() {
     installationDate: new Date().toISOString().split('T')[0],
     specifications: null
   })
+  const [newEquipmentStatus, setNewEquipmentStatus] = useState<string>('running')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // 검색, 필터, 정렬 상태
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   // Supabase에서 설비 데이터 가져오기
   useEffect(() => {
     fetchEquipments()
   }, [])
 
-  const fetchEquipments = async () => {
+  const fetchEquipments = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -161,7 +142,86 @@ export function EquipmentManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  // 필터링된 설비 목록 계산
+  const filteredAndSortedEquipments = useMemo(() => {
+    let filtered = equipments
+
+    // 검색어 필터링
+    if (searchTerm) {
+      filtered = filtered.filter(equipment => 
+        equipment.equipmentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        equipment.equipmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        equipment.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (equipment.manufacturer && equipment.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (equipment.model && equipment.model.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (equipment.location && equipment.location.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    }
+
+    // 카테고리 필터링
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(equipment => equipment.category === categoryFilter)
+    }
+
+    // 상태 필터링
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(equipment => {
+        const status = equipmentStatuses.find(s => s.equipmentId === equipment.id)
+        return status?.status === statusFilter
+      })
+    }
+
+    // 정렬
+    filtered = [...filtered].sort((a, b) => {
+      let aValue: string | number | Date, bValue: string | number | Date
+
+      switch (sortBy) {
+        case 'equipmentNumber':
+          aValue = a.equipmentNumber
+          bValue = b.equipmentNumber
+          break
+        case 'equipmentName':
+          aValue = a.equipmentName
+          bValue = b.equipmentName
+          break
+        case 'category':
+          aValue = a.category
+          bValue = b.category
+          break
+        case 'location':
+          aValue = a.location || ''
+          bValue = b.location || ''
+          break
+        case 'status':
+          const statusA = equipmentStatuses.find(s => s.equipmentId === a.id)
+          const statusB = equipmentStatuses.find(s => s.equipmentId === b.id)
+          aValue = statusA?.status || 'unknown'
+          bValue = statusB?.status || 'unknown'
+          break
+        case 'created_at':
+        default:
+          aValue = new Date(a.createdAt)
+          bValue = new Date(b.createdAt)
+          break
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+      }
+    })
+
+    return filtered
+  }, [equipments, equipmentStatuses, searchTerm, statusFilter, categoryFilter, sortBy, sortOrder])
+
+  // 카테고리 목록 계산
+  const availableCategories = useMemo(() => {
+    const categories = Array.from(new Set(equipments.map(eq => eq.category)))
+    return categories.sort()
+  }, [equipments])
 
   // Excel 템플릿 다운로드
   const downloadTemplate = async () => {
@@ -375,6 +435,20 @@ export function EquipmentManagement() {
         return
       }
 
+      // 설비 상태 정보 추가
+      const { error: statusError } = await supabase
+        .from('equipment_status')
+        .insert({
+          equipment_id: data.id,
+          status: newEquipmentStatus || 'running',
+          status_changed_at: new Date().toISOString()
+        })
+
+      if (statusError) {
+        console.error('Error adding equipment status:', statusError)
+        // 상태 추가 실패해도 설비는 이미 추가되었으므로 계속 진행
+      }
+
       // 로컬 상태 업데이트
       const newEquipmentData: Equipment = {
         id: data.id,
@@ -391,6 +465,25 @@ export function EquipmentManagement() {
       }
 
       setEquipments(prev => [...prev, newEquipmentData])
+      
+      // 상태 정보도 로컬에 추가
+      if (!statusError) {
+        const newStatus: EquipmentStatus = {
+          id: crypto.randomUUID(),
+          equipmentId: data.id,
+          status: (newEquipmentStatus || 'running') as EquipmentStatus['status'],
+          statusReason: null,
+          updatedBy: null,
+          statusChangedAt: new Date().toISOString(),
+          lastMaintenanceDate: null,
+          nextMaintenanceDate: null,
+          operatingHours: null,
+          notes: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        setEquipmentStatuses(prev => [...prev, newStatus])
+      }
       showSuccess(
         t('equipment:messages.registerSuccess'),
         t('equipment:messages.registerSuccessDetail', { equipmentNumber: newEquipment.equipmentNumber })
@@ -415,12 +508,14 @@ export function EquipmentManagement() {
       installationDate: new Date().toISOString().split('T')[0],
       specifications: null
     })
+    setNewEquipmentStatus('operational')
     setShowAddForm(false)
   }
 
   // 개별 등록 폼 취소
   const handleCancelAdd = () => {
     setShowAddForm(false)
+    setNewEquipmentStatus('operational')
     setNewEquipment({
       equipmentName: '',
       equipmentNumber: '',
@@ -443,6 +538,9 @@ export function EquipmentManagement() {
   const handleEdit = (equipment: Equipment) => {
     setSelectedEquipment(equipment)
     setEditFormData(equipment)
+    // 현재 설비 상태 가져오기
+    const currentStatus = equipmentStatuses.find(s => s.equipmentId === equipment.id)
+    setEditEquipmentStatus(currentStatus?.status || settings.equipment.defaultStatus || 'operational')
     setShowEditModal(true)
   }
 
@@ -486,6 +584,58 @@ export function EquipmentManagement() {
         return
       }
 
+      // 설비 상태 업데이트
+      const currentStatus = equipmentStatuses.find(s => s.equipmentId === selectedEquipment.id)
+      if (currentStatus && currentStatus.status !== editEquipmentStatus) {
+        const { error: statusError } = await supabase
+          .from('equipment_status')
+          .update({
+            status: editEquipmentStatus,
+            status_changed_at: new Date().toISOString()
+          })
+          .eq('equipment_id', selectedEquipment.id)
+        
+        if (statusError) {
+          console.error('Error updating equipment status:', statusError)
+        } else {
+          // 로컬 상태 업데이트
+          setEquipmentStatuses(prev => prev.map(s => 
+            s.equipmentId === selectedEquipment.id 
+              ? { ...s, status: editEquipmentStatus as EquipmentStatus['status'], statusChangedAt: new Date().toISOString() }
+              : s
+          ))
+        }
+      } else if (!currentStatus) {
+        // 상태가 없으면 새로 생성
+        const { error: statusError } = await supabase
+          .from('equipment_status')
+          .insert({
+            equipment_id: selectedEquipment.id,
+            status: editEquipmentStatus,
+            status_changed_at: new Date().toISOString()
+          })
+        
+        if (statusError) {
+          console.error('Error creating equipment status:', statusError)
+        } else {
+          const newStatus: EquipmentStatus = {
+            id: crypto.randomUUID(),
+            equipmentId: selectedEquipment.id,
+            status: editEquipmentStatus as EquipmentStatus['status'],
+            statusReason: null,
+            updatedBy: null,
+            statusChangedAt: new Date().toISOString(),
+            lastMaintenanceDate: null,
+            nextMaintenanceDate: null,
+            operatingHours: null,
+            notes: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+          setEquipmentStatuses(prev => [...prev, newStatus])
+        }
+      }
+
       // 로컬 상태 업데이트
       setEquipments(prev => prev.map(eq => 
         eq.id === selectedEquipment.id 
@@ -501,6 +651,7 @@ export function EquipmentManagement() {
       setShowEditModal(false)
       setSelectedEquipment(null)
       setEditFormData({})
+      setEditEquipmentStatus('')
     } catch (err) {
       console.error('Unexpected error updating equipment:', err)
       showError(
@@ -640,6 +791,113 @@ export function EquipmentManagement() {
         </div>
       </div>
 
+      {/* 검색 및 필터 섹션 */}
+      <Card>
+        <Card.Content className="p-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            {/* 검색 */}
+            <div className="flex-1 min-w-0">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder={t('equipment:management.searchPlaceholder')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-400">🔍</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 카테고리 필터 */}
+            <div className="lg:w-48">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">{t('equipment:management.allCategories')}</option>
+                {availableCategories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 상태 필터 */}
+            <div className="lg:w-36">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">{t('equipment:management.allStatus')}</option>
+                <option value="running">{t('equipment:status.running')}</option>
+                <option value="breakdown">{t('equipment:status.breakdown')}</option>
+                <option value="standby">{t('equipment:status.standby')}</option>
+                <option value="maintenance">{t('equipment:status.maintenance')}</option>
+                <option value="stopped">{t('equipment:status.stopped')}</option>
+              </select>
+            </div>
+
+            {/* 정렬 */}
+            <div className="lg:w-44">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="created_at">{t('equipment:management.sortBy.date')}</option>
+                <option value="equipmentNumber">{t('equipment:management.sortBy.number')}</option>
+                <option value="equipmentName">{t('equipment:management.sortBy.name')}</option>
+                <option value="category">{t('equipment:management.sortBy.category')}</option>
+                <option value="location">{t('equipment:management.sortBy.location')}</option>
+                <option value="status">{t('equipment:management.sortBy.status')}</option>
+              </select>
+            </div>
+
+            {/* 정렬 순서 */}
+            <div className="lg:w-20">
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                title={sortOrder === 'asc' ? t('equipment:management.sortAsc') : t('equipment:management.sortDesc')}
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </button>
+            </div>
+          </div>
+
+          {/* 결과 요약 */}
+          <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+            <div>
+              {filteredAndSortedEquipments.length === equipments.length ? (
+                <span>{t('equipment:management.totalEquipments', { count: equipments.length })}</span>
+              ) : (
+                <span>
+                  {t('equipment:management.filteredEquipments', { 
+                    filtered: filteredAndSortedEquipments.length, 
+                    total: equipments.length 
+                  })}
+                </span>
+              )}
+            </div>
+            {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('')
+                  setCategoryFilter('all')
+                  setStatusFilter('all')
+                }}
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                {t('equipment:management.clearFilters')}
+              </button>
+            )}
+          </div>
+        </Card.Content>
+      </Card>
 
       {/* 개별 설비 등록 폼 */}
       {showAddForm && (
@@ -773,7 +1031,26 @@ export function EquipmentManagement() {
                 />
               </div>
 
-              {/* 8. 사양 */}
+              {/* 8. 설비 상태 */}
+              <div>
+                <label htmlFor="newStatus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('equipment:fields.status')}
+                </label>
+                <select
+                  value={newEquipmentStatus}
+                  onChange={(e) => setNewEquipmentStatus(e.target.value)}
+                  id="newStatus"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {settings.equipment.statuses.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 9. 사양 */}
               <div className="md:col-span-2">
                 <label htmlFor="newSpecifications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('equipment:fields.specifications')}
@@ -880,7 +1157,7 @@ export function EquipmentManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                {equipments.map((equipment) => {
+                {filteredAndSortedEquipments.map((equipment) => {
                   const equipmentStatus = equipmentStatuses.find(status => status.equipmentId === equipment.id)
                   
                   return (
@@ -906,15 +1183,17 @@ export function EquipmentManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {equipmentStatus ? (
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(equipmentStatus.status)}`}>
-                            {getStatusText(equipmentStatus.status, t)}
-                          </span>
-                        ) : (
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            {t('equipment:status.unknown')}
-                          </span>
-                        )}
+                        {(() => {
+                          const defaultStatus = 'running';
+                          const status = equipmentStatus?.status || defaultStatus;
+                          const colorClass = getStatusColor(status);
+                          
+                          return (
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${colorClass}`}>
+                              {getStatusText(status, t)}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex space-x-2">
@@ -973,7 +1252,7 @@ export function EquipmentManagement() {
             setShowDetailsModal(false)
             setSelectedEquipment(null)
           }}
-          title={t('common:modals.viewDetails')}
+          title={t('equipment:modals.detailsTitle')}
         >
           <div className="space-y-4">
             <div>
@@ -1050,7 +1329,7 @@ export function EquipmentManagement() {
             setSelectedEquipment(null)
             setEditFormData({})
           }}
-          title={t('common:modals.editItem')}
+          title={t('equipment:modals.editTitle')}
         >
           <div className="space-y-4">
             <div>
@@ -1153,6 +1432,22 @@ export function EquipmentManagement() {
             </div>
             
             <div>
+              <label htmlFor="editStatus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('equipment:fields.status')}
+              </label>
+              <select
+                value={editEquipmentStatus}
+                onChange={(e) => setEditEquipmentStatus(e.target.value)}
+                id="editStatus"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                {settings.equipment.statuses.map(status => (
+                  <option key={status.value} value={status.value}>{status.label}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
               <label htmlFor="editSpecifications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('equipment:fields.specifications')}
               </label>
@@ -1172,6 +1467,7 @@ export function EquipmentManagement() {
                   setShowEditModal(false)
                   setSelectedEquipment(null)
                   setEditFormData({})
+                  setEditEquipmentStatus('')
                 }}
               >
                 {t('common:actions.cancel')}
@@ -1192,11 +1488,11 @@ export function EquipmentManagement() {
             setShowDeleteModal(false)
             setSelectedEquipment(null)
           }}
-          title={t('common:modals.deleteConfirm')}
+          title={t('equipment:modals.deleteConfirmTitle')}
         >
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300">
-              {t('common:modals.deleteConfirmMessage')}
+              {t('equipment:modals.deleteConfirmMessage')}
             </p>
             
             <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">

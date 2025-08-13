@@ -1060,6 +1060,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
             <div className="flex-shrink-0">
               <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center overflow-hidden">
                 {settings.branding?.symbolUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img 
                     src={settings.branding.symbolUrl} 
                     alt="Company Symbol" 
@@ -1114,6 +1115,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
             <div className="flex-shrink-0">
               <div className="w-48 h-16 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center overflow-hidden px-4">
                 {settings.branding?.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img 
                     src={settings.branding.logoUrl} 
                     alt="Company Logo" 

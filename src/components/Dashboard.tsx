@@ -12,6 +12,7 @@ import { RepairPage } from '@/components/repair'
 import { StatisticsPage } from '@/components/statistics'
 import { SystemSettingsPage } from '@/components/settings'
 import { TrendChart, DailyStatusCards } from '@/components/dashboard-widgets'
+import { RecentActivitiesWidget } from '@/components/dashboard-widgets/RecentActivitiesWidget'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -164,131 +165,8 @@ function DashboardComponent() {
               }}
             />
 
-            {/* Recent Activities */}
-            <div className="mt-8">
-              <Card className="shadow-lg">
-                <Card.Header className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-t-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                        <span className="mr-2">📋</span> {t('dashboard:activities.title')}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard:activities.subtitle')}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard:activities.realtime')}</span>
-                    </div>
-                  </div>
-                </Card.Header>
-                <Card.Content className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border-l-4 border-red-500 hover:shadow-md transition-shadow">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center shadow-sm">
-                          <span className="text-red-600 dark:text-red-400 text-lg">🚨</span>
-                        </div>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-LT-001 {t('dashboard:activities.types.urgent')}
-                          </p>
-                          <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-medium rounded-full">{t('dashboard:dailyCards.breakdowns.urgent')}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          {t('dashboard:activities.labels.reporter', { name: '김기술자', team: '생산1팀' })} · 스핀들 베어링 이상소음 및 진동 발생
-                        </p>
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>📍 {t('equipment:locations.1공장 B라인')}</span>
-                          <span>⏰ 2시간 전 (13:45)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border-l-4 border-green-500 hover:shadow-md transition-shadow">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center shadow-sm">
-                          <span className="text-green-600 dark:text-green-400 text-lg">✅</span>
-                        </div>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-ML-001 {t('dashboard:activities.types.completed')}
-                          </p>
-                          <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-medium rounded-full">{t('common:status.completed')}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          {t('dashboard:activities.labels.manager', { name: '박정비사', team: '정비팀' })} · 오일 교체, 필터 청소, 정밀도 점검 완료
-                        </p>
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>💰 {t('dashboard:activities.labels.cost', { amount: '85,000' })}</span>
-                          <span>⏰ 4시간 전 (11:30)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-l-4 border-blue-500 hover:shadow-md transition-shadow">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center shadow-sm">
-                          <span className="text-blue-600 dark:text-blue-400 text-lg">🔧</span>
-                        </div>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-DR-001 {t('dashboard:activities.types.inProgress')}
-                          </p>
-                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">{t('common:status.inProgress')}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          {t('dashboard:activities.labels.manager', { name: '이수리기사', team: '정비팀' })} · 드릴 척 교체 및 제어 시스템 점검
-                        </p>
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>⏱️ {t('dashboard:activities.labels.expectedCompletion', { time: '16:30' })}</span>
-                          <span>⏰ 6시간 전 (09:15)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-l-4 border-yellow-500 hover:shadow-md transition-shadow">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-800 rounded-full flex items-center justify-center shadow-sm">
-                          <span className="text-yellow-600 dark:text-yellow-400 text-lg">⚠️</span>
-                        </div>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            CNC-GR-001 {t('dashboard:activities.types.scheduled')}
-                          </p>
-                          <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded-full">{t('common:status.warning')}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          {t('dashboard:activities.labels.scheduled', { date: '내일 (1월 16일)' })} · 정기 예방 정비 및 부품 교체 예정
-                        </p>
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>👨‍🔧 {t('dashboard:activities.labels.assigned', { name: '최정비사' })}</span>
-                          <span>📅 {t('dashboard:activities.labels.daysLeft', { days: '1' })}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="flex items-center"><span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span> {t('dashboard:activities.summary.urgent', { count: 1 })}</span>
-                      <span className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> {t('dashboard:activities.summary.inProgress', { count: 1 })}</span>
-                      <span className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> {t('dashboard:activities.summary.completed', { count: 1 })}</span>
-                    </div>
-                    <Button variant="secondary" size="sm" className="hover:shadow-md transition-shadow">
-                      📊 {t('dashboard:activities.viewAll')}
-                    </Button>
-                  </div>
-                </Card.Content>
-              </Card>
-            </div>
+            {/* Recent Activities - Real Database Data */}
+            <RecentActivitiesWidget />
           </>
         )
       

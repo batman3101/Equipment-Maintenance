@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card } from '@/components/ui'
@@ -31,7 +31,7 @@ export function UserManagement() {
   const [showUserDetail, setShowUserDetail] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -53,13 +53,13 @@ export function UserManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
 
   useEffect(() => {
     if (profile && ['system_admin', 'manager'].includes(profile.role)) {
       fetchUsers()
     }
-  }, [profile])
+  }, [profile, fetchUsers])
 
   const handleUserCreated = () => {
     // 새 사용자가 생성되면 목록 새로고침

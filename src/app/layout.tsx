@@ -53,6 +53,15 @@ export default function RootLayout({
                   document.documentElement.style.colorScheme = 'light';
                   document.documentElement.style.backgroundColor = '#ffffff';
                 }
+
+                // JW Player 오류 방지
+                window.onerror = function(msg, url, lineNo, columnNo, error) {
+                  if (msg && msg.indexOf && msg.indexOf('jwplayer') > -1) {
+                    console.warn('JW Player 오류가 무시되었습니다:', msg);
+                    return true; // 오류 무시
+                  }
+                  return false;
+                };
               })();
             `,
           }}

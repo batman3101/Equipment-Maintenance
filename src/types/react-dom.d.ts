@@ -16,6 +16,7 @@ declare module "react-dom" {
   export function unmountComponentAtNode(container: Element | null): boolean;
 
   export function findDOMNode(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     componentOrElement: Element | React.Component<any, any> | null
   ): Element | Text | null;
 

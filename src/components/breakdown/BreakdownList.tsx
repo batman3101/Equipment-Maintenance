@@ -1,26 +1,11 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Card, StatusBadge, Modal, Button } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
-
-interface BreakdownReport {
-  id: string
-  equipmentId: string
-  breakdownTitle: string
-  breakdownDescription: string
-  breakdownType?: string
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  occurredAt: string
-  reportedBy: string
-  status: 'reported' | 'assigned' | 'in_progress' | 'completed'
-  assignedTo?: string
-  symptoms?: string
-  createdAt: string
-  updatedAt: string
-}
+import { BreakdownReport, BreakdownListProps, BreakdownListRef } from '@/types/breakdown'
 
 
 const getPriorityColor = (priority: string): 'success' | 'warning' | 'danger' | 'secondary' => {
@@ -43,11 +28,8 @@ const getStatusColor = (status: string): 'secondary' | 'info' | 'warning' | 'suc
   }
 }
 
-interface BreakdownListProps {
-  onReportClick?: (report: BreakdownReport) => void
-}
 
-export function BreakdownList({ onReportClick: _onReportClick }: BreakdownListProps) {
+export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({ onReportClick: _onReportClick }, ref) => {
   const { t } = useTranslation(['breakdown', 'common'])
   const { showSuccess, showError } = useToast()
   const [reports, setReports] = useState<BreakdownReport[]>([])
@@ -63,6 +45,11 @@ export function BreakdownList({ onReportClick: _onReportClick }: BreakdownListPr
   const [selectedReport, setSelectedReport] = useState<BreakdownReport | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<BreakdownReport>>({})
 
+  // ref를 통해 외부에서 refreshData 호출 가능
+  useImperativeHandle(ref, () => ({
+    refreshData: fetchReports
+  }))
+
   // Supabase에서 고장 데이터 가져오기
   useEffect(() => {
     fetchReports()
@@ -75,7 +62,13 @@ export function BreakdownList({ onReportClick: _onReportClick }: BreakdownListPr
       
       const { data, error: fetchError } = await supabase
         .from('breakdown_reports')
-        .select('*')
+        .select(`
+          *,
+          equipment_info!inner(
+            equipment_number,
+            equipment_name
+          )
+        `)
         .order('created_at', { ascending: false })
 
       if (fetchError) {
@@ -85,21 +78,30 @@ export function BreakdownList({ onReportClick: _onReportClick }: BreakdownListPr
       }
 
       // Supabase 데이터를 컴포넌트 인터페이스에 맞게 변환
-      const formattedReports: BreakdownReport[] = (data || []).map(report => ({
-        id: report.id,
-        equipmentId: report.equipment_id,
-        breakdownTitle: report.breakdown_title,
-        breakdownDescription: report.breakdown_description,
-        breakdownType: report.breakdown_type,
-        priority: report.priority,
-        occurredAt: report.occurred_at,
-        reportedBy: report.reported_by,
-        status: report.status,
-        assignedTo: report.assigned_to,
-        symptoms: report.symptoms,
-        createdAt: report.created_at,
-        updatedAt: report.updated_at
-      }))
+      const formattedReports: BreakdownReport[] = (data || []).map(report => {
+        // breakdown_description에서 신고자 이름 추출
+        const reporterMatch = report.breakdown_description?.match(/\[신고자:\s*(.+?)\]/)
+        const reporterName = reporterMatch ? reporterMatch[1] : '알 수 없는 사용자'
+        
+        // 실제 설명에서 신고자 정보 제거
+        const cleanDescription = report.breakdown_description?.replace(/\[신고자:\s*.+?\]\n\n/, '') || ''
+        
+        return {
+          id: report.id,
+          equipmentId: report.equipment_info?.equipment_number || report.equipment_id, // 설비 번호를 표시
+          breakdownTitle: report.breakdown_title,
+          breakdownDescription: cleanDescription,
+          breakdownType: report.breakdown_type,
+          priority: report.priority,
+          occurredAt: report.occurred_at,
+          reportedBy: reporterName, // 추출한 신고자 이름
+          status: report.status,
+          assignedTo: report.assigned_to,
+          symptoms: report.symptoms,
+          createdAt: report.created_at,
+          updatedAt: report.updated_at
+        }
+      })
 
       setReports(formattedReports)
     } catch (err) {
@@ -727,4 +729,6 @@ export function BreakdownList({ onReportClick: _onReportClick }: BreakdownListPr
       )}
     </div>
   )
-}
+})
+
+BreakdownList.displayName = 'BreakdownList'

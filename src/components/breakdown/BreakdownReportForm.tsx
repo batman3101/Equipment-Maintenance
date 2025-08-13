@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
 import { useTranslation } from 'react-i18next'
+import { supabase } from '@/lib/supabase'
 
 interface BreakdownReport {
   equipmentCategory: string
@@ -40,6 +41,31 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [availableEquipment, setAvailableEquipment] = useState<Array<{id: string, equipment_number: string, equipment_name: string}>>([])
+
+  // 컴포넌트 로드 시 사용 가능한 설비 목록 가져오기
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('equipment_info')
+          .select('id, equipment_number, equipment_name')
+          .order('equipment_number')
+
+        if (error) {
+          console.error('Error fetching equipment:', error)
+          return
+        }
+
+        console.log('Available equipment:', data)
+        setAvailableEquipment(data || [])
+      } catch (err) {
+        console.error('Unexpected error fetching equipment:', err)
+      }
+    }
+
+    fetchEquipment()
+  }, [])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -74,11 +100,61 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     try {
       const reportData: BreakdownReport = formData as BreakdownReport
 
-      // 여기서 실제 API 호출이나 상태 업데이트
-      console.log('고장 신고 데이터:', reportData)
+      console.log('Submitting breakdown report:', reportData)
+
+      // 먼저 설비 번호로 equipment_info에서 equipment_id 찾기
+      console.log('Looking for equipment with number:', reportData.equipmentNumber)
+      const { data: equipmentData, error: equipmentError } = await supabase
+        .from('equipment_info')
+        .select('id')
+        .eq('equipment_number', reportData.equipmentNumber)
+        .single()
+
+      console.log('Equipment lookup result:', { equipmentData, equipmentError })
+
+      if (equipmentError || !equipmentData) {
+        console.error('Equipment lookup error:', equipmentError)
+        console.error('Equipment data:', equipmentData)
+        showError(
+          t('breakdown:messages.reportError'),
+          `설비 번호 '${reportData.equipmentNumber}'를 찾을 수 없습니다. 올바른 설비 번호를 입력해주세요.`
+        )
+        return
+      }
+
+      // 현재 로그인된 사용자 ID 가져오기 (임시로 가짜 UUID 사용)
+      const currentUserId = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' // 임시 UUID, 나중에 실제 auth.uid() 사용
       
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Supabase에 데이터 저장
+      const { data, error } = await supabase
+        .from('breakdown_reports')
+        .insert({
+          equipment_id: equipmentData.id, // 실제 equipment_info의 UUID
+          breakdown_title: `${reportData.equipmentCategory} - ${reportData.equipmentNumber} 고장 신고`,
+          breakdown_description: `[신고자: ${reportData.reporterName}]\n\n${reportData.description}`,
+          breakdown_type: reportData.issueType,
+          priority: reportData.urgencyLevel === 'critical' ? 'urgent' : reportData.urgencyLevel, // critical -> urgent 매핑
+          occurred_at: new Date().toISOString(),
+          reported_by: currentUserId, // UUID 타입으로 저장
+          status: 'reported',
+          symptoms: reportData.symptoms,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error saving breakdown report:', error)
+        console.error('Error details:', JSON.stringify(error, null, 2))
+        showError(
+          t('breakdown:messages.reportError'),
+          error.message || '알 수 없는 오류가 발생했습니다.'
+        )
+        return
+      }
+
+      console.log('고장 신고 저장 성공:', data)
       
       onSubmit?.(reportData)
       
@@ -92,7 +168,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
         equipmentCategory: '',
         equipmentNumber: '',
         reporterName: '',
-        urgencyLevel: 'medium',
+        urgencyLevel: settings.breakdown.defaultUrgency as 'low' | 'medium' | 'high' | 'critical',
         issueType: 'mechanical',
         description: '',
         symptoms: ''
@@ -147,14 +223,38 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
 
             {/* 2. 고장 설비 번호 */}
             <div>
-              <Input
-                label={t('breakdown:form.equipmentNumber')}
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('breakdown:form.equipmentNumber')} <span className="text-red-500">{t('breakdown:form.required')}</span>
+              </label>
+              <select
                 value={formData.equipmentNumber || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, equipmentNumber: e.target.value }))}
-                placeholder={t('breakdown:form.equipmentNumberPlaceholder')}
-                required
-                error={errors.equipmentNumber}
-              />
+                className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                  errors.equipmentNumber 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
+                } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
+              >
+                <option value="">{t('breakdown:form.equipmentNumberPlaceholder')}</option>
+                {availableEquipment.map((equipment) => (
+                  <option key={equipment.id} value={equipment.equipment_number}>
+                    {equipment.equipment_number} - {equipment.equipment_name}
+                  </option>
+                ))}
+              </select>
+              {errors.equipmentNumber && <p className="mt-1 text-sm text-red-600">{errors.equipmentNumber}</p>}
+              
+              {/* 디버깅 정보 표시 */}
+              {availableEquipment.length === 0 && (
+                <p className="mt-1 text-sm text-yellow-600">
+                  사용 가능한 설비 목록을 불러오는 중입니다... ({availableEquipment.length}개 설비)
+                </p>
+              )}
+              {availableEquipment.length > 0 && (
+                <p className="mt-1 text-sm text-green-600">
+                  {availableEquipment.length}개의 설비를 사용할 수 있습니다.
+                </p>
+              )}
             </div>
 
             {/* 3. 신고자 이름 */}

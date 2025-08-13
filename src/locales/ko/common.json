@@ -72,7 +72,10 @@
   "modals": {
     "details": "상세 정보",
     "editTitle": "정보 수정",
+    "editItem": "설비 정보 수정",
     "deleteTitle": "삭제 확인",
+    "deleteConfirm": "삭제 확인",
+    "deleteConfirmMessage": "이 설비를 정말 삭제하시겠습니까?",
     "detailsOf": "{{name}} 상세 정보"
   },
   "errors": {

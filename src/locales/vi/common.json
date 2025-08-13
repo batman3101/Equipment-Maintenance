@@ -73,7 +73,10 @@
   "modals": {
     "details": "Thông tin chi tiết",
     "editTitle": "Chỉnh sửa thông tin",
+    "editItem": "Chỉnh sửa thông tin thiết bị",
     "deleteTitle": "Xác nhận xóa",
+    "deleteConfirm": "Xác nhận xóa",
+    "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa thiết bị này không?",
     "detailsOf": "Thông tin chi tiết {{name}}"
   },
   "errors": {

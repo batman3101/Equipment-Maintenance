@@ -41,6 +41,7 @@
     "equipmentName": "Tên thiết bị",
     "location": "Vị trí thiết bị",
     "installDate": "Ngày lắp đặt",
+    "installationDate": "Ngày lắp đặt",
     "status": "Trạng thái",
     "category": "Danh mục",
     "manufacturer": "Nhà sản xuất",
@@ -62,6 +63,12 @@
     "byCategory": "Theo danh mục",
     "byStatus": "Theo trạng thái",
     "byLocation": "Theo vị trí"
+  },
+  "modals": {
+    "deleteConfirmTitle": "Xác nhận xóa",
+    "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa thiết bị này không? Thao tác này không thể hoàn tác.",
+    "detailsTitle": "Thông tin chi tiết thiết bị",
+    "editTitle": "Chỉnh sửa thông tin thiết bị"
   },
   "messages": {
     "uploadSuccess": "Tải lên thành công",

@@ -40,7 +40,8 @@
     "equipmentNumber": "설비 번호",
     "equipmentName": "설비명",
     "location": "설비 위치",
-    "installDate": "설치 일자", 
+    "installDate": "설치 일자",
+    "installationDate": "설치일자",
     "status": "상태",
     "category": "카테고리",
     "manufacturer": "제조업체",
@@ -62,6 +63,12 @@
     "byCategory": "카테고리별",
     "byStatus": "상태별",
     "byLocation": "위치별"
+  },
+  "modals": {
+    "deleteConfirmTitle": "삭제 확인",
+    "deleteConfirmMessage": "이 설비를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "detailsTitle": "설비 상세 정보",
+    "editTitle": "설비 정보 수정"
   },
   "messages": {
     "uploadSuccess": "업로드 성공",

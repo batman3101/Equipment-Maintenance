@@ -3,7 +3,8 @@
 import React from 'react'
 import { Card } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
-import { useDashboardAnalytics } from '@/hooks/useAnalytics'
+import { useState, useEffect } from 'react'
+import { DashboardData } from '@/types/dashboard'
 
 interface DailyStatusCardsProps {
   className?: string
@@ -11,7 +12,51 @@ interface DailyStatusCardsProps {
 
 export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
   const { t } = useTranslation(['dashboard', 'common'])
-  const { data: dashboardData, loading, error } = useDashboardAnalytics()
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+        console.log('Fetching dashboard stats from new API...')
+        
+        const response = await fetch('/api/dashboard/stats')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        console.log('Dashboard stats response:', data)
+        setDashboardData(data)
+        setError(null)
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err)
+        setError(err instanceof Error ? err.message : String(err))
+        // 에러 시 기본값 설정
+        setDashboardData({
+          dailyStats: {
+            breakdowns: { total: 0, urgent: 0, pending: 0 },
+            repairs: { completed: 0, inProgress: 0, scheduled: 0 },
+            equipment: { operational: 1, total: 1, maintenance: 0, stopped: 0 }
+          },
+          weeklyTrend: {
+            labels: [],
+            breakdowns: [],
+            repairs: [],
+            uptime: []
+          },
+          equipmentPerformance: [],
+          maintenanceSchedule: []
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
 
   if (error) {
     console.error('DailyStatusCards error:', error)
