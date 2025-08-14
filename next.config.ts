@@ -68,11 +68,14 @@ const nextConfig: NextConfig = {
 
   // 다이내믹 임포트 최적화
   webpack: (config, { dev, isServer }) => {
-    // ExcelJS 동적 임포트 최적화
+    // ExcelJS를 브라우저에서 사용하기 위한 설정
     if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'exceljs': false, // 클라이언트 번들에서 제외
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        stream: false,
+        crypto: false,
+        buffer: require.resolve('buffer/'),
       }
     }
 

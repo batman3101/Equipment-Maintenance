@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-// ExcelJS를 동적으로 import (Next.js 호환성)
 import { saveAs } from 'file-saver'
+import { createSimpleExcelTemplate, downloadBlob } from '@/lib/excel-utils'
 import { Button, Card, Modal } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
@@ -234,9 +234,8 @@ export function EquipmentManagement() {
     try {
       console.log('Starting template download...')
       
-      // ExcelJS를 동적으로 import
-      const ExcelJS = await import('exceljs')
-      const workbook = new ExcelJS.default.Workbook()
+      // Excel workbook 생성 (헬퍼 함수 사용)
+      const workbook = await createWorkbook()
       const worksheet = workbook.addWorksheet(t('equipment:excel.sheetName'))
 
     // 확장된 헤더 추가 - 현재 데이터베이스 구조에 맞게 업데이트
@@ -372,9 +371,8 @@ export function EquipmentManagement() {
     try {
       const data = await file.arrayBuffer()
       
-      // ExcelJS를 동적으로 import
-      const ExcelJS = await import('exceljs')
-      const workbook = new ExcelJS.default.Workbook()
+      // Excel workbook 생성 (헬퍼 함수 사용)
+      const workbook = await createWorkbook()
       await workbook.xlsx.load(data)
       const worksheet = workbook.getWorksheet(1)
       
