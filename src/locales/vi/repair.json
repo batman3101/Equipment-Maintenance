@@ -55,10 +55,12 @@
   "form": {
     "title": "Đăng ký Hoàn thành Sửa chữa",
     "description": "Vui lòng điền chính xác thông tin công việc sửa chữa đã hoàn thành.",
-    "equipmentId": "ID Thiết bị",
+    "equipmentId": "Chọn Thiết bị Bị hỏng",
     "equipmentIdPlaceholder": "Ví dụ: CNC-ML-001",
-    "technicianName": "Tên Kỹ thuật viên",
-    "technicianNamePlaceholder": "Nhập tên kỹ thuật viên phụ trách",
+    "selectEquipment": "Vui lòng chọn thiết bị bị hỏng",
+    "technicianName": "Phụ trách",
+    "technicianNamePlaceholder": "Chọn người phụ trách",
+    "selectTechnician": "Vui lòng chọn người phụ trách",
     "repairType": "Loại Sửa chữa",
     "completionStatus": "Trạng thái Hoàn thành",
     "workDescription": "Nội dung Công việc đã Thực hiện",
@@ -75,8 +77,8 @@
     "required": "*"
   },
   "validation": {
-    "equipmentIdRequired": "Vui lòng nhập ID thiết bị",
-    "technicianNameRequired": "Vui lòng nhập tên kỹ thuật viên",
+    "equipmentIdRequired": "Vui lòng chọn thiết bị bị hỏng",
+    "technicianNameRequired": "Vui lòng chọn người phụ trách",
     "workDescriptionRequired": "Vui lòng nhập nội dung công việc đã thực hiện",
     "timeSpentRequired": "Vui lòng nhập thời gian làm việc",
     "timeSpentInvalid": "Vui lòng nhập thời gian hợp lệ (ví dụ: 2.5)",

@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 interface RepairReport {
   equipmentId: string
   technicianName: string
+  technicianId?: string
   repairType: 'preventive' | 'corrective' | 'emergency' | 'upgrade'
   completionStatus: 'completed' | 'partial' | 'failed'
   workDescription: string
@@ -41,6 +42,8 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [availableEquipment, setAvailableEquipment] = useState<Equipment[]>([])
+  const [availableUsers, setAvailableUsers] = useState<Array<{id: string, full_name: string}>>([])
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState<string>('')
 
   // [OCP] Rule: 기본 폼 데이터를 초기화하되, 새로운 필드 추가에 열려있음
   const [formData, setFormData] = useState<Partial<RepairReport>>({
@@ -54,28 +57,68 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     notes: ''
   })
 
-  // 컴포넌트 로드 시 사용 가능한 설비 목록 가져오기
+  // 컴포넌트 로드 시 수리 완료 상태가 아닌 고장 설비 목록 가져오기
   useEffect(() => {
-    const fetchEquipment = async () => {
+    const fetchBrokenEquipment = async () => {
       try {
+        // 수리 완료 상태가 아닌 고장 설비들을 가져오기
         const { data, error } = await supabase
-          .from('equipment_info')
-          .select('id, equipment_number, equipment_name, category, location')
-          .order('equipment_number')
+          .from('breakdown_reports')
+          .select(`
+            equipment_info!inner(
+              id,
+              equipment_number,
+              equipment_name,
+              category,
+              location
+            )
+          `)
+          .neq('status', 'completed') // 수리 완료 상태가 아닌 것들만
+          .order('equipment_info.equipment_number')
 
         if (error) {
-          console.error('Error fetching equipment:', error)
+          console.error('Error fetching broken equipment:', error)
           return
         }
 
-        setAvailableEquipment(data || [])
+        // 중복 제거 후 설비 정보만 추출
+        const uniqueEquipment = data?.reduce((acc, item) => {
+          const equipment = item.equipment_info
+          if (equipment && !acc.find(eq => eq.id === equipment.id)) {
+            acc.push(equipment)
+          }
+          return acc
+        }, [] as Equipment[]) || []
+
+        setAvailableEquipment(uniqueEquipment)
       } catch (err) {
-        console.error('Unexpected error fetching equipment:', err)
+        console.error('Unexpected error fetching broken equipment:', err)
       }
     }
 
-    fetchEquipment()
+    fetchBrokenEquipment()
+    fetchUsers()
   }, [])
+
+  // 사용자 목록 가져오기
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('is_active', true)
+        .order('full_name')
+
+      if (error) {
+        console.error('Error fetching users:', error)
+        return
+      }
+
+      setAvailableUsers(data || [])
+    } catch (err) {
+      console.error('Unexpected error fetching users:', err)
+    }
+  }
 
   // [SRP] Rule: 수리 유형 옵션 계산 - 번역된 수리 유형만 담당
   const repairTypeOptions = useMemo(() => [
@@ -113,7 +156,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     if (!formData.equipmentId) {
       newErrors.equipmentId = t('repair:validation.equipmentIdRequired')
     }
-    if (!formData.technicianName?.trim()) {
+    if (!selectedTechnicianId) {
       newErrors.technicianName = t('repair:validation.technicianNameRequired')
     }
     if (!formData.workDescription?.trim()) {
@@ -207,16 +250,32 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
               {errors.equipmentId && <p className="mt-1 text-sm text-red-600">{errors.equipmentId}</p>}
             </div>
 
-            {/* 2. 기술자 이름 */}
+            {/* 2. 담당자 */}
             <div>
-              <Input
-                label={t('repair:form.technicianName')}
-                value={formData.technicianName || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, technicianName: e.target.value }))}
-                placeholder={t('repair:form.technicianNamePlaceholder')}
-                required
-                error={errors.technicianName}
-              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('repair:form.technicianName')} <span className="text-red-500">{t('repair:form.required')}</span>
+              </label>
+              <select
+                value={selectedTechnicianId}
+                onChange={(e) => {
+                  setSelectedTechnicianId(e.target.value)
+                  const selectedUser = availableUsers.find(u => u.id === e.target.value)
+                  setFormData(prev => ({ ...prev, technicianName: selectedUser?.full_name || '' }))
+                }}
+                className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                  errors.technicianName 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
+                } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
+              >
+                <option value="">{t('repair:form.selectTechnician')}</option>
+                {availableUsers.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name}
+                  </option>
+                ))}
+              </select>
+              {errors.technicianName && <p className="mt-1 text-sm text-red-600">{errors.technicianName}</p>}
             </div>
 
             {/* 3. 수리유형 및 4. 완료상태 */}

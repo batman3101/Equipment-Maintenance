@@ -44,6 +44,8 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedReport, setSelectedReport] = useState<BreakdownReport | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<BreakdownReport>>({})
+  const [availableUsers, setAvailableUsers] = useState<Array<{id: string, full_name: string}>>([])
+  const [editAssigneeId, setEditAssigneeId] = useState<string>('')
 
   // ref를 통해 외부에서 refreshData 호출 가능
   useImperativeHandle(ref, () => ({
@@ -53,7 +55,27 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
   // Supabase에서 고장 데이터 가져오기
   useEffect(() => {
     fetchReports()
+    fetchUsers()
   }, [])
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('is_active', true)
+        .order('full_name')
+
+      if (error) {
+        console.error('Error fetching users:', error)
+        return
+      }
+
+      setAvailableUsers(data || [])
+    } catch (err) {
+      console.error('Unexpected error fetching users:', err)
+    }
+  }
 
   const fetchReports = async () => {
     try {
@@ -67,6 +89,12 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
           equipment_info!inner(
             equipment_number,
             equipment_name
+          ),
+          profiles_reported:profiles!breakdown_reports_reported_by_fkey(
+            full_name
+          ),
+          profiles_assigned:profiles!breakdown_reports_assigned_to_fkey(
+            full_name
           )
         `)
         .order('created_at', { ascending: false })
@@ -79,9 +107,9 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
 
       // Supabase 데이터를 컴포넌트 인터페이스에 맞게 변환
       const formattedReports: BreakdownReport[] = (data || []).map(report => {
-        // breakdown_description에서 신고자 이름 추출
-        const reporterMatch = report.breakdown_description?.match(/\[신고자:\s*(.+?)\]/)
-        const reporterName = reporterMatch ? reporterMatch[1] : '알 수 없는 사용자'
+        // 신고자 정보는 이제 reported_by로 처리하므로 description에서 추출할 필요 없음
+        const reporterName = report.profiles_reported?.full_name || '알 수 없는 사용자'
+        const assigneeName = report.profiles_assigned?.full_name || ''
         
         // 실제 설명에서 신고자 정보 제거
         const cleanDescription = report.breakdown_description?.replace(/\[신고자:\s*.+?\]\n\n/, '') || ''
@@ -96,7 +124,8 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
           occurredAt: report.occurred_at,
           reportedBy: reporterName, // 추출한 신고자 이름
           status: report.status,
-          assignedTo: report.assigned_to,
+          assignedTo: assigneeName, // 담당자 이름
+          assignedToId: report.assigned_to, // 담당자 ID (편집용)
           symptoms: report.symptoms,
           createdAt: report.created_at,
           updatedAt: report.updated_at
@@ -144,6 +173,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
       assignedTo: report.assignedTo,
       symptoms: report.symptoms
     })
+    setEditAssigneeId(report.assignedToId || '')
     setShowEditModal(true)
   }
 
@@ -170,7 +200,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
           breakdown_type: editFormData.breakdownType,
           priority: editFormData.priority,
           status: editFormData.status,
-          assigned_to: editFormData.assignedTo,
+          assigned_to: editAssigneeId || null,
           symptoms: editFormData.symptoms,
           updated_at: new Date().toISOString()
         })
@@ -186,9 +216,16 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
       }
 
       // 로컬 상태 업데이트
+      const assigneeName = availableUsers.find(u => u.id === editAssigneeId)?.full_name || ''
       setReports(prev => prev.map(report => 
         report.id === selectedReport.id 
-          ? { ...report, ...editFormData as BreakdownReport, updatedAt: new Date().toISOString() }
+          ? { 
+              ...report, 
+              ...editFormData as BreakdownReport, 
+              assignedTo: assigneeName,
+              assignedToId: editAssigneeId,
+              updatedAt: new Date().toISOString() 
+            }
           : report
       ))
 
@@ -200,6 +237,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
       setShowEditModal(false)
       setSelectedReport(null)
       setEditFormData({})
+      setEditAssigneeId('')
     } catch (err) {
       console.error('Unexpected error updating breakdown report:', err)
       showError(
@@ -568,6 +606,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
             setShowEditModal(false)
             setSelectedReport(null)
             setEditFormData({})
+            setEditAssigneeId('')
           }}
           title={t('common:modals.editItem')}
         >
@@ -656,12 +695,18 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('breakdown:list.assignee')}
               </label>
-              <input
-                type="text"
-                value={editFormData.assignedTo || ''}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
+              <select
+                value={editAssigneeId}
+                onChange={(e) => setEditAssigneeId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
+              >
+                <option value="">{t('breakdown:form.assigneePlaceholder')}</option>
+                {availableUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name}
+                  </option>
+                ))}
+              </select>
             </div>
             
             <div className="flex justify-end space-x-2 pt-4">
@@ -671,6 +716,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                   setShowEditModal(false)
                   setSelectedReport(null)
                   setEditFormData({})
+                  setEditAssigneeId('')
                 }}
               >
                 {t('common:actions.cancel')}

@@ -55,10 +55,12 @@
   "form": {
     "title": "수리 완료 등록",
     "description": "완료된 수리 작업 정보를 정확하게 기입해주세요.",
-    "equipmentId": "설비 ID",
+    "equipmentId": "고장설비 선택",
     "equipmentIdPlaceholder": "예: CNC-ML-001",
-    "technicianName": "기술자 이름",
-    "technicianNamePlaceholder": "담당 기술자 이름을 입력하세요",
+    "selectEquipment": "고장설비를 선택하세요",
+    "technicianName": "담당자",
+    "technicianNamePlaceholder": "담당자를 선택하세요",
+    "selectTechnician": "담당자를 선택하세요",
     "repairType": "수리 유형",
     "completionStatus": "완료 상태",
     "workDescription": "수행한 작업 내용",
@@ -75,8 +77,8 @@
     "required": "*"
   },
   "validation": {
-    "equipmentIdRequired": "설비 ID를 입력해주세요",
-    "technicianNameRequired": "기술자 이름을 입력해주세요",
+    "equipmentIdRequired": "고장설비를 선택해주세요",
+    "technicianNameRequired": "담당자를 선택해주세요",
     "workDescriptionRequired": "수행한 작업 내용을 입력해주세요",
     "timeSpentRequired": "작업 시간을 입력해주세요",
     "timeSpentInvalid": "올바른 시간을 입력해주세요 (예: 2.5)",

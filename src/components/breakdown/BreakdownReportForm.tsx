@@ -11,6 +11,7 @@ interface BreakdownReport {
   equipmentCategory: string
   equipmentNumber: string
   reporterName: string
+  assignee?: string
   urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
   issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
   description: string
@@ -44,6 +45,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
   const [availableEquipment, setAvailableEquipment] = useState<Array<{id: string, equipment_number: string, equipment_name: string}>>([])
   const [availableUsers, setAvailableUsers] = useState<Array<{id: string, full_name: string, email: string}>>([])
   const [selectedReporter, setSelectedReporter] = useState<string>('')
+  const [selectedAssignee, setSelectedAssignee] = useState<string>('')
 
   // 컴포넌트 로드 시 사용 가능한 설비 목록과 사용자 목록 가져오기
   useEffect(() => {
@@ -165,6 +167,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
           priority: reportData.urgencyLevel === 'critical' ? 'urgent' : reportData.urgencyLevel, // critical -> urgent 매핑
           occurred_at: new Date().toISOString(),
           reported_by: selectedReporter, // 선택된 사용자의 UUID
+          assigned_to: selectedAssignee || null, // 선택된 담당자 UUID
           status: 'reported',
           symptoms: reportData.symptoms,
           created_at: new Date().toISOString(),
@@ -203,6 +206,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
         symptoms: ''
       })
       setSelectedReporter('')
+      setSelectedAssignee('')
       
     } catch (error) {
       console.error('고장 신고 제출 실패:', error)
@@ -323,7 +327,38 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
             </div>
 
-            {/* 4. 긴급도 및 5. 문제 유형 */}
+            {/* 4. 담당자 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('breakdown:form.assignee')}
+              </label>
+              <select
+                value={selectedAssignee}
+                onChange={(e) => setSelectedAssignee(e.target.value)}
+                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="">{t('breakdown:form.assigneePlaceholder')}</option>
+                {availableUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name} ({user.email})
+                  </option>
+                ))}
+              </select>
+              
+              {/* 담당자 목록 디버깅 정보 */}
+              {availableUsers.length === 0 && (
+                <p className="mt-1 text-sm text-yellow-600">
+                  사용자 목록을 불러오는 중입니다...
+                </p>
+              )}
+              {availableUsers.length > 0 && (
+                <p className="mt-1 text-sm text-green-600">
+                  {availableUsers.length}명의 사용자 중에서 담당자를 선택할 수 있습니다.
+                </p>
+              )}
+            </div>
+
+            {/* 5. 긴급도 및 6. 문제 유형 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -360,7 +395,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               </div>
             </div>
 
-            {/* 6. 고장 내용 */}
+            {/* 7. 고장 내용 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('breakdown:form.description')} <span className="text-red-500">{t('breakdown:form.required')}</span>
@@ -379,7 +414,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
             </div>
 
-            {/* 7. 발생 증상 */}
+            {/* 8. 발생 증상 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('breakdown:form.symptoms')} <span className="text-red-500">{t('breakdown:form.required')}</span>

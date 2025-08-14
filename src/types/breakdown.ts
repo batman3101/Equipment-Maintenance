@@ -14,6 +14,7 @@ export interface BreakdownReport {
   reportedBy: string
   status: BreakdownStatus
   assignedTo?: string
+  assignedToId?: string
   symptoms?: string
   createdAt: string
   updatedAt: string
