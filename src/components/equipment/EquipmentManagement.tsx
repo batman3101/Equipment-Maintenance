@@ -410,13 +410,15 @@ export function EquipmentManagement() {
             equipment_number: eq.equipmentNumber,
             equipment_name: eq.equipmentName,
             category: eq.category,
-            location: eq.location,
-            manufacturer: eq.manufacturer,
-            model: eq.model,
-            installation_date: eq.installationDate,
-            specifications: eq.specifications
+            location: eq.location || null,
+            manufacturer: eq.manufacturer || null,
+            model: eq.model || null,
+            installation_date: eq.installationDate && eq.installationDate !== '' ? eq.installationDate : null,
+            specifications: eq.specifications || null
           }))
 
+          console.log('Inserting equipments:', equipmentsToInsert)
+          
           const { data: insertedEquipments, error: insertError } = await supabase
             .from('equipment_info')
             .insert(equipmentsToInsert)
@@ -424,6 +426,9 @@ export function EquipmentManagement() {
 
           if (insertError) {
             console.error('Error inserting equipment:', insertError)
+            console.error('Insert error details:', insertError.details)
+            console.error('Insert error hint:', insertError.hint)
+            console.error('Insert error code:', insertError.code)
             showError(
               '설비 저장 실패',
               `데이터베이스 저장 중 오류가 발생했습니다: ${insertError.message}`
