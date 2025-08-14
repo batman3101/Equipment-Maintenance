@@ -74,6 +74,10 @@ export function EquipmentManagement() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [sortBy, setSortBy] = useState('created_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   // Supabase에서 설비 데이터 가져오기
   useEffect(() => {
@@ -219,6 +223,49 @@ export function EquipmentManagement() {
 
     return filtered
   }, [equipments, equipmentStatuses, searchTerm, statusFilter, categoryFilter, sortBy, sortOrder])
+
+  // 페이지네이션 계산
+  const paginationData = useMemo(() => {
+    const totalItems = filteredAndSortedEquipments.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const currentItems = filteredAndSortedEquipments.slice(startIndex, endIndex)
+    
+    return {
+      totalItems,
+      totalPages,
+      currentItems,
+      startIndex,
+      endIndex,
+      hasNextPage: currentPage < totalPages,
+      hasPrevPage: currentPage > 1
+    }
+  }, [filteredAndSortedEquipments, currentPage, itemsPerPage])
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  // 다음 페이지
+  const handleNextPage = () => {
+    if (paginationData.hasNextPage) {
+      setCurrentPage(prev => prev + 1)
+    }
+  }
+
+  // 이전 페이지
+  const handlePrevPage = () => {
+    if (paginationData.hasPrevPage) {
+      setCurrentPage(prev => prev - 1)
+    }
+  }
+
+  // 필터나 검색이 변경될 때 첫 페이지로 이동
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, statusFilter, categoryFilter])
 
   // 카테고리 목록 계산
   const availableCategories = useMemo(() => {
@@ -1090,13 +1137,10 @@ export function EquipmentManagement() {
           <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <div>
               {filteredAndSortedEquipments.length === equipments.length ? (
-                <span>{t('equipment:management.totalEquipments', { count: equipments.length })}</span>
+                <span>총 {equipments.length}개 설비 (페이지 {currentPage}/{paginationData.totalPages})</span>
               ) : (
                 <span>
-                  {t('equipment:management.filteredEquipments', { 
-                    filtered: filteredAndSortedEquipments.length, 
-                    total: equipments.length 
-                  })}
+                  필터링된 {filteredAndSortedEquipments.length}개 / 전체 {equipments.length}개 (페이지 {currentPage}/{paginationData.totalPages})
                 </span>
               )}
             </div>
@@ -1374,7 +1418,7 @@ export function EquipmentManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredAndSortedEquipments.map((equipment) => {
+                {paginationData.currentItems.map((equipment) => {
                   const equipmentStatus = equipmentStatuses.find(status => status.equipmentId === equipment.id)
                   
                   return (
@@ -1443,6 +1487,116 @@ export function EquipmentManagement() {
               </tbody>
             </table>
           </div>
+
+          {/* 페이지네이션 컨트롤 */}
+          {paginationData.totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                <span>
+                  {paginationData.startIndex + 1}-{Math.min(paginationData.endIndex, paginationData.totalItems)}개 표시 
+                  (총 {paginationData.totalItems}개 중)
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {/* 이전 페이지 버튼 */}
+                <button
+                  onClick={handlePrevPage}
+                  disabled={!paginationData.hasPrevPage}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    paginationData.hasPrevPage
+                      ? 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  이전
+                </button>
+
+                {/* 페이지 번호 */}
+                <div className="flex items-center space-x-1">
+                  {(() => {
+                    const pages = []
+                    const showPages = 5 // 표시할 페이지 번호 개수
+                    let startPage = Math.max(1, currentPage - Math.floor(showPages / 2))
+                    let endPage = Math.min(paginationData.totalPages, startPage + showPages - 1)
+                    
+                    // 끝 페이지가 조정되면 시작 페이지도 조정
+                    if (endPage - startPage + 1 < showPages) {
+                      startPage = Math.max(1, endPage - showPages + 1)
+                    }
+
+                    // 첫 페이지 표시
+                    if (startPage > 1) {
+                      pages.push(
+                        <button
+                          key={1}
+                          onClick={() => handlePageChange(1)}
+                          className="px-3 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                          1
+                        </button>
+                      )
+                      if (startPage > 2) {
+                        pages.push(
+                          <span key="start-ellipsis" className="px-2 text-gray-400">...</span>
+                        )
+                      }
+                    }
+
+                    // 중간 페이지들
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => handlePageChange(i)}
+                          className={`px-3 py-2 text-sm font-medium rounded-md ${
+                            i === currentPage
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      )
+                    }
+
+                    // 마지막 페이지 표시
+                    if (endPage < paginationData.totalPages) {
+                      if (endPage < paginationData.totalPages - 1) {
+                        pages.push(
+                          <span key="end-ellipsis" className="px-2 text-gray-400">...</span>
+                        )
+                      }
+                      pages.push(
+                        <button
+                          key={paginationData.totalPages}
+                          onClick={() => handlePageChange(paginationData.totalPages)}
+                          className="px-3 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                          {paginationData.totalPages}
+                        </button>
+                      )
+                    }
+
+                    return pages
+                  })()}
+                </div>
+
+                {/* 다음 페이지 버튼 */}
+                <button
+                  onClick={handleNextPage}
+                  disabled={!paginationData.hasNextPage}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    paginationData.hasNextPage
+                      ? 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  다음
+                </button>
+              </div>
+            </div>
+          )}
           
           {equipments.length === 0 && (
             <div className="text-center py-12">
