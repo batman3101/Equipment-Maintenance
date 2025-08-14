@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import * as ExcelJS from 'exceljs'
+// ExcelJS를 동적으로 import (Next.js 호환성)
 import { saveAs } from 'file-saver'
 import { Button, Card, Modal } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
@@ -233,7 +233,10 @@ export function EquipmentManagement() {
     setIsDownloadingTemplate(true)
     try {
       console.log('Starting template download...')
-      const workbook = new ExcelJS.Workbook()
+      
+      // ExcelJS를 동적으로 import
+      const ExcelJS = await import('exceljs')
+      const workbook = new ExcelJS.default.Workbook()
       const worksheet = workbook.addWorksheet(t('equipment:excel.sheetName'))
 
     // 확장된 헤더 추가 - 현재 데이터베이스 구조에 맞게 업데이트
@@ -368,7 +371,10 @@ export function EquipmentManagement() {
 
     try {
       const data = await file.arrayBuffer()
-      const workbook = new ExcelJS.Workbook()
+      
+      // ExcelJS를 동적으로 import
+      const ExcelJS = await import('exceljs')
+      const workbook = new ExcelJS.default.Workbook()
       await workbook.xlsx.load(data)
       const worksheet = workbook.getWorksheet(1)
       
@@ -377,10 +383,10 @@ export function EquipmentManagement() {
       const headerRow = worksheet?.getRow(1)
       const headers = headerRow?.values as string[]
       
-      worksheet?.eachRow((row, rowNumber) => {
+      worksheet?.eachRow((row: any, rowNumber: number) => {
         if (rowNumber > 1) { // 헤더 행 제외
           const rowData: Record<string, unknown> = {}
-          row.eachCell((cell, colNumber) => {
+          row.eachCell((cell: any, colNumber: number) => {
             if (headers && headers[colNumber]) {
               rowData[headers[colNumber]] = cell.value
             }
