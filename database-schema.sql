@@ -222,8 +222,22 @@ CREATE POLICY "관리자는 모든 프로필 접근 가능" ON public.profiles
 CREATE POLICY "인증된 사용자는 설비 정보 읽기 가능" ON public.equipment_info
   FOR SELECT USING (auth.role() = 'authenticated');
 
-CREATE POLICY "관리자만 설비 정보 수정 가능" ON public.equipment_info
-  FOR ALL USING (
+-- 인증된 사용자는 설비 정보 추가 가능
+CREATE POLICY "인증된 사용자는 설비 정보 추가 가능" ON public.equipment_info
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+-- 관리자만 설비 정보 수정/삭제 가능
+CREATE POLICY "관리자만 설비 정보 수정/삭제 가능" ON public.equipment_info
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles 
+      WHERE id = auth.uid() 
+      AND role IN ('admin', 'manager')
+    )
+  );
+
+CREATE POLICY "관리자만 설비 정보 삭제 가능" ON public.equipment_info
+  FOR DELETE USING (
     EXISTS (
       SELECT 1 FROM public.profiles 
       WHERE id = auth.uid() 

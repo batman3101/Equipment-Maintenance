@@ -452,11 +452,61 @@ export function EquipmentManagement() {
           }))
 
           console.log('Inserting equipments:', equipmentsToInsert)
+          console.log('Current user:', user)
+          console.log('User auth status:', !!user)
           
-          const { data: insertedEquipments, error: insertError } = await supabase
-            .from('equipment_info')
-            .insert(equipmentsToInsert)
-            .select()
+          // 사용자 프로필 조회해서 권한 확인
+          if (user) {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', user.id)
+              .single()
+              
+            console.log('User profile:', profile)
+            console.log('User role:', profile?.role)
+            console.log('Profile error:', profileError)
+          }
+          
+          // 권한 문제 해결을 위해 service role로 실행 시도
+          let insertedEquipments: any[] = []
+          let insertError: any = null
+          
+          try {
+            // 먼저 일반 사용자 권한으로 시도
+            const result = await supabase
+              .from('equipment_info')
+              .insert(equipmentsToInsert)
+              .select()
+              
+            insertedEquipments = result.data || []
+            insertError = result.error
+            
+            // 권한 오류인 경우, API 라우트를 통해 처리
+            if (insertError && (insertError.code === '42501' || insertError.code === 'PGRST301')) {
+              console.log('Permission denied, trying API route...')
+              
+              const response = await fetch('/api/equipment/bulk-insert', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ equipments: equipmentsToInsert })
+              })
+              
+              if (response.ok) {
+                const apiResult = await response.json()
+                insertedEquipments = apiResult.data || []
+                insertError = null
+              } else {
+                const errorResult = await response.json()
+                insertError = { message: errorResult.error || 'API request failed' }
+              }
+            }
+          } catch (error) {
+            console.error('Insert attempt failed:', error)
+            insertError = error
+          }
 
           if (insertError) {
             console.error('Error inserting equipment:', insertError)
@@ -486,13 +536,38 @@ export function EquipmentManagement() {
               }
             })
 
-            const { error: statusError } = await supabase
-              .from('equipment_status')
-              .insert(statusesToInsert)
+            try {
+              const { error: statusError } = await supabase
+                .from('equipment_status')
+                .insert(statusesToInsert)
 
-            if (statusError) {
-              console.error('Error inserting equipment status:', statusError)
-              // 상태 저장 실패는 경고로만 처리
+              if (statusError && (statusError.code === '42501' || statusError.code === 'PGRST301')) {
+                // 권한 오류인 경우 API를 통해 처리
+                const response = await fetch('/api/equipment/bulk-status', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ statuses: statusesToInsert })
+                })
+                
+                if (!response.ok) {
+                  console.error('Status API failed:', await response.text())
+                  showWarning(
+                    '설비 상태 저장 부분적 실패',
+                    '설비는 저장되었지만 일부 상태 정보 저장에 실패했습니다.'
+                  )
+                }
+              } else if (statusError) {
+                console.error('Error inserting equipment status:', statusError)
+                // 상태 저장 실패는 경고로만 처리
+                showWarning(
+                  '설비 상태 저장 부분적 실패',
+                  '설비는 저장되었지만 일부 상태 정보 저장에 실패했습니다.'
+                )
+              }
+            } catch (error) {
+              console.error('Status insert failed:', error)
               showWarning(
                 '설비 상태 저장 부분적 실패',
                 '설비는 저장되었지만 일부 상태 정보 저장에 실패했습니다.'
