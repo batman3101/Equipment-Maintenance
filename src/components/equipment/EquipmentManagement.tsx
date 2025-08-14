@@ -374,7 +374,29 @@ export function EquipmentManagement() {
             location: String(row[locationKey] || ''),
             manufacturer: row[manufacturerKey] ? String(row[manufacturerKey]) : null,
             model: row[modelKey] ? String(row[modelKey]) : null,
-            installationDate: String(row[installDateKey] || new Date().toISOString().split('T')[0]),
+            installationDate: (() => {
+              const dateValue = row[installDateKey];
+              if (!dateValue) return new Date().toISOString().split('T')[0];
+              
+              try {
+                // Excel에서 날짜는 다양한 형식으로 올 수 있음
+                if (dateValue instanceof Date) {
+                  return dateValue.toISOString().split('T')[0];
+                }
+                
+                // 문자열인 경우 Date로 변환
+                const date = new Date(String(dateValue));
+                if (isNaN(date.getTime())) {
+                  console.warn('Invalid date in Excel:', dateValue);
+                  return new Date().toISOString().split('T')[0];
+                }
+                
+                return date.toISOString().split('T')[0];
+              } catch (error) {
+                console.warn('Date conversion error:', dateValue, error);
+                return new Date().toISOString().split('T')[0];
+              }
+            })(),
             specifications: row[specificationsKey] ? String(row[specificationsKey]) : null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -413,7 +435,19 @@ export function EquipmentManagement() {
             location: eq.location || null,
             manufacturer: eq.manufacturer || null,
             model: eq.model || null,
-            installation_date: eq.installationDate && eq.installationDate !== '' ? eq.installationDate : null,
+            installation_date: (() => {
+              if (!eq.installationDate || eq.installationDate === '') return null;
+              
+              try {
+                // Excel 날짜 형식을 안전하게 처리
+                const date = new Date(eq.installationDate);
+                if (isNaN(date.getTime())) return null;
+                return date.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+              } catch (error) {
+                console.warn('Invalid date format:', eq.installationDate);
+                return null;
+              }
+            })(),
             specifications: eq.specifications || null
           }))
 

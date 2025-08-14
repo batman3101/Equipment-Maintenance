@@ -17,20 +17,28 @@ export async function createSimpleExcelTemplate(
     // 헤더 추가
     worksheet.addRow(headers)
     
-    // 상태 값 설명 추가 (두 번째 행)
-    if (headers.includes('상태') || headers.find(h => h.includes('status'))) {
-      const statusHelpRow = headers.map(header => {
+    // 필드 설명 추가 (두 번째 행)
+    const hasStatusOrDate = headers.includes('상태') || 
+                           headers.find(h => h.includes('status')) ||
+                           headers.includes('설치일자') ||
+                           headers.find(h => h.includes('date'))
+    
+    if (hasStatusOrDate) {
+      const helpRow = headers.map(header => {
         if (header === '상태' || header.includes('status')) {
           return 'running, breakdown, standby, maintenance, stopped 중 하나'
         }
+        if (header === '설치일자' || header.includes('date')) {
+          return 'YYYY-MM-DD 형식 (예: 2024-01-15)'
+        }
         return ''
       })
-      worksheet.addRow(statusHelpRow)
+      worksheet.addRow(helpRow)
       
       // 설명 행 스타일
-      const helpRow = worksheet.getRow(2)
-      helpRow.font = { italic: true, color: { argb: 'FF666666' } }
-      helpRow.fill = {
+      const helpRowStyle = worksheet.getRow(2)
+      helpRowStyle.font = { italic: true, color: { argb: 'FF666666' } }
+      helpRowStyle.fill = {
         type: 'pattern',
         pattern: 'solid',
         fgColor: { argb: 'FFFFEAA7' }
