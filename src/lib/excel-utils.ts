@@ -17,6 +17,26 @@ export async function createSimpleExcelTemplate(
     // 헤더 추가
     worksheet.addRow(headers)
     
+    // 상태 값 설명 추가 (두 번째 행)
+    if (headers.includes('상태') || headers.find(h => h.includes('status'))) {
+      const statusHelpRow = headers.map(header => {
+        if (header === '상태' || header.includes('status')) {
+          return 'running, breakdown, standby, maintenance, stopped 중 하나'
+        }
+        return ''
+      })
+      worksheet.addRow(statusHelpRow)
+      
+      // 설명 행 스타일
+      const helpRow = worksheet.getRow(2)
+      helpRow.font = { italic: true, color: { argb: 'FF666666' } }
+      helpRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFEAA7' }
+      }
+    }
+    
     // 샘플 데이터 추가
     if (sampleData.length > 0) {
       worksheet.addRow(sampleData)

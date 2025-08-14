@@ -241,6 +241,7 @@ export function EquipmentManagement() {
         t('equipment:excel.columns.category'),         // category  
         t('equipment:excel.columns.location'),         // location
         t('equipment:excel.columns.installDate'),      // installation_date
+        t('equipment:excel.columns.status'),           // status
         '제조사',                                      // manufacturer
         '모델명',                                      // model
         '사양'                                         // specifications
@@ -253,6 +254,7 @@ export function EquipmentManagement() {
         'CNC',                // category
         'BUILD_A',            // location
         '2024-01-15',         // installation_date
+        'running',            // status (running, breakdown, standby, maintenance, stopped)
         '한화정밀',           // manufacturer
         'HM-500',             // model
         '최대 가공: 500x400x300mm' // specifications
@@ -330,6 +332,7 @@ export function EquipmentManagement() {
           const categoryKey = t('equipment:excel.columns.category') || '카테고리'
           const locationKey = t('equipment:excel.columns.location') || '설비위치'
           const installDateKey = t('equipment:excel.columns.installDate') || '설치일자'
+          const statusKey = t('equipment:excel.columns.status') || '상태'
           const manufacturerKey = '제조사'
           const modelKey = '모델명'
           const specificationsKey = '사양'
@@ -352,7 +355,18 @@ export function EquipmentManagement() {
             return
           }
 
-          const equipment: Equipment = {
+          // 상태 값 검증
+          const validStatuses = ['running', 'breakdown', 'standby', 'maintenance', 'stopped']
+          const status = String(row[statusKey] || 'running')
+          if (!validStatuses.includes(status)) {
+            validationErrors.push(t('equipment:messages.validationError', {
+              row: index + 2,
+              message: `유효하지 않은 상태값입니다. 허용 값: ${validStatuses.join(', ')}`
+            }))
+            return
+          }
+
+          const equipment: Equipment & { statusFromExcel?: string } = {
             id: Date.now().toString() + index,
             equipmentNumber: String(row[equipmentNumberKey]),
             equipmentName: String(row[equipmentNameKey]),
@@ -363,7 +377,8 @@ export function EquipmentManagement() {
             installationDate: String(row[installDateKey] || new Date().toISOString().split('T')[0]),
             specifications: row[specificationsKey] ? String(row[specificationsKey]) : null,
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            statusFromExcel: status
           }
 
           newEquipments.push(equipment)
@@ -418,13 +433,19 @@ export function EquipmentManagement() {
 
           // 각 설비에 대한 상태 정보도 생성
           if (insertedEquipments && insertedEquipments.length > 0) {
-            const statusesToInsert = insertedEquipments.map(eq => ({
-              equipment_id: eq.id,
-              status: 'running', // 기본 상태
-              status_reason: '초기 설정',
-              updated_by: user?.id || null,
-              status_changed_at: new Date().toISOString()
-            }))
+            const statusesToInsert = insertedEquipments.map((eq, index) => {
+              // Excel에서 지정한 상태를 사용, 없으면 기본값 'running'
+              const equipmentWithStatus = newEquipments[index] as Equipment & { statusFromExcel?: string }
+              const status = equipmentWithStatus?.statusFromExcel || 'running'
+              
+              return {
+                equipment_id: eq.id,
+                status: status,
+                status_reason: status === 'running' ? '초기 설정' : `Excel 업로드 - ${status}`,
+                updated_by: user?.id || null,
+                status_changed_at: new Date().toISOString()
+              }
+            })
 
             const { error: statusError } = await supabase
               .from('equipment_status')
