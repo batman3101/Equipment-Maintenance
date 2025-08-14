@@ -82,13 +82,19 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
         }
 
         // 중복 제거 후 설비 정보만 추출
-        const uniqueEquipment = data?.reduce((acc, item) => {
+        const uniqueEquipment: Equipment[] = []
+        data?.forEach((item: any) => {
           const equipment = item.equipment_info
-          if (equipment && !acc.find(eq => eq.id === equipment.id)) {
-            acc.push(equipment)
+          if (equipment && !uniqueEquipment.find(eq => eq.id === equipment.id)) {
+            uniqueEquipment.push({
+              id: equipment.id,
+              equipment_number: equipment.equipment_number,
+              equipment_name: equipment.equipment_name,
+              category: equipment.category,
+              location: equipment.location
+            })
           }
-          return acc
-        }, [] as Equipment[]) || []
+        })
 
         setAvailableEquipment(uniqueEquipment)
       } catch (err) {
