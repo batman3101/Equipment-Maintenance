@@ -234,54 +234,28 @@ export function EquipmentManagement() {
     try {
       console.log('Starting template download...')
       
-      // 헤더 준비
+      // 헤더 준비 (실제 데이터베이스 스키마에 맞춰 수정)
       const headers = [
-        t('equipment:excel.columns.equipmentName'),
-        t('equipment:excel.columns.equipmentNumber'),
-        t('equipment:excel.columns.category'),
-        t('equipment:excel.columns.location'),
-        t('equipment:excel.columns.installDate'),
-        t('equipment:excel.columns.status'),
-        '제조사',
-        '모델명',
-        '사양',
-        '총 고장 횟수',
-        '총 수리 횟수',
-        '총 다운타임(시간)',
-        '총 수리비용',
-        '마지막 고장일',
-        '마지막 수리일',
-        '정비 점수',
-        '중요도 수준',
-        '보증 종료일',
-        '공급업체 연락처',
-        '구매 비용',
-        '연간 정비 비용'
+        t('equipment:excel.columns.equipmentName'),    // equipment_name
+        t('equipment:excel.columns.equipmentNumber'),  // equipment_number
+        t('equipment:excel.columns.category'),         // category  
+        t('equipment:excel.columns.location'),         // location
+        t('equipment:excel.columns.installDate'),      // installation_date
+        '제조사',                                      // manufacturer
+        '모델명',                                      // model
+        '사양'                                         // specifications
       ]
       
-      // 샘플 데이터
+      // 샘플 데이터 (실제 스키마에 맞춤)
       const sampleData = [
-        'CNC 밀링머신',
-        'CNC-002',
-        'CNC',
-        'BUILD_A',
-        '2024-01-15',
-        'running',
-        '한화정밀',
-        'HM-500',
-        '최대 가공: 500x400x300mm',
-        0,
-        0,
-        0,
-        0,
-        '',
-        '',
-        10.0,
-        'medium',
-        '2026-01-15',
-        '010-1234-5678',
-        50000000,
-        2000000
+        'CNC 밀링머신',        // equipment_name
+        'CNC-002',            // equipment_number
+        'CNC',                // category
+        'BUILD_A',            // location
+        '2024-01-15',         // installation_date
+        '한화정밀',           // manufacturer
+        'HM-500',             // model
+        '최대 가공: 500x400x300mm' // specifications
       ]
       
       // Excel 파일 생성
@@ -350,30 +324,15 @@ export function EquipmentManagement() {
 
       (jsonData as Record<string, unknown>[]).forEach((row: Record<string, unknown>, index: number) => {
         try {
-          // 필수 필드 검증 - 업데이트된 컬럼명 지원
+          // 필수 필드 키 (실제 스키마에 맞춰 간소화)
           const equipmentNameKey = t('equipment:excel.columns.equipmentName') || '설비명'
           const equipmentNumberKey = t('equipment:excel.columns.equipmentNumber') || '설비번호'
           const categoryKey = t('equipment:excel.columns.category') || '카테고리'
           const locationKey = t('equipment:excel.columns.location') || '설비위치'
           const installDateKey = t('equipment:excel.columns.installDate') || '설치일자'
-          const statusKey = t('equipment:excel.columns.status') || '상태'
-          
-          // 추가 필드 키들
           const manufacturerKey = '제조사'
           const modelKey = '모델명'
           const specificationsKey = '사양'
-          const totalBreakdownCountKey = '총 고장 횟수'
-          const totalRepairCountKey = '총 수리 횟수'
-          const totalDowntimeHoursKey = '총 다운타임(시간)'
-          const totalRepairCostKey = '총 수리비용'
-          const lastBreakdownDateKey = '마지막 고장일'
-          const lastRepairDateKey = '마지막 수리일'
-          const maintenanceScoreKey = '정비 점수'
-          const criticalityLevelKey = '중요도 수준'
-          const warrantyEndDateKey = '보증 종료일'
-          const supplierContactKey = '공급업체 연락처'
-          const purchaseCostKey = '구매 비용'
-          const annualMaintenanceCostKey = '연간 정비 비용'
           
           if (!row[equipmentNameKey] || !row[equipmentNumberKey] || !row[categoryKey]) {
             validationErrors.push(t('equipment:messages.validationError', { 
@@ -393,38 +352,6 @@ export function EquipmentManagement() {
             return
           }
 
-          // 상태 값 검증
-          const validStatuses = ['running', 'breakdown', 'standby', 'maintenance', 'stopped']
-          const status = String(row[statusKey] || 'running')
-          if (!validStatuses.includes(status)) {
-            validationErrors.push(t('equipment:messages.validationError', {
-              row: index + 2,
-              message: `유효하지 않은 상태값입니다. 허용 값: ${validStatuses.join(', ')}`
-            }))
-            return
-          }
-
-          // 숫자 값 안전하게 처리하는 함수
-          const safeNumber = (value: any, defaultValue: number = 0) => {
-            if (value === null || value === undefined || value === '') return defaultValue
-            const num = Number(value)
-            return isNaN(num) ? defaultValue : num
-          }
-
-          // 날짜 값 안전하게 처리하는 함수  
-          const safeDate = (value: any) => {
-            if (!value || value === '') return null
-            const date = new Date(value)
-            return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
-          }
-
-          // 중요도 수준 검증 함수
-          const safeCriticalityLevel = (value: any): 'low' | 'medium' | 'high' | 'critical' => {
-            const validLevels = ['low', 'medium', 'high', 'critical']
-            const level = String(value || 'medium').toLowerCase()
-            return validLevels.includes(level) ? level as 'low' | 'medium' | 'high' | 'critical' : 'medium'
-          }
-
           const equipment: Equipment = {
             id: Date.now().toString() + index,
             equipmentNumber: String(row[equipmentNumberKey]),
@@ -436,21 +363,7 @@ export function EquipmentManagement() {
             installationDate: String(row[installDateKey] || new Date().toISOString().split('T')[0]),
             specifications: row[specificationsKey] ? String(row[specificationsKey]) : null,
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            
-            // 추가된 필드들
-            totalBreakdownCount: safeNumber(row[totalBreakdownCountKey]),
-            totalRepairCount: safeNumber(row[totalRepairCountKey]),
-            totalDowntimeHours: safeNumber(row[totalDowntimeHoursKey]),
-            totalRepairCost: safeNumber(row[totalRepairCostKey]),
-            lastBreakdownDate: safeDate(row[lastBreakdownDateKey]),
-            lastRepairDate: safeDate(row[lastRepairDateKey]),
-            maintenanceScore: safeNumber(row[maintenanceScoreKey], 10.0),
-            criticalityLevel: safeCriticalityLevel(row[criticalityLevelKey]),
-            warrantyEndDate: safeDate(row[warrantyEndDateKey]),
-            supplierContact: row[supplierContactKey] ? String(row[supplierContactKey]) : null,
-            purchaseCost: safeNumber(row[purchaseCostKey]),
-            annualMaintenanceCost: safeNumber(row[annualMaintenanceCostKey])
+            updatedAt: new Date().toISOString()
           }
 
           newEquipments.push(equipment)
@@ -476,7 +389,7 @@ export function EquipmentManagement() {
           t('equipment:messages.uploadWarningDetail')
         )
       } else {
-        // Supabase에 설비 데이터 저장
+        // Supabase에 설비 데이터 저장 (실제 스키마에 맞춰 수정)
         try {
           const equipmentsToInsert = newEquipments.map(eq => ({
             equipment_number: eq.equipmentNumber,
@@ -486,19 +399,7 @@ export function EquipmentManagement() {
             manufacturer: eq.manufacturer,
             model: eq.model,
             installation_date: eq.installationDate,
-            specifications: eq.specifications,
-            total_breakdown_count: eq.totalBreakdownCount || 0,
-            total_repair_count: eq.totalRepairCount || 0,
-            total_downtime_hours: eq.totalDowntimeHours || 0,
-            total_repair_cost: eq.totalRepairCost || 0,
-            last_breakdown_date: eq.lastBreakdownDate,
-            last_repair_date: eq.lastRepairDate,
-            maintenance_score: eq.maintenanceScore || 10.0,
-            criticality_level: eq.criticalityLevel || 'medium',
-            warranty_end_date: eq.warrantyEndDate,
-            supplier_contact: eq.supplierContact,
-            purchase_cost: eq.purchaseCost || 0,
-            annual_maintenance_cost: eq.annualMaintenanceCost || 0
+            specifications: eq.specifications
           }))
 
           const { data: insertedEquipments, error: insertError } = await supabase
@@ -521,7 +422,8 @@ export function EquipmentManagement() {
               equipment_id: eq.id,
               status: 'running', // 기본 상태
               status_reason: '초기 설정',
-              updated_by: user?.id || null
+              updated_by: user?.id || null,
+              status_changed_at: new Date().toISOString()
             }))
 
             const { error: statusError } = await supabase
