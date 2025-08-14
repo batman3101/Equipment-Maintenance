@@ -234,122 +234,73 @@ export function EquipmentManagement() {
     try {
       console.log('Starting template download...')
       
-      // Excel workbook 생성 (헬퍼 함수 사용)
-      const workbook = await createWorkbook()
-      const worksheet = workbook.addWorksheet(t('equipment:excel.sheetName'))
-
-    // 확장된 헤더 추가 - 현재 데이터베이스 구조에 맞게 업데이트
-    const headers = [
-      // 필수 필드
-      t('equipment:excel.columns.equipmentName'),       // equipment_name
-      t('equipment:excel.columns.equipmentNumber'),     // equipment_number  
-      t('equipment:excel.columns.category'),            // category
-      t('equipment:excel.columns.location'),            // location
-      t('equipment:excel.columns.installDate'),         // installation_date
-      t('equipment:excel.columns.status'),              // status (equipment_status 테이블)
+      // 헤더 준비
+      const headers = [
+        t('equipment:excel.columns.equipmentName'),
+        t('equipment:excel.columns.equipmentNumber'),
+        t('equipment:excel.columns.category'),
+        t('equipment:excel.columns.location'),
+        t('equipment:excel.columns.installDate'),
+        t('equipment:excel.columns.status'),
+        '제조사',
+        '모델명',
+        '사양',
+        '총 고장 횟수',
+        '총 수리 횟수',
+        '총 다운타임(시간)',
+        '총 수리비용',
+        '마지막 고장일',
+        '마지막 수리일',
+        '정비 점수',
+        '중요도 수준',
+        '보증 종료일',
+        '공급업체 연락처',
+        '구매 비용',
+        '연간 정비 비용'
+      ]
       
-      // 선택 필드
-      '제조사',           // manufacturer
-      '모델명',           // model
-      '사양',             // specifications
+      // 샘플 데이터
+      const sampleData = [
+        'CNC 밀링머신',
+        'CNC-002',
+        'CNC',
+        'BUILD_A',
+        '2024-01-15',
+        'running',
+        '한화정밀',
+        'HM-500',
+        '최대 가공: 500x400x300mm',
+        0,
+        0,
+        0,
+        0,
+        '',
+        '',
+        10.0,
+        'medium',
+        '2026-01-15',
+        '010-1234-5678',
+        50000000,
+        2000000
+      ]
       
-      // 추가된 필드들
-      '총 고장 횟수',      // total_breakdown_count
-      '총 수리 횟수',      // total_repair_count
-      '총 다운타임(시간)', // total_downtime_hours
-      '총 수리비용',      // total_repair_cost
-      '마지막 고장일',    // last_breakdown_date
-      '마지막 수리일',    // last_repair_date
-      '정비 점수',        // maintenance_score (0-10)
-      '중요도 수준',      // criticality_level (low/medium/high/critical)
-      '보증 종료일',      // warranty_end_date
-      '공급업체 연락처',  // supplier_contact
-      '구매 비용',        // purchase_cost
-      '연간 정비 비용'    // annual_maintenance_cost
-    ]
-    worksheet.addRow(headers)
-
-    // 샘플 데이터 추가 (업데이트된 구조에 맞게)
-    worksheet.addRow([
-      'CNC 밀링머신',        // equipment_name
-      'CNC-002',            // equipment_number
-      'CNC',                // category
-      'BUILD_A',            // location
-      '2024-01-15',         // installation_date
-      'running',            // status
-      '한화정밀',           // manufacturer
-      'HM-500',             // model
-      '최대 가공: 500x400x300mm', // specifications
-      0,                    // total_breakdown_count
-      0,                    // total_repair_count
-      0,                    // total_downtime_hours
-      0,                    // total_repair_cost
-      '',                   // last_breakdown_date (빈 값)
-      '',                   // last_repair_date (빈 값)
-      10.0,                 // maintenance_score
-      'medium',             // criticality_level
-      '2026-01-15',         // warranty_end_date
-      '010-1234-5678',      // supplier_contact
-      50000000,             // purchase_cost
-      2000000               // annual_maintenance_cost
-    ])
-
-    // 컬럼 너비 조정 (확장된 필드에 맞게)
-    worksheet.columns = [
-      { width: 20 }, // 설비명
-      { width: 15 }, // 설비번호
-      { width: 12 }, // 카테고리
-      { width: 12 }, // 설비위치
-      { width: 12 }, // 설치일자
-      { width: 10 }, // 상태
-      { width: 15 }, // 제조사
-      { width: 15 }, // 모델명
-      { width: 25 }, // 사양
-      { width: 12 }, // 총 고장 횟수
-      { width: 12 }, // 총 수리 횟수
-      { width: 15 }, // 총 다운타임
-      { width: 15 }, // 총 수리비용
-      { width: 12 }, // 마지막 고장일
-      { width: 12 }, // 마지막 수리일
-      { width: 12 }, // 정비 점수
-      { width: 12 }, // 중요도 수준
-      { width: 12 }, // 보증 종료일
-      { width: 18 }, // 공급업체 연락처
-      { width: 15 }, // 구매 비용
-      { width: 15 }  // 연간 정비 비용
-    ]
-
-    // 헤더 스타일 적용
-    const headerRow = worksheet.getRow(1)
-    headerRow.font = { bold: true }
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE6F3FF' }
-    }
-    headerRow.alignment = { horizontal: 'center' }
-
-    // 테두리 추가
-    headerRow.eachCell((cell) => {
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      }
-    })
-
-    const buffer = await workbook.xlsx.writeBuffer()
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    const fileName = `설비관리_템플릿_${new Date().toISOString().split('T')[0]}.xlsx`
-    console.log('Downloading template file:', fileName)
-    saveAs(blob, fileName)
-    
-    showSuccess(
-      '템플릿 다운로드 완료',
-      '설비 관리 템플릿이 성공적으로 다운로드되었습니다.'
-    )
-    console.log('Template download completed successfully')
+      // Excel 파일 생성
+      const blob = await createSimpleExcelTemplate(
+        t('equipment:excel.sheetName'),
+        headers,
+        sampleData
+      )
+      
+      // 파일 다운로드
+      const fileName = `설비관리_템플릿_${new Date().toISOString().split('T')[0]}.xlsx`
+      console.log('Downloading template file:', fileName)
+      downloadBlob(blob, fileName)
+      
+      showSuccess(
+        '템플릿 다운로드 완료',
+        '설비 관리 템플릿이 성공적으로 다운로드되었습니다.'
+      )
+      console.log('Template download completed successfully')
     } catch (error) {
       console.error('Template download failed:', error)
       showError(
@@ -371,8 +322,9 @@ export function EquipmentManagement() {
     try {
       const data = await file.arrayBuffer()
       
-      // Excel workbook 생성 (헬퍼 함수 사용)
-      const workbook = await createWorkbook()
+      // ExcelJS를 동적으로 로드
+      const ExcelJS = require('exceljs')
+      const workbook = new ExcelJS.Workbook()
       await workbook.xlsx.load(data)
       const worksheet = workbook.getWorksheet(1)
       
