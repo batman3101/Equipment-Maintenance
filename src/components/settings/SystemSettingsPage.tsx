@@ -27,7 +27,7 @@ export function SystemSettingsPage() {
 
   const tabs = [
     { id: 'general', label: t('sections.general.title'), icon: '⚙️' },
-    { id: 'branding', label: t('sections.branding.title', '브랜딩'), icon: '🎨' },
+    { id: 'branding', label: t('sections.branding.title'), icon: '🎨' },
     { id: 'equipment', label: t('common:equipment.title', '설비 설정'), icon: '🏭' },
     { id: 'breakdown', label: t('common:breakdown.title', '고장 신고'), icon: '🚨' },
     { id: 'repair', label: t('common:repair.title', '수리 관리'), icon: '🔧' },
@@ -424,20 +424,20 @@ function EquipmentSettings({ settings, updateSettings }: SettingsSectionProps) {
 }
 
 function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
-  const { t } = useTranslation(['settings', 'common'])
+  const { t } = useTranslation(['settings', 'common', 'breakdown'])
 
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:breakdown.settings', '고장 신고 설정')}</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('common:breakdown.settings')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          {t('common:breakdown.settingsDesc', '고장 신고 폼과 관련된 설정을 관리합니다')}
+          {t('common:breakdown.settingsDesc')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('common:breakdown.defaultUrgency', '기본 긴급도')}
+            {t('common:breakdown.defaultUrgency')}
           </label>
           <select
             value={settings.breakdown.defaultUrgency}
@@ -446,11 +446,10 @@ function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
             })}
             className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            {settings.breakdown.urgencyLevels.map((level) => (
-              <option key={level.value} value={level.value}>
-                {level.label}
-              </option>
-            ))}
+            <option value="low">{t('breakdown:urgency.low')}</option>
+            <option value="medium">{t('breakdown:urgency.medium')}</option>
+            <option value="high">{t('breakdown:urgency.high')}</option>
+            <option value="critical">{t('breakdown:urgency.critical')}</option>
           </select>
         </div>
 
@@ -466,7 +465,7 @@ function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="autoAssignment" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              {t('common:breakdown.autoAssignment', '자동 담당자 배정')}
+              {t('common:breakdown.autoAssignment')}
             </label>
           </div>
 
@@ -481,7 +480,7 @@ function BreakdownSettings({ settings, updateSettings }: SettingsSectionProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="requirePhotos" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              {t('common:breakdown.requirePhotos', '사진 첨부 필수')}
+              {t('common:breakdown.requirePhotos')}
             </label>
           </div>
         </div>
@@ -916,6 +915,7 @@ function SecuritySettings({ settings, updateSettings }: SettingsSectionProps) {
 
 // 브랜딩 설정 컴포넌트
 function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const [uploading, setUploading] = useState({ symbol: false, logo: false })
   const [uploadError, setUploadError] = useState('')
   const [uploadSuccess, setUploadSuccess] = useState('')
@@ -929,12 +929,12 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
       // 파일 유효성 검사
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
-        throw new Error('지원되지 않는 파일 형식입니다. JPG, PNG, WebP 파일만 업로드 가능합니다.')
+        throw new Error(t('settings.branding.messages.unsupportedFormat'))
       }
 
       // 파일 크기 제한 (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        throw new Error('파일 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.')
+        throw new Error(t('settings.branding.messages.fileTooLarge'))
       }
 
       // 파일명 생성 (고유한 이름)
@@ -964,14 +964,16 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
         }
       })
 
-      setUploadSuccess(`${type === 'symbol' ? '심볼' : '로고'} 이미지가 성공적으로 업로드되었습니다.`)
+      setUploadSuccess(t('settings.branding.messages.uploadSuccess', { 
+        type: type === 'symbol' ? t('settings.branding.placeholders.symbol') : t('settings.branding.placeholders.logo')
+      }))
       
       // 로그인 페이지 이미지 업데이트
       updateLoginImage(type, publicUrlData.publicUrl)
 
     } catch (error) {
       console.error('Image upload error:', error)
-      setUploadError(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.')
+      setUploadError(error instanceof Error ? error.message : t('settings.branding.messages.uploadError'))
     } finally {
       setUploading({ ...uploading, [type]: false })
     }
@@ -1024,20 +1026,22 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
         placeholder.classList.remove('hidden')
       }
 
-      setUploadSuccess(`${type === 'symbol' ? '심볼' : '로고'} 이미지가 제거되었습니다.`)
+      setUploadSuccess(t('settings.branding.messages.removeSuccess', { 
+        type: type === 'symbol' ? t('settings.branding.placeholders.symbol') : t('settings.branding.placeholders.logo')
+      }))
 
     } catch (error) {
       console.error('Remove image error:', error)
-      setUploadError('이미지 제거에 실패했습니다.')
+      setUploadError(t('settings.branding.messages.removeError'))
     }
   }
 
   return (
     <Card>
       <Card.Header>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">브랜딩 설정</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t('settings.branding.title')}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          회사 심볼과 로고를 설정하여 로그인 페이지와 시스템 전반에 표시됩니다
+          {t('settings.branding.description')}
         </p>
       </Card.Header>
       <Card.Content className="space-y-6">
@@ -1055,7 +1059,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
 
         {/* 심볼 업로드 */}
         <div>
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">회사 심볼</h4>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('settings.branding.companySymbol')}</h4>
           <div className="flex items-start space-x-4">
             <div className="flex-shrink-0">
               <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center overflow-hidden">
@@ -1067,7 +1071,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
                     className="max-w-full max-h-full object-contain"
                   />
                 ) : (
-                  <span className="text-gray-400 text-xs text-center px-2">심볼</span>
+                  <span className="text-gray-400 text-xs text-center px-2">{t('settings.branding.placeholders.symbol')}</span>
                 )}
               </div>
             </div>
@@ -1087,7 +1091,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
                   disabled={uploading.symbol}
                   onClick={() => triggerFileInput('symbol')}
                 >
-                  {uploading.symbol ? '업로드 중...' : '📁 파일 선택'}
+                  {uploading.symbol ? t('settings.branding.uploading') : `📁 ${t('settings.branding.fileSelect')}`}
                 </Button>
                 {settings.branding?.symbolUrl && (
                   <Button
@@ -1097,12 +1101,12 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
                     onClick={() => removeImage('symbol')}
                     className="text-red-600 hover:text-red-700"
                   >
-                    🗑️ 제거
+                    🗑️ {t('settings.branding.remove')}
                   </Button>
                 )}
               </div>
               <p className="text-xs text-gray-500">
-                권장: 정사각형, 최대 5MB, JPG/PNG/WebP
+                {t('settings.branding.recommendations.symbol')}
               </p>
             </div>
           </div>
@@ -1110,7 +1114,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
 
         {/* 로고 업로드 */}
         <div>
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">회사 로고</h4>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('settings.branding.companyLogo')}</h4>
           <div className="flex items-start space-x-4">
             <div className="flex-shrink-0">
               <div className="w-48 h-16 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center overflow-hidden px-4">
@@ -1122,7 +1126,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
                     className="max-w-full max-h-full object-contain"
                   />
                 ) : (
-                  <span className="text-gray-400 text-xs text-center">회사 로고</span>
+                  <span className="text-gray-400 text-xs text-center">{t('settings.branding.placeholders.logo')}</span>
                 )}
               </div>
             </div>
@@ -1142,7 +1146,7 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
                   disabled={uploading.logo}
                   onClick={() => triggerFileInput('logo')}
                 >
-                  {uploading.logo ? '업로드 중...' : '📁 파일 선택'}
+                  {uploading.logo ? t('settings.branding.uploading') : `📁 ${t('settings.branding.fileSelect')}`}
                 </Button>
                 {settings.branding?.logoUrl && (
                   <Button
@@ -1152,12 +1156,12 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
                     onClick={() => removeImage('logo')}
                     className="text-red-600 hover:text-red-700"
                   >
-                    🗑️ 제거
+                    🗑️ {t('settings.branding.remove')}
                   </Button>
                 )}
               </div>
               <p className="text-xs text-gray-500">
-                권장: 가로형, 최대 5MB, JPG/PNG/WebP
+                {t('settings.branding.recommendations.logo')}
               </p>
             </div>
           </div>
@@ -1167,12 +1171,12 @@ function BrandingSettings({ settings, updateSettings }: SettingsSectionProps) {
           <div className="flex items-start">
             <span className="text-blue-400 text-lg mr-2">💡</span>
             <div className="text-sm text-blue-800 dark:text-blue-300">
-              <p className="font-medium mb-1">이미지 업로드 안내:</p>
+              <p className="font-medium mb-1">{t('settings.branding.uploadGuidelines')}</p>
               <ul className="text-xs space-y-1 text-blue-700 dark:text-blue-400">
-                <li>• 업로드한 이미지는 로그인 페이지에 즉시 반영됩니다</li>
-                <li>• 심볼: 정사각형 비율 권장 (예: 200x200px)</li>
-                <li>• 로고: 가로형 비율 권장 (예: 300x100px)</li>
-                <li>• 투명 배경 PNG 파일 사용 시 더 자연스러운 표현이 가능합니다</li>
+                <li>• {t('settings.branding.guidelines.immediate')}</li>
+                <li>• {t('settings.branding.guidelines.symbolRatio')}</li>
+                <li>• {t('settings.branding.guidelines.logoRatio')}</li>
+                <li>• {t('settings.branding.guidelines.transparent')}</li>
               </ul>
             </div>
           </div>

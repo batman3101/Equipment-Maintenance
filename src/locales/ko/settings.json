@@ -32,6 +32,10 @@
     "backup": {
       "title": "백업 설정",
       "description": "데이터 백업 및 복구 설정"
+    },
+    "branding": {
+      "title": "브랜딩",
+      "description": "회사 심볼과 로고를 설정하여 로그인 페이지와 시스템 전반에 표시됩니다"
     }
   },
   "settings": {
@@ -103,6 +107,38 @@
       "retentionPeriodDesc": "백업 파일을 보존할 기간을 일 단위로 설정합니다",
       "cloudBackup": "클라우드 백업",
       "cloudBackupDesc": "클라우드 스토리지에 백업을 저장합니다"
+    },
+    "branding": {
+      "title": "브랜딩 설정",
+      "description": "회사 심볼과 로고를 설정하여 로그인 페이지와 시스템 전반에 표시됩니다",
+      "companySymbol": "회사 심볼",
+      "companyLogo": "회사 로고",
+      "fileSelect": "파일 선택",
+      "remove": "제거",
+      "uploading": "업로드 중...",
+      "uploadGuidelines": "이미지 업로드 안내:",
+      "guidelines": {
+        "immediate": "업로드한 이미지는 로그인 페이지에 즉시 반영됩니다",
+        "symbolRatio": "심볼: 정사각형 비율 권장 (예: 200x200px)",
+        "logoRatio": "로고: 가로형 비율 권장 (예: 300x100px)",
+        "transparent": "투명 배경 PNG 파일 사용 시 더 자연스러운 표현이 가능합니다"
+      },
+      "recommendations": {
+        "symbol": "권장: 정사각형, 최대 5MB, JPG/PNG/WebP",
+        "logo": "권장: 가로형, 최대 5MB, JPG/PNG/WebP"
+      },
+      "messages": {
+        "uploadSuccess": "{{type}} 이미지가 성공적으로 업로드되었습니다.",
+        "removeSuccess": "{{type}} 이미지가 제거되었습니다.",
+        "uploadError": "이미지 업로드에 실패했습니다.",
+        "removeError": "이미지 제거에 실패했습니다.",
+        "unsupportedFormat": "지원되지 않는 파일 형식입니다. JPG, PNG, WebP 파일만 업로드 가능합니다.",
+        "fileTooLarge": "파일 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다."
+      },
+      "placeholders": {
+        "symbol": "심볼",
+        "logo": "회사 로고"
+      }
     }
   },
   "system": {

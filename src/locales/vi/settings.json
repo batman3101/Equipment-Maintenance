@@ -32,6 +32,10 @@
     "backup": {
       "title": "Cài đặt sao lưu",
       "description": "Cài đặt sao lưu và khôi phục dữ liệu"
+    },
+    "branding": {
+      "title": "Thương hiệu",
+      "description": "Thiết lập biểu tượng và logo công ty sẽ hiển thị trên trang đăng nhập và toàn bộ hệ thống"
     }
   },
   "settings": {
@@ -103,6 +107,38 @@
       "retentionPeriodDesc": "Thiết lập thời gian lưu trữ tập tin sao lưu tính bằng ngày",
       "cloudBackup": "Sao lưu đám mây",
       "cloudBackupDesc": "Lưu trữ bản sao lưu trên đám mây"
+    },
+    "branding": {
+      "title": "Cài đặt Thương hiệu",
+      "description": "Thiết lập biểu tượng và logo công ty sẽ hiển thị trên trang đăng nhập và toàn bộ hệ thống",
+      "companySymbol": "Biểu tượng Công ty",
+      "companyLogo": "Logo Công ty",
+      "fileSelect": "Chọn tập tin",
+      "remove": "Xóa",
+      "uploading": "Đang tải lên...",
+      "uploadGuidelines": "Hướng dẫn tải lên hình ảnh:",
+      "guidelines": {
+        "immediate": "Hình ảnh đã tải lên sẽ được phản ánh ngay lập tức trên trang đăng nhập",
+        "symbolRatio": "Biểu tượng: Khuyến nghị tỷ lệ vuông (ví dụ: 200x200px)",
+        "logoRatio": "Logo: Khuyến nghị tỷ lệ ngang (ví dụ: 300x100px)",
+        "transparent": "Sử dụng tập tin PNG có nền trong suốt để hiển thị tự nhiên hơn"
+      },
+      "recommendations": {
+        "symbol": "Khuyến nghị: Hình vuông, tối đa 5MB, JPG/PNG/WebP",
+        "logo": "Khuyến nghị: Hình ngang, tối đa 5MB, JPG/PNG/WebP"
+      },
+      "messages": {
+        "uploadSuccess": "Hình ảnh {{type}} đã được tải lên thành công.",
+        "removeSuccess": "Hình ảnh {{type}} đã được xóa.",
+        "uploadError": "Tải lên hình ảnh thất bại.",
+        "removeError": "Xóa hình ảnh thất bại.",
+        "unsupportedFormat": "Định dạng tập tin không được hỗ trợ. Chỉ có thể tải lên tập tin JPG, PNG, WebP.",
+        "fileTooLarge": "Kích thước tập tin quá lớn. Chỉ có thể tải lên tập tin dưới 5MB."
+      },
+      "placeholders": {
+        "symbol": "Biểu tượng",
+        "logo": "Logo Công ty"
+      }
     }
   },
   "system": {
