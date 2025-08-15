@@ -276,7 +276,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
                       <StatusBadge variant={getStatusColor(eq.status)}>
                         {getStatusText(eq.status, t)}
                       </StatusBadge>
-                      <StatusBadge variant={getUrgencyColor(eq.urgency)} size="sm">
+                      <StatusBadge variant={getUrgencyColor(eq.urgency)}>
                         {t(`breakdown:urgency.${eq.urgency}`, eq.urgency)}
                       </StatusBadge>
                     </div>
