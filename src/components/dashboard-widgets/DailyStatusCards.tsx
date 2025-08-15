@@ -45,14 +45,34 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
           .from('breakdown_reports')
           .select('status, priority')
 
-        if (breakdownError) throw breakdownError
+        if (breakdownError) {
+          console.error('Breakdown query error:', breakdownError)
+          throw breakdownError
+        }
 
-        // 2. 수리 완료 통계
-        const { data: repairData, error: repairError } = await supabase
-          .from('repair_reports')
-          .select('completion_status, created_at')
+        // 2. 수리 완료 통계 - 먼저 테이블이 존재하는지 확인
+        let repairData: any[] = []
+        try {
+          const { data, error: repairError } = await supabase
+            .from('repair_reports')
+            .select('completion_status, created_at')
 
-        if (repairError) throw repairError
+          if (repairError) {
+            console.error('Repair reports query error:', repairError)
+            // repair_reports 테이블이 없으면 빈 배열로 처리
+            if (repairError.message.includes('relation "public.repair_reports" does not exist')) {
+              console.warn('repair_reports 테이블이 존재하지 않습니다. 빈 데이터로 처리합니다.')
+              repairData = []
+            } else {
+              throw repairError
+            }
+          } else {
+            repairData = data || []
+          }
+        } catch (tableError) {
+          console.warn('repair_reports 테이블 접근 실패, 빈 데이터로 처리:', tableError)
+          repairData = []
+        }
 
         // 통계 계산
         const breakdownStats = {
@@ -82,6 +102,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
         setError(null)
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
+        console.error('Error details:', err)
         setError(err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.')
         // 에러 시 기본값 설정
         setDashboardStats({
