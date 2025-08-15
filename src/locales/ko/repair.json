@@ -58,6 +58,7 @@
     "equipmentId": "고장설비 선택",
     "equipmentIdPlaceholder": "예: CNC-ML-001",
     "selectEquipment": "고장설비를 선택하세요",
+    "noAvailableEquipment": "수리할 고장 설비가 없습니다",
     "technicianName": "담당자",
     "technicianNamePlaceholder": "담당자를 선택하세요",
     "selectTechnician": "담당자를 선택하세요",
@@ -155,6 +156,7 @@
     "repairSuccessWithEquipment": "{{equipmentId}} 설비의 수리가 성공적으로 등록되었습니다.",
     "repairError": "등록 실패",
     "repairErrorDetail": "수리 완료 보고 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
+    "noBreakdownEquipment": "현재 수리가 필요한 고장 신고된 설비가 없습니다.",
     "deleteConfirm": "이 수리 내역을 삭제하시겠습니까?",
     "deleteSuccess": "수리 내역이 삭제되었습니다.",
     "updateSuccess": "수리 내역이 업데이트되었습니다."

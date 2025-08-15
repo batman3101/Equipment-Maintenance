@@ -71,7 +71,8 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
               equipment_name,
               category,
               location
-            )
+            ),
+            status
           `)
           .neq('status', 'completed') // 수리 완료 상태가 아닌 것들만
           .order('equipment_info.equipment_number')
@@ -191,12 +192,52 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     
     try {
       const reportData: RepairReport = formData as RepairReport
+      const selectedUser = availableUsers.find(u => u.id === selectedTechnicianId)
 
-      // 여기서 실제 API 호출이나 상태 업데이트
-      console.log('수리 완료 보고 데이터:', reportData)
-      
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // 1. 수리 완료 정보를 repair_reports 테이블에 저장
+      const { data: repairData, error: repairError } = await supabase
+        .from('repair_reports')
+        .insert({
+          equipment_id: formData.equipmentId,
+          technician_id: selectedTechnicianId,
+          technician_name: selectedUser?.full_name || '',
+          repair_type: formData.repairType,
+          completion_status: formData.completionStatus,
+          work_description: formData.workDescription,
+          time_spent: formData.timeSpent,
+          test_results: formData.testResults,
+          notes: formData.notes || '',
+          completed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (repairError) {
+        console.error('Error saving repair report:', repairError)
+        throw repairError
+      }
+
+      // 2. 완료 상태가 'completed'인 경우에만 고장 신고 상태를 업데이트
+      if (formData.completionStatus === 'completed') {
+        const { error: updateError } = await supabase
+          .from('breakdown_reports')
+          .update({ 
+            status: 'completed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('equipment_id', formData.equipmentId)
+          .neq('status', 'completed') // 이미 완료된 것은 제외
+
+        if (updateError) {
+          console.error('Error updating breakdown status:', updateError)
+          // 수리 보고서는 저장되었지만 상태 업데이트에 실패한 경우
+          console.warn('Repair report saved but breakdown status update failed')
+        }
+      }
+
+      console.log('수리 완료 보고 저장 성공:', repairData)
       
       onSubmit?.(reportData)
       
@@ -247,13 +288,22 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
                 } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
               >
                 <option value="">{t('repair:form.selectEquipment')}</option>
-                {availableEquipment.map(equipment => (
-                  <option key={equipment.id} value={equipment.id}>
-                    {equipment.equipment_number} - {equipment.equipment_name}
-                  </option>
-                ))}
+                {availableEquipment.length > 0 ? (
+                  availableEquipment.map(equipment => (
+                    <option key={equipment.id} value={equipment.id}>
+                      {equipment.equipment_number} - {equipment.equipment_name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>{t('repair:form.noAvailableEquipment', '수리할 고장 설비가 없습니다')}</option>
+                )}
               </select>
               {errors.equipmentId && <p className="mt-1 text-sm text-red-600">{errors.equipmentId}</p>}
+              {availableEquipment.length === 0 && (
+                <p className="mt-1 text-sm text-amber-600">
+                  {t('repair:messages.noBreakdownEquipment', '현재 수리가 필요한 고장 신고된 설비가 없습니다.')}
+                </p>
+              )}
             </div>
 
             {/* 2. 담당자 */}

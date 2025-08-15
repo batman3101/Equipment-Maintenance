@@ -58,6 +58,7 @@
     "equipmentId": "Chọn Thiết bị Bị hỏng",
     "equipmentIdPlaceholder": "Ví dụ: CNC-ML-001",
     "selectEquipment": "Vui lòng chọn thiết bị bị hỏng",
+    "noAvailableEquipment": "Không có thiết bị hỏng nào cần sửa chữa",
     "technicianName": "Phụ trách",
     "technicianNamePlaceholder": "Chọn người phụ trách",
     "selectTechnician": "Vui lòng chọn người phụ trách",
@@ -155,6 +156,7 @@
     "repairSuccessWithEquipment": "Sửa chữa thiết bị {{equipmentId}} đã được đăng ký thành công.",
     "repairError": "Đăng ký Thất bại",
     "repairErrorDetail": "Đã xảy ra lỗi khi xử lý báo cáo hoàn thành sửa chữa. Vui lòng thử lại.",
+    "noBreakdownEquipment": "Hiện tại không có thiết bị báo cáo sự cố nào cần sửa chữa.",
     "deleteConfirm": "Bạn có muốn xóa lịch sử sửa chữa này không?",
     "deleteSuccess": "Lịch sử sửa chữa đã được xóa.",
     "updateSuccess": "Lịch sử sửa chữa đã được cập nhật."

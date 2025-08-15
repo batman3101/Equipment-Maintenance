@@ -4,7 +4,26 @@ import React from 'react'
 import { Card } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
-import { DashboardData } from '@/types/dashboard'
+import { supabase } from '@/lib/supabase'
+
+interface DashboardStats {
+  breakdowns: {
+    total: number
+    urgent: number
+    pending: number
+    critical: number
+  }
+  repairs: {
+    completed: number
+    inProgress: number
+    scheduled: number
+  }
+  equipment: {
+    totalReported: number
+    completed: number
+    needsRepair: number
+  }
+}
 
 interface DailyStatusCardsProps {
   className?: string
@@ -12,70 +31,75 @@ interface DailyStatusCardsProps {
 
 export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
   const { t } = useTranslation(['dashboard', 'common'])
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardStats = async () => {
       try {
         setLoading(true)
-        console.log('Fetching dashboard stats from new API...')
         
-        const response = await fetch('/api/dashboard/stats')
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+        // 1. 고장 신고 통계
+        const { data: breakdownData, error: breakdownError } = await supabase
+          .from('breakdown_reports')
+          .select('status, priority')
+
+        if (breakdownError) throw breakdownError
+
+        // 2. 수리 완료 통계
+        const { data: repairData, error: repairError } = await supabase
+          .from('repair_reports')
+          .select('completion_status, created_at')
+
+        if (repairError) throw repairError
+
+        // 통계 계산
+        const breakdownStats = {
+          total: breakdownData?.length || 0,
+          urgent: breakdownData?.filter(r => r.priority === 'critical' || r.priority === 'high').length || 0,
+          pending: breakdownData?.filter(r => r.status === 'reported' || r.status === 'assigned').length || 0,
+          critical: breakdownData?.filter(r => r.priority === 'critical').length || 0
         }
-        
-        const data = await response.json()
-        console.log('Dashboard stats response:', data)
-        setDashboardData(data)
+
+        const repairStats = {
+          completed: repairData?.filter(r => r.completion_status === 'completed').length || 0,
+          inProgress: repairData?.filter(r => r.completion_status === 'partial').length || 0,
+          scheduled: breakdownData?.filter(r => r.status === 'assigned' || r.status === 'in_progress').length || 0
+        }
+
+        const equipmentStats = {
+          totalReported: breakdownData?.length || 0,
+          completed: breakdownData?.filter(r => r.status === 'completed').length || 0,
+          needsRepair: breakdownData?.filter(r => r.status !== 'completed').length || 0
+        }
+
+        setDashboardStats({
+          breakdowns: breakdownStats,
+          repairs: repairStats,
+          equipment: equipmentStats
+        })
         setError(null)
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.')
         // 에러 시 기본값 설정
-        setDashboardData({
-          dailyStats: {
-            breakdowns: { total: 0, urgent: 0, pending: 0 },
-            repairs: { completed: 0, inProgress: 0, scheduled: 0 },
-            equipment: { operational: 1, total: 1, maintenance: 0, stopped: 0 }
-          },
-          weeklyTrend: {
-            labels: [],
-            breakdowns: [],
-            repairs: [],
-            uptime: []
-          },
-          equipmentPerformance: [],
-          maintenanceSchedule: []
+        setDashboardStats({
+          breakdowns: { total: 0, urgent: 0, pending: 0, critical: 0 },
+          repairs: { completed: 0, inProgress: 0, scheduled: 0 },
+          equipment: { totalReported: 0, completed: 0, needsRepair: 0 }
         })
       } finally {
         setLoading(false)
       }
     }
 
-    fetchDashboardData()
+    fetchDashboardStats()
+    
+    // 1분마다 데이터 새로고침
+    const interval = setInterval(fetchDashboardStats, 60000)
+    return () => clearInterval(interval)
   }, [])
-
-  if (error) {
-    console.error('DailyStatusCards error:', error)
-  }
-
-  // API 데이터에서 일일 통계 추출
-  const dailyStats = dashboardData?.dailyStats || {
-    breakdowns: { total: 0, urgent: 0, pending: 0 },
-    repairs: { completed: 0, inProgress: 0, scheduled: 0 },
-    equipment: { operational: 0, total: 1, maintenance: 0, stopped: 0 } // total: 1로 0 나누기 방지
-  }
-
-  // equipment 데이터 사용
-  const equipmentStatus = dailyStats.equipment || {
-    operational: 0,
-    total: 1,
-    maintenance: 0,
-    stopped: 0
-  }
 
   if (loading) {
     return (
@@ -91,23 +115,28 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
     )
   }
 
-  const formatTrend = (value: number, isPositive: boolean = false) => {
-    const trend = value >= 0 ? `+${value}` : value.toString()
-    const isIncrease = value >= 0
-    const colorClass = isPositive 
-      ? (isIncrease ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')
-      : (isIncrease ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400')
-    
+  if (error) {
     return (
-      <span className={`text-xs font-medium ${colorClass}`}>
-        {isIncrease ? '↗️' : '↘️'} {trend}
-      </span>
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
+        <Card className="bg-red-50 border-red-200">
+          <Card.Content className="p-6 text-center">
+            <div className="text-red-600 mb-2">⚠️ 데이터 로드 오류</div>
+            <p className="text-sm text-gray-600">{error}</p>
+          </Card.Content>
+        </Card>
+      </div>
     )
+  }
+
+  const stats = dashboardStats || {
+    breakdowns: { total: 0, urgent: 0, pending: 0, critical: 0 },
+    repairs: { completed: 0, inProgress: 0, scheduled: 0 },
+    equipment: { totalReported: 0, completed: 0, needsRepair: 0 }
   }
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
-      {/* 금일 고장 발생 */}
+      {/* 고장 신고 현황 */}
       <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-700 shadow-lg hover:shadow-xl transition-shadow">
         <Card.Content className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -116,18 +145,14 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 <span className="text-white text-2xl">🚨</span>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('dashboard:dailyCards.breakdowns.title')}</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">고장 신고</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-red-600 dark:text-red-400">
-                    {dailyStats.breakdowns.total}
+                    {stats.breakdowns.total}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{t('dashboard:dailyCards.breakdowns.unit')}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">건</span>
                 </div>
               </div>
-            </div>
-            <div className="text-right">
-              {formatTrend(Math.floor(Math.random() * 3), false)}
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('dashboard:dailyCards.breakdowns.comparison')}</div>
             </div>
           </div>
           
@@ -135,58 +160,48 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
             <div className="flex justify-between text-sm">
               <span className="text-red-600 dark:text-red-400 flex items-center">
                 <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
-                {t('dashboard:dailyCards.breakdowns.urgent')}
+                긴급/높음
               </span>
               <span className="font-semibold text-red-600 dark:text-red-400">
-                {dailyStats.breakdowns.urgent}{t('dashboard:dailyCards.breakdowns.unit')}
+                {stats.breakdowns.urgent}건
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-orange-600 dark:text-orange-400 flex items-center">
                 <span className="w-2 h-2 bg-orange-600 rounded-full mr-2"></span>
-                {t('dashboard:dailyCards.breakdowns.pending')}
+                처리 대기중
               </span>
               <span className="font-semibold text-orange-600 dark:text-orange-400">
-                {dailyStats.breakdowns.pending}{t('dashboard:dailyCards.breakdowns.unit')}
+                {stats.breakdowns.pending}건
               </span>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-red-200 dark:border-red-700">
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              {dailyStats.breakdowns.total > 0 
-                ? t('dashboard:dailyCards.breakdowns.recent', { 
-                    equipment: 'CNC-001', 
-                    time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-                  })
-                : t('dashboard:dailyCards.breakdowns.noRecent')
-              }
+              전체 신고 건수 ({new Date().toLocaleDateString()})
             </div>
           </div>
         </Card.Content>
       </Card>
 
-      {/* 금일 수리 완료 */}
+      {/* 수리 완료 현황 */}
       <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700 shadow-lg hover:shadow-xl transition-shadow">
         <Card.Content className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
-                <span className="text-white text-2xl">✅</span>
+                <span className="text-white text-2xl">🔧</span>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('dashboard:dailyCards.repairs.title')}</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">수리 완료</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-green-600 dark:text-green-400">
-                    {dailyStats.repairs.completed}
+                    {stats.repairs.completed}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{t('dashboard:dailyCards.repairs.unit')}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">건</span>
                 </div>
               </div>
-            </div>
-            <div className="text-right">
-              {formatTrend(Math.floor(Math.random() * 3), true)}
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('dashboard:dailyCards.repairs.comparison')}</div>
             </div>
           </div>
           
@@ -194,97 +209,79 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
             <div className="flex justify-between text-sm">
               <span className="text-blue-600 dark:text-blue-400 flex items-center">
                 <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
-                {t('dashboard:dailyCards.repairs.inProgress')}
+                진행중
               </span>
               <span className="font-semibold text-blue-600 dark:text-blue-400">
-                {dailyStats.repairs.inProgress}{t('dashboard:dailyCards.repairs.unit')}
+                {stats.repairs.inProgress}건
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-purple-600 dark:text-purple-400 flex items-center">
                 <span className="w-2 h-2 bg-purple-600 rounded-full mr-2"></span>
-                {t('dashboard:dailyCards.repairs.scheduled')}
+                예정됨
               </span>
               <span className="font-semibold text-purple-600 dark:text-purple-400">
-                {dailyStats.repairs.scheduled}{t('dashboard:dailyCards.repairs.unit')}
+                {stats.repairs.scheduled}건
               </span>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-green-200 dark:border-green-700">
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              {dailyStats.repairs.completed > 0 
-                ? t('dashboard:dailyCards.repairs.recent', { 
-                    equipment: 'CNC-002', 
-                    time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-                  })
-                : t('dashboard:dailyCards.repairs.noRecent')
-              }
+              전체 수리 완료 건수
             </div>
           </div>
         </Card.Content>
       </Card>
 
-      {/* 설비 가동 현황 */}
+      {/* 설비 현황 */}
       <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700 shadow-lg hover:shadow-xl transition-shadow">
         <Card.Content className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
-                <span className="text-white text-2xl">⚙️</span>
+                <span className="text-white text-2xl">🏭</span>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('dashboard:dailyCards.equipmentStatus.title')}</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">설비 현황</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {equipmentStatus.operational}
+                    {stats.equipment.needsRepair}
                   </span>
-                  <span className="text-lg text-gray-500 dark:text-gray-400">
-                    /{equipmentStatus.total}
-                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">대</span>
                 </div>
               </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {equipmentStatus.total > 0 ? Math.round((equipmentStatus.operational / equipmentStatus.total) * 100) : 0}%
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard:dailyCards.equipmentStatus.rate')}</div>
             </div>
           </div>
           
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-yellow-600 dark:text-yellow-400 flex items-center">
-                <span className="w-2 h-2 bg-yellow-600 rounded-full mr-2"></span>
-                {t('dashboard:dailyCards.equipmentStatus.maintenance')}
+              <span className="text-green-600 dark:text-green-400 flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                수리 완료
               </span>
-              <span className="font-semibold text-yellow-600 dark:text-yellow-400">
-                {equipmentStatus.maintenance}대
+              <span className="font-semibold text-green-600 dark:text-green-400">
+                {stats.equipment.completed}대
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-red-600 dark:text-red-400 flex items-center">
-                <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
-                {t('dashboard:dailyCards.equipmentStatus.stopped')}
+              <span className="text-gray-600 dark:text-gray-400 flex items-center">
+                <span className="w-2 h-2 bg-gray-600 rounded-full mr-2"></span>
+                전체 신고
               </span>
-              <span className="font-semibold text-red-600 dark:text-red-400">
-                {equipmentStatus.stopped}대
+              <span className="font-semibold text-gray-600 dark:text-gray-400">
+                {stats.equipment.totalReported}대
               </span>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-blue-200 dark:border-blue-700">
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${equipmentStatus.total > 0 ? (equipmentStatus.operational / equipmentStatus.total) * 100 : 0}%` }}
-              ></div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">
+              수리가 필요한 설비 현황
             </div>
           </div>
         </Card.Content>
       </Card>
-
     </div>
   )
 }
