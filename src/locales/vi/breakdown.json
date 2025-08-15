@@ -117,6 +117,9 @@
     "reportSuccessDetail": "Báo cáo sự cố đã được gửi thành công!",
     "reportSuccessWithEquipment": "Sự cố thiết bị {{equipmentNumber}} đã được báo cáo thành công.",
     "reportError": "Báo cáo Thất bại",
+    "availableEquipment": "Có {{count}} thiết bị có thể sử dụng.",
+    "availableUsers": "Có {{count}} người dùng có thể chọn.",
+    "availableAssignees": "Có thể chọn người phụ trách từ {{count}} người dùng.",
     "reportErrorDetail": "Đã xảy ra lỗi khi xử lý báo cáo sự cố. Vui lòng thử lại."
   }
 }

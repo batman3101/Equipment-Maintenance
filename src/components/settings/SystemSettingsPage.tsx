@@ -28,13 +28,13 @@ export function SystemSettingsPage() {
   const tabs = [
     { id: 'general', label: t('sections.general.title'), icon: '⚙️' },
     { id: 'branding', label: t('sections.branding.title'), icon: '🎨' },
-    { id: 'equipment', label: t('common:equipment.title', '설비 설정'), icon: '🏭' },
-    { id: 'breakdown', label: t('common:breakdown.title', '고장 신고'), icon: '🚨' },
-    { id: 'repair', label: t('common:repair.title', '수리 관리'), icon: '🔧' },
+    { id: 'equipment', label: t('common:equipment.title'), icon: '🏭' },
+    { id: 'breakdown', label: t('common:breakdown.title'), icon: '🚨' },
+    { id: 'repair', label: t('common:repair.title'), icon: '🔧' },
     { id: 'notifications', label: t('sections.notifications.title'), icon: '🔔' },
-    { id: 'data', label: t('common:data.title', '데이터 설정'), icon: '📊' },
-    { id: 'ui', label: t('common:ui.title', 'UI 설정'), icon: '🎨' },
-    { id: 'security', label: t('common:security.title', '보안 설정'), icon: '🔒' }
+    { id: 'data', label: t('common:data.title'), icon: '📊' },
+    { id: 'ui', label: t('common:ui.title'), icon: '🎨' },
+    { id: 'security', label: t('common:security.title'), icon: '🔒' }
   ] as const
 
   if (loading) {
@@ -205,7 +205,7 @@ function GeneralSettings({ settings, updateSettings }: SettingsSectionProps) {
             placeholder="CNC 설비 관리 시스템"
           />
           <Input
-            label={t('common:company', '회사명')}
+            label={t('common:company.label')}
             value={settings.general.companyName}
             onChange={(e) => updateSettings({
               general: { ...settings.general, companyName: e.target.value }

@@ -286,7 +286,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
               {availableEquipment.length > 0 && (
                 <p className="mt-1 text-sm text-green-600">
-                  {availableEquipment.length}개의 설비를 사용할 수 있습니다.
+                  {t('breakdown:messages.availableEquipment', { count: availableEquipment.length })}
                 </p>
               )}
             </div>
@@ -322,7 +322,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
               {availableUsers.length > 0 && (
                 <p className="mt-1 text-sm text-green-600">
-                  {availableUsers.length}명의 사용자를 선택할 수 있습니다.
+                  {t('breakdown:messages.availableUsers', { count: availableUsers.length })}
                 </p>
               )}
             </div>
@@ -353,7 +353,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
               {availableUsers.length > 0 && (
                 <p className="mt-1 text-sm text-green-600">
-                  {availableUsers.length}명의 사용자 중에서 담당자를 선택할 수 있습니다.
+                  {t('breakdown:messages.availableAssignees', { count: availableUsers.length })}
                 </p>
               )}
             </div>
