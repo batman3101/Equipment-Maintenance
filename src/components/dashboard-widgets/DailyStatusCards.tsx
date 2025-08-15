@@ -5,6 +5,7 @@ import { Card } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { BreakdownStatus } from '@/types/breakdown'
 
 interface DashboardStats {
   breakdowns: {
@@ -30,7 +31,7 @@ interface DailyStatusCardsProps {
 }
 
 export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
-  const { t } = useTranslation(['dashboard', 'common'])
+  const { t: _t } = useTranslation(['dashboard', 'common']) // unused for now
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +52,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
         }
 
         // 2. 수리 완료 통계 - 먼저 테이블이 존재하는지 확인
-        let repairData: any[] = []
+        let repairData: Array<{ completion_status: string; created_at: string }> = []
         try {
           const { data, error: repairError } = await supabase
             .from('repair_reports')
@@ -78,20 +79,20 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
         const breakdownStats = {
           total: breakdownData?.length || 0,
           urgent: breakdownData?.filter(r => r.priority === 'critical' || r.priority === 'high').length || 0,
-          pending: breakdownData?.filter(r => r.status === 'reported' || r.status === 'assigned').length || 0,
+          pending: breakdownData?.filter(r => r.status === BreakdownStatus.REPORTED || r.status === BreakdownStatus.IN_PROGRESS).length || 0,
           critical: breakdownData?.filter(r => r.priority === 'critical').length || 0
         }
 
         const repairStats = {
           completed: repairData?.filter(r => r.completion_status === 'completed').length || 0,
           inProgress: repairData?.filter(r => r.completion_status === 'partial').length || 0,
-          scheduled: breakdownData?.filter(r => r.status === 'assigned' || r.status === 'in_progress').length || 0
+          scheduled: breakdownData?.filter(r => r.status === BreakdownStatus.IN_PROGRESS).length || 0
         }
 
         const equipmentStats = {
           totalReported: breakdownData?.length || 0,
-          completed: breakdownData?.filter(r => r.status === 'completed').length || 0,
-          needsRepair: breakdownData?.filter(r => r.status !== 'completed').length || 0
+          completed: breakdownData?.filter(r => r.status === BreakdownStatus.COMPLETED).length || 0,
+          needsRepair: breakdownData?.filter(r => r.status !== BreakdownStatus.COMPLETED).length || 0
         }
 
         setDashboardStats({

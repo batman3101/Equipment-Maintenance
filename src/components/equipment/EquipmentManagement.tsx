@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { saveAs } from 'file-saver'
+// import { saveAs } from 'file-saver' // 사용하지 않음
 import { createSimpleExcelTemplate, downloadBlob } from '@/lib/excel-utils'
 import { Button, Card, Modal } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
@@ -1518,7 +1518,7 @@ export function EquipmentManagement() {
                     const pages = []
                     const showPages = 5 // 표시할 페이지 번호 개수
                     let startPage = Math.max(1, currentPage - Math.floor(showPages / 2))
-                    let endPage = Math.min(paginationData.totalPages, startPage + showPages - 1)
+                    const endPage = Math.min(paginationData.totalPages, startPage + showPages - 1)
                     
                     // 끝 페이지가 조정되면 시작 페이지도 조정
                     if (endPage - startPage + 1 < showPages) {

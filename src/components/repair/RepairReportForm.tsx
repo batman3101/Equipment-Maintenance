@@ -5,6 +5,7 @@ import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
+import { BreakdownStatus, BREAKDOWN_STATUS_LABELS } from '@/types/breakdown'
 
 // [SRP] Rule: 수리 보고서 타입 정의 - 데이터 구조만 담당
 interface RepairReport {
@@ -19,13 +20,16 @@ interface RepairReport {
   notes?: string
 }
 
-// [SRP] Rule: 설비 타입 정의 - 데이터 구조만 담당
+// [SRP] Rule: 수리 대상 설비 타입 정의 - 데이터 구조만 담당
 interface Equipment {
   id: string
   equipment_number: string
   equipment_name: string
   category: string
   location: string
+  breakdown_id: string // 고장 신고 ID 추가
+  breakdown_title: string // 고장 제목 추가
+  status: BreakdownStatus // 상태 정보 추가
 }
 
 interface RepairReportFormProps {
@@ -61,20 +65,22 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
   useEffect(() => {
     const fetchBrokenEquipment = async () => {
       try {
-        // 수리 완료 상태가 아닌 고장 설비들을 가져오기
+        // '신고 접수' 또는 '수리중' 상태인 고장 설비들을 가져오기
         const { data, error } = await supabase
           .from('breakdown_reports')
           .select(`
+            id,
+            breakdown_title,
+            status,
             equipment_info!inner(
               id,
               equipment_number,
               equipment_name,
               category,
               location
-            ),
-            status
+            )
           `)
-          .neq('status', 'completed') // 수리 완료 상태가 아닌 것들만
+          .in('status', [BreakdownStatus.REPORTED, BreakdownStatus.IN_PROGRESS]) // '신고 접수' 또는 '수리중' 상태만
           .order('equipment_info.equipment_number')
 
         if (error) {
@@ -85,14 +91,17 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
         // 중복 제거 후 설비 정보만 추출
         const uniqueEquipment: Equipment[] = []
         data?.forEach((item: any) => {
-          const equipment = item.equipment_info
+          const equipment = Array.isArray(item.equipment_info) ? item.equipment_info[0] : item.equipment_info
           if (equipment && !uniqueEquipment.find(eq => eq.id === equipment.id)) {
             uniqueEquipment.push({
               id: equipment.id,
               equipment_number: equipment.equipment_number,
               equipment_name: equipment.equipment_name,
               category: equipment.category,
-              location: equipment.location
+              location: equipment.location,
+              breakdown_id: item.id,
+              breakdown_title: item.breakdown_title || '고장 신고',
+              status: item.status as BreakdownStatus
             })
           }
         })
@@ -224,11 +233,11 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
         const { error: updateError } = await supabase
           .from('breakdown_reports')
           .update({ 
-            status: 'completed',
+            status: BreakdownStatus.COMPLETED,
             updated_at: new Date().toISOString()
           })
           .eq('equipment_id', formData.equipmentId)
-          .neq('status', 'completed') // 이미 완료된 것은 제외
+          .neq('status', BreakdownStatus.COMPLETED) // 이미 완료된 것은 제외
 
         if (updateError) {
           console.error('Error updating breakdown status:', updateError)
@@ -291,7 +300,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
                 {availableEquipment.length > 0 ? (
                   availableEquipment.map(equipment => (
                     <option key={equipment.id} value={equipment.id}>
-                      {equipment.equipment_number} - {equipment.equipment_name}
+                      {equipment.equipment_number} - {equipment.equipment_name} [{BREAKDOWN_STATUS_LABELS[equipment.status]}] - {equipment.breakdown_title}
                     </option>
                   ))
                 ) : (

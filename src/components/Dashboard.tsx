@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, memo, useEffect } from 'react'
+import React, { useState, memo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card, ThemeToggle } from '@/components/ui'
 import { LanguageToggle } from '@/components/ui/LanguageToggle'

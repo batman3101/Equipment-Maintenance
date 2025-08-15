@@ -5,7 +5,7 @@ import { Card, StatusBadge, Modal, Button } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
-import { BreakdownReport, BreakdownListProps, BreakdownListRef } from '@/types/breakdown'
+import { BreakdownReport, BreakdownListProps, BreakdownListRef, BreakdownStatus, BREAKDOWN_STATUS_LABELS } from '@/types/breakdown'
 
 
 const getPriorityColor = (priority: string): 'success' | 'warning' | 'danger' | 'secondary' => {
@@ -20,10 +20,9 @@ const getPriorityColor = (priority: string): 'success' | 'warning' | 'danger' | 
 
 const getStatusColor = (status: string): 'secondary' | 'info' | 'warning' | 'success' | 'danger' => {
   switch (status) {
-    case 'reported': return 'secondary'
-    case 'assigned': return 'info'
-    case 'in_progress': return 'warning'
-    case 'completed': return 'success'
+    case BreakdownStatus.REPORTED: return 'danger'
+    case BreakdownStatus.IN_PROGRESS: return 'warning'  
+    case BreakdownStatus.COMPLETED: return 'success'
     default: return 'secondary'
   }
 }
@@ -116,17 +115,24 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
         
         return {
           id: report.id,
-          equipmentId: report.equipment_info?.equipment_number || report.equipment_id, // 설비 번호를 표시
+          equipmentId: report.equipment_id,
+          equipmentCategory: report.equipment_info?.category || '',
+          equipmentNumber: report.equipment_info?.equipment_number || '',
           breakdownTitle: report.breakdown_title,
           breakdownDescription: cleanDescription,
-          breakdownType: report.breakdown_type,
-          priority: report.priority,
-          occurredAt: report.occurred_at,
-          reportedBy: reporterName, // 추출한 신고자 이름
-          status: report.status,
-          assignedTo: assigneeName, // 담당자 이름
-          assignedToId: report.assigned_to, // 담당자 ID (편집용)
+          breakdownType: report.breakdown_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
+          priority: report.priority as 'low' | 'medium' | 'high' | 'critical',
+          reporterName: reporterName,
+          reportedBy: report.reported_by,
+          assignee: assigneeName,
+          assignedTo: assigneeName,
+          assignedToId: report.assigned_to,
+          urgencyLevel: report.priority as 'low' | 'medium' | 'high' | 'critical',
+          issueType: report.breakdown_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
+          description: cleanDescription,
           symptoms: report.symptoms,
+          status: report.status,
+          occurredAt: report.occurred_at,
           createdAt: report.created_at,
           updatedAt: report.updated_at
         }
@@ -316,50 +322,32 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
 
   return (
     <div className="space-y-6">
-      {/* 통계 요약 */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      {/* 통계 요약 - 3개 상태만 표시 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-gray-600">
-              {statusCounts.reported || 0}
+            <div className="text-2xl font-bold text-red-600">
+              {statusCounts[BreakdownStatus.REPORTED] || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.reported')}</div>
-          </Card.Content>
-        </Card>
-        
-        <Card>
-          <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {statusCounts.assigned || 0}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.assigned')}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{BREAKDOWN_STATUS_LABELS[BreakdownStatus.REPORTED]}</div>
           </Card.Content>
         </Card>
         
         <Card>
           <Card.Content className="text-center py-4">
             <div className="text-2xl font-bold text-yellow-600">
-              {statusCounts.in_progress || 0}
+              {statusCounts[BreakdownStatus.IN_PROGRESS] || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.inProgress')}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{BREAKDOWN_STATUS_LABELS[BreakdownStatus.IN_PROGRESS]}</div>
           </Card.Content>
         </Card>
         
         <Card>
           <Card.Content className="text-center py-4">
             <div className="text-2xl font-bold text-green-600">
-              {statusCounts.completed || 0}
+              {statusCounts[BreakdownStatus.COMPLETED] || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.completed')}</div>
-          </Card.Content>
-        </Card>
-        
-        <Card>
-          <Card.Content className="text-center py-4">
-            <div className="text-2xl font-bold text-blue-400">
-              {reports.length}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:list.statistics.total')}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{BREAKDOWN_STATUS_LABELS[BreakdownStatus.COMPLETED]}</div>
           </Card.Content>
         </Card>
       </div>
@@ -381,10 +369,9 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                 className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="all">{t('breakdown:list.filters.allStatus')}</option>
-                <option value="reported">{t('breakdown:status.reported')}</option>
-                <option value="assigned">{t('breakdown:status.assigned')}</option>
-                <option value="in_progress">{t('breakdown:status.in_progress')}</option>
-                <option value="completed">{t('breakdown:status.completed')}</option>
+                <option value={BreakdownStatus.REPORTED}>{BREAKDOWN_STATUS_LABELS[BreakdownStatus.REPORTED]}</option>
+                <option value={BreakdownStatus.IN_PROGRESS}>{BREAKDOWN_STATUS_LABELS[BreakdownStatus.IN_PROGRESS]}</option>
+                <option value={BreakdownStatus.COMPLETED}>{BREAKDOWN_STATUS_LABELS[BreakdownStatus.COMPLETED]}</option>
               </select>
               
               <select
@@ -651,12 +638,18 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('breakdown:list.type')}
               </label>
-              <input
-                type="text"
+              <select
                 value={editFormData.breakdownType || ''}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, breakdownType: e.target.value }))}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, breakdownType: e.target.value as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other' }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
+              >
+                <option value="">선택하세요</option>
+                <option value="mechanical">기계적</option>
+                <option value="electrical">전기적</option>
+                <option value="software">소프트웨어</option>
+                <option value="safety">안전</option>
+                <option value="other">기타</option>
+              </select>
             </div>
             
             <div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, StatusBadge } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
+import { BreakdownStatus } from '@/types/breakdown'
 
 interface Equipment {
   id: string
@@ -78,7 +79,7 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
             ),
             profiles_assigned:profiles!breakdown_reports_assigned_to_fkey(full_name)
           `)
-          .neq('status', 'completed') // 수리 완료가 아닌 것들만
+          .neq('status', BreakdownStatus.COMPLETED) // 수리 완료가 아닌 것들만
           .order('occurred_at', { ascending: false })
 
         if (error) {
@@ -89,7 +90,9 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
         const equipmentMap = new Map<string, Equipment>()
         
         data?.forEach((item: any) => {
-          const equipment = item.equipment_info
+          const equipment = Array.isArray(item.equipment_info) ? item.equipment_info[0] : item.equipment_info
+          const assignedProfile = Array.isArray(item.profiles_assigned) ? item.profiles_assigned[0] : item.profiles_assigned
+          
           if (equipment && !equipmentMap.has(equipment.id)) {
             equipmentMap.set(equipment.id, {
               id: equipment.id,
@@ -97,11 +100,11 @@ export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMoni
               equipment_name: equipment.equipment_name,
               category: equipment.category,
               location: equipment.location || '위치 미지정',
-              status: item.status,
-              urgency: item.priority || 'medium',
+              status: item.status as 'breakdown' | 'in_progress' | 'reported' | 'assigned',
+              urgency: (item.priority || 'medium') as 'low' | 'medium' | 'high' | 'critical',
               lastUpdated: item.updated_at || item.occurred_at,
               breakdownTitle: item.breakdown_title,
-              assignedTo: item.profiles_assigned?.full_name
+              assignedTo: assignedProfile?.full_name
             })
           }
         })

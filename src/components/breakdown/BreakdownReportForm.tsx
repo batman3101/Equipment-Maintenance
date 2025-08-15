@@ -1,27 +1,17 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button, Input, Card } from '@/components/ui'
+import { Button, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
-
-interface BreakdownReport {
-  equipmentCategory: string
-  equipmentNumber: string
-  reporterName: string
-  assignee?: string
-  urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
-  issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
-  description: string
-  symptoms: string
-}
+import { BreakdownReportForm as BreakdownReportFormType, BreakdownStatus, BREAKDOWN_STATUS_LABELS } from '@/types/breakdown'
 
 // 이제 시스템 설정에서 가져옵니다
 
 interface BreakdownReportFormProps {
-  onSubmit?: (report: BreakdownReport) => void
+  onSubmit?: (report: BreakdownReportFormType) => void
   onCancel?: () => void
 }
 
@@ -31,14 +21,15 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
   const { t } = useTranslation(['breakdown', 'common'])
   const settings = getTranslatedSettings()
   
-  const [formData, setFormData] = useState<Partial<BreakdownReport>>({
+  const [formData, setFormData] = useState<Partial<BreakdownReportFormType>>({
     equipmentCategory: '',
     equipmentNumber: '',
     reporterName: '',
     urgencyLevel: settings.breakdown.defaultUrgency as 'low' | 'medium' | 'high' | 'critical',
     issueType: 'mechanical',
     description: '',
-    symptoms: ''
+    symptoms: '',
+    status: BreakdownStatus.REPORTED // 기본값: 신고 접수
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -123,7 +114,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     setLoading(true)
     
     try {
-      const reportData: BreakdownReport = formData as BreakdownReport
+      const reportData: BreakdownReportFormType = formData as BreakdownReportFormType
 
       console.log('Submitting breakdown report:', reportData)
 
@@ -168,7 +159,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
           occurred_at: new Date().toISOString(),
           reported_by: selectedReporter, // 선택된 사용자의 UUID
           assigned_to: selectedAssignee || null, // 선택된 담당자 UUID
-          status: 'reported',
+          status: formData.status || BreakdownStatus.REPORTED,
           symptoms: reportData.symptoms,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -203,7 +194,8 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
         urgencyLevel: settings.breakdown.defaultUrgency as 'low' | 'medium' | 'high' | 'critical',
         issueType: 'mechanical',
         description: '',
-        symptoms: ''
+        symptoms: '',
+        status: BreakdownStatus.REPORTED
       })
       setSelectedReporter('')
       setSelectedAssignee('')
@@ -358,7 +350,28 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
             </div>
 
-            {/* 5. 긴급도 및 6. 문제 유형 */}
+            {/* 5. 상태 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                상태 <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.status || BreakdownStatus.REPORTED}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as BreakdownStatus }))}
+                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {Object.entries(BREAKDOWN_STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                고장 신고의 현재 처리 상태를 선택하세요
+              </p>
+            </div>
+
+            {/* 6. 긴급도 및 7. 문제 유형 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
