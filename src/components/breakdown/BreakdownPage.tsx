@@ -4,24 +4,10 @@ import React, { useState, useRef } from 'react'
 import { Button } from '@/components/ui'
 import { BreakdownReportForm } from './BreakdownReportForm'
 import { BreakdownList } from './BreakdownList'
-import { BreakdownListRef } from '@/types/breakdown'
+import { BreakdownListRef, BreakdownReport } from '@/types/breakdown'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslation } from 'react-i18next'
-
-interface BreakdownReport {
-  id: string
-  equipmentCategory: string
-  equipmentNumber: string
-  reporterName: string
-  urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
-  issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
-  description: string
-  symptoms: string
-  status: 'reported' | 'assigned' | 'in_progress' | 'resolved' | 'rejected'
-  reportedAt: string
-  updatedAt: string
-  assignedTo?: string
-}
+import { useUnifiedState } from '@/hooks/useUnifiedState'
 
 type ViewMode = 'list' | 'form' | 'detail'
 
@@ -31,23 +17,47 @@ export function BreakdownPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedReport, setSelectedReport] = useState<BreakdownReport | null>(null)
   const breakdownListRef = useRef<BreakdownListRef>(null)
+  
+  // [SRP] Rule: 통합 상태 관리 사용 - 고장 신고와 설비 정보 연동
+  const { actions, loading, errors } = useUnifiedState()
 
   const handleNewReport = () => {
     setViewMode('form')
     setSelectedReport(null)
   }
 
-  const handleReportSubmit = (report: { equipmentCategory: string; equipmentNumber: string; reporterName: string; urgencyLevel: 'low' | 'medium' | 'high' | 'critical'; issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'; description: string; symptoms: string }) => {
-    console.log('새 고장 신고 제출:', report)
-    
-    // 성공 메시지 표시
-    showSuccess(
-      t('breakdown:messages.reportSuccess'),
-      t('breakdown:messages.reportSuccessDetail')
-    )
-    
-    // 목록으로 돌아가기 및 데이터 새로고침
-    setViewMode('list')
+  // [SRP] Rule: 고장 신고 생성 - 통합 상태 관리 액션 사용
+  const handleReportSubmit = async (report: { 
+    equipmentCategory: string
+    equipmentNumber: string
+    reporterName: string
+    urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
+    issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
+    description: string
+    symptoms: string
+  }) => {
+    try {
+      console.log('새 고장 신고 제출:', report)
+      
+      // [DIP] Rule: 통합 API 서비스를 통한 고장 신고 생성
+      const createdReport = await actions.createBreakdownReport(report as Partial<BreakdownReport>)
+      
+      if (createdReport) {
+        // 성공 메시지 표시
+        showSuccess(
+          t('breakdown:messages.reportSuccess'),
+          t('breakdown:messages.reportSuccessDetail')
+        )
+        
+        // 목록으로 돌아가기
+        setViewMode('list')
+      } else {
+        throw new Error('Failed to create breakdown report')
+      }
+    } catch (error) {
+      console.error('Error creating breakdown report:', error)
+      // 에러는 통합 상태 관리에서 처리됨
+    }
     
     // BreakdownList 데이터 새로고침
     if (breakdownListRef.current) {
@@ -287,7 +297,7 @@ function BreakdownDetailView({ report }: { report: BreakdownReport; onBack: () =
           <div className="flex justify-between items-center">
             <span className="text-gray-600 dark:text-gray-400">{t('breakdown:detail.reportedAt')}:</span>
             <span className="font-medium text-gray-900 dark:text-white">
-              {new Date(report.reportedAt).toLocaleString()}
+              {new Date(report.occurredAt || report.createdAt).toLocaleString()}
             </span>
           </div>
           <div className="flex justify-between items-center">

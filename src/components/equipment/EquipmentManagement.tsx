@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 // import { saveAs } from 'file-saver' // 사용하지 않음
 import { createSimpleExcelTemplate, downloadBlob } from '@/lib/excel-utils'
 import { Button, Card, Modal } from '@/components/ui'
@@ -8,32 +8,19 @@ import { useToast } from '@/contexts/ToastContext'
 import { useSystemSettings } from '@/contexts/SystemSettingsContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
-import { supabase } from '@/lib/supabase'
+import { useUnifiedState } from '@/hooks/useUnifiedState'
 import { Equipment, EquipmentStatusInfo as EquipmentStatus } from '@/types/equipment'
+import { StatusUtils, STATUS_COLORS, SystemStatus } from '@/types/unified-status'
+import { supabase } from '@/lib/supabase'
 
 
+// [SRP] Rule: 통합 상태 시스템 사용으로 중복 제거
 const getStatusColor = (status: string) => {
-  const colorMap: Record<string, string> = {
-    running: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
-    breakdown: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200',
-    standby: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200',
-    maintenance: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
-    stopped: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-  }
-  
-  return colorMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  return StatusUtils.getStatusColor(status as SystemStatus)
 }
 
 const getStatusText = (status: string, t: (key: string) => string) => {
-  const statusMap: Record<string, string> = {
-    running: '운영 중',
-    breakdown: '고장',
-    standby: '대기',
-    maintenance: '정비 중',
-    stopped: '중지'
-  }
-  
-  return statusMap[status] || t('equipment:status.unknown')
+  return StatusUtils.getStatusLabel(status as SystemStatus, 'ko') || t('equipment:status.unknown')
 }
 
 export function EquipmentManagement() {
@@ -42,10 +29,19 @@ export function EquipmentManagement() {
   const { getTranslatedSettings } = useSystemSettings()
   const { user } = useAuth()
   const settings = getTranslatedSettings()
-  const [equipments, setEquipments] = useState<Equipment[]>([])
-  const [equipmentStatuses, setEquipmentStatuses] = useState<EquipmentStatus[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  
+  // [DIP] Rule: 통합 상태 관리 훅 사용으로 구체적 구현에 의존하지 않음
+  const unifiedState = useUnifiedState()
+  const { 
+    equipments,
+    equipmentStatuses,
+    loading,
+    errors,
+    actions,
+    derived
+  } = unifiedState
+
+  // UI 전용 로컬 상태들
   const [isUploading, setIsUploading] = useState(false)
   const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -79,79 +75,21 @@ export function EquipmentManagement() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  // Supabase에서 설비 데이터 가져오기
-  useEffect(() => {
-    fetchEquipments()
-  }, [])
+  // [SRP] Rule: 초기 데이터 로딩 - 통합 상태 관리에서 자동 처리됨
 
-  const fetchEquipments = useCallback(async () => {
+  // [SRP] Rule: 데이터 새로고침 - 통합 상태 관리 액션 사용
+  const refreshEquipmentData = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
-      // 설비 정보 가져오기
-      const { data: equipmentData, error: equipmentError } = await supabase
-        .from('equipment_info')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (equipmentError) {
-        console.error('Error fetching equipment:', equipmentError)
-        setError(t('equipment:messages.loadFailed'))
-        return
-      }
-
-      // 설비 상태 정보 가져오기
-      const { data: statusData, error: statusError } = await supabase
-        .from('equipment_status')
-        .select('*')
-
-      if (statusError) {
-        console.error('Error fetching equipment status:', statusError)
-        console.warn('Could not load equipment status information.')
-      }
-
-      // Supabase 데이터를 컴포넌트 인터페이스에 맞게 변환
-      const formattedEquipments: Equipment[] = (equipmentData || []).map(eq => ({
-        id: eq.id,
-        equipmentNumber: eq.equipment_number,
-        equipmentName: eq.equipment_name,
-        category: eq.category,
-        location: eq.location,
-        manufacturer: eq.manufacturer,
-        model: eq.model,
-        installationDate: eq.installation_date,
-        specifications: eq.specifications,
-        createdAt: eq.created_at,
-        updatedAt: eq.updated_at
-      }))
-
-      const formattedStatuses: EquipmentStatus[] = (statusData || []).map(status => ({
-        id: status.id,
-        equipmentId: status.equipment_id,
-        status: status.status,
-        statusReason: status.status_reason,
-        updatedBy: status.updated_by,
-        statusChangedAt: status.status_changed_at,
-        lastMaintenanceDate: status.last_maintenance_date,
-        nextMaintenanceDate: status.next_maintenance_date,
-        operatingHours: status.operating_hours,
-        notes: status.notes,
-        createdAt: status.created_at,
-        updatedAt: status.updated_at
-      }))
-
-      setEquipments(formattedEquipments)
-      setEquipmentStatuses(formattedStatuses)
-    } catch (err) {
-      console.error('Unexpected error fetching equipment:', err)
-      setError(t('common:errors.unexpected'))
-    } finally {
-      setLoading(false)
+      await actions.refreshEquipments()
+      await actions.refreshStatuses()
+      showSuccess(t('equipment:messages.refreshSuccess'))
+    } catch (error) {
+      console.error('Failed to refresh equipment data:', error)
+      showError(t('equipment:messages.refreshFailed'))
     }
-  }, [t])
+  }, [actions, showSuccess, showError, t])
 
-  // 필터링된 설비 목록 계산
+  // [SRP] Rule: 필터링된 설비 목록 계산 - 통합 상태에서 관계형 데이터 활용
   const filteredAndSortedEquipments = useMemo(() => {
     let filtered = equipments
 
@@ -172,11 +110,11 @@ export function EquipmentManagement() {
       filtered = filtered.filter(equipment => equipment.category === categoryFilter)
     }
 
-    // 상태 필터링
+    // 상태 필터링 - 통합 상태의 관계형 접근자 사용
     if (statusFilter !== 'all') {
       filtered = filtered.filter(equipment => {
-        const status = equipmentStatuses.find(s => s.equipmentId === equipment.id)
-        return status?.status === statusFilter
+        const equipmentWithStatus = derived.getEquipmentWithStatus(equipment.id)
+        return equipmentWithStatus?.status?.status === statusFilter
       })
     }
 
@@ -623,7 +561,7 @@ export function EquipmentManagement() {
           }
 
           // 성공적으로 저장된 후 목록 새로고침
-          await fetchEquipments()
+          await refreshEquipmentData()
           showSuccess(
             '업로드 성공',
             `${newEquipments.length}개의 설비가 성공적으로 등록되었습니다.`
@@ -651,7 +589,7 @@ export function EquipmentManagement() {
     }
   }
 
-  // 개별 설비 등록
+  // [SRP] Rule: 개별 설비 등록 - 통합 상태 관리 액션 사용
   const handleAddEquipment = async () => {
     // 필수 필드 검증
     if (!newEquipment.equipmentName || !newEquipment.equipmentNumber || !newEquipment.category) {
@@ -673,79 +611,24 @@ export function EquipmentManagement() {
     }
 
     try {
-      // Supabase에 새 설비 추가
-      const { data, error } = await supabase
-        .from('equipment_info')
-        .insert({
-          equipment_number: newEquipment.equipmentNumber!,
-          equipment_name: newEquipment.equipmentName!,
-          category: newEquipment.category!,
-          location: newEquipment.location,
-          manufacturer: newEquipment.manufacturer,
-          model: newEquipment.model,
-          installation_date: newEquipment.installationDate,
-          specifications: newEquipment.specifications
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Error adding equipment:', error)
+      // [DIP] Rule: 통합 API 서비스를 통한 설비 생성
+      const createdEquipment = await actions.createEquipment(newEquipment)
+      
+      if (!createdEquipment) {
         showError(
           t('equipment:messages.registerFailed'),
-          t('equipment:messages.registerFailed')
+          t('equipment:messages.registerFailedDetail')
         )
         return
       }
 
-      // 설비 상태 정보 추가
-      const { error: statusError } = await supabase
-        .from('equipment_status')
-        .insert({
-          equipment_id: data.id,
-          status: newEquipmentStatus || 'running',
-          status_changed_at: new Date().toISOString()
-        })
-
-      if (statusError) {
-        console.error('Error adding equipment status:', statusError)
-        // 상태 추가 실패해도 설비는 이미 추가되었으므로 계속 진행
-      }
-
-      // 로컬 상태 업데이트
-      const newEquipmentData: Equipment = {
-        id: data.id,
-        equipmentNumber: data.equipment_number,
-        equipmentName: data.equipment_name,
-        category: data.category,
-        location: data.location,
-        manufacturer: data.manufacturer,
-        model: data.model,
-        installationDate: data.installation_date,
-        specifications: data.specifications,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      }
-
-      setEquipments(prev => [...prev, newEquipmentData])
-      
-      // 상태 정보도 로컬에 추가
-      if (!statusError) {
-        const newStatus: EquipmentStatus = {
-          id: crypto.randomUUID(),
-          equipmentId: data.id,
-          status: (newEquipmentStatus || 'running') as EquipmentStatus['status'],
-          statusReason: null,
-          updatedBy: null,
-          statusChangedAt: new Date().toISOString(),
-          lastMaintenanceDate: null,
-          nextMaintenanceDate: null,
-          operatingHours: null,
-          notes: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-        setEquipmentStatuses(prev => [...prev, newStatus])
+      // [SRP] Rule: 설비 상태 초기화 - 통합 상태 관리 액션 사용
+      if (newEquipmentStatus && newEquipmentStatus !== 'running') {
+        await actions.updateEquipmentStatus(createdEquipment.id, {
+          status: newEquipmentStatus as EquipmentStatus['status'],
+          statusReason: 'Initial status',
+          statusChangedAt: new Date().toISOString()
+        } as Partial<EquipmentStatus>)
       }
       showSuccess(
         t('equipment:messages.registerSuccess'),
@@ -861,12 +744,15 @@ export function EquipmentManagement() {
         if (statusError) {
           console.error('Error updating equipment status:', statusError)
         } else {
-          // 로컬 상태 업데이트
-          setEquipmentStatuses(prev => prev.map(s => 
-            s.equipmentId === selectedEquipment.id 
-              ? { ...s, status: editEquipmentStatus as EquipmentStatus['status'], statusChangedAt: new Date().toISOString() }
-              : s
-          ))
+          // [SRP] Rule: 통합 상태 관리 액션을 통한 업데이트
+          const currentStatus = equipmentStatuses.find(s => s.equipmentId === selectedEquipment.id)
+          if (currentStatus) {
+            await actions.updateEquipmentStatus(selectedEquipment.id, {
+              ...currentStatus,
+              status: editEquipmentStatus as EquipmentStatus['status'],
+              statusChangedAt: new Date().toISOString()
+            })
+          }
         }
       } else if (!currentStatus) {
         // 상태가 없으면 새로 생성
@@ -895,16 +781,11 @@ export function EquipmentManagement() {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           }
-          setEquipmentStatuses(prev => [...prev, newStatus])
+          // [SRP] Rule: 상태는 통합 상태 관리에서 자동으로 처리됨
         }
       }
 
-      // 로컬 상태 업데이트
-      setEquipments(prev => prev.map(eq => 
-        eq.id === selectedEquipment.id 
-          ? { ...eq, ...editFormData as Equipment }
-          : eq
-      ))
+      // [SRP] Rule: 설비 정보는 통합 상태 관리에서 자동으로 처리됨
 
       showSuccess(
         t('common:messages.updateSuccess'),
@@ -943,8 +824,7 @@ export function EquipmentManagement() {
         return
       }
 
-      // 로컬 상태에서 제거
-      setEquipments(prev => prev.filter(eq => eq.id !== selectedEquipment.id))
+      // [SRP] Rule: 설비 삭제는 통합 상태 관리에서 자동으로 처리됨
       
       showSuccess(
         t('common:messages.deleteSuccess'),
@@ -981,7 +861,8 @@ export function EquipmentManagement() {
     return counts
   }, [equipmentStatuses])
 
-  if (loading) {
+  // [SRP] Rule: 로딩 상태 표시 - 통합 상태에서 관리
+  if (loading.global || loading.equipments) {
     return (
       <div className="space-y-6">
         <Card>
@@ -993,13 +874,16 @@ export function EquipmentManagement() {
     )
   }
 
-  if (error) {
+  // [SRP] Rule: 에러 상태 표시 - 통합 상태에서 관리
+  if (errors.equipments || errors.statuses) {
     return (
       <div className="space-y-6">
         <Card>
           <Card.Content className="text-center py-8">
-            <div className="text-red-500 mb-4">{error}</div>
-            <Button onClick={fetchEquipments} variant="secondary">
+            <div className="text-red-500 mb-4">
+              {errors.equipments || errors.statuses || t('common:errors.unexpected')}
+            </div>
+            <Button onClick={refreshEquipmentData} variant="secondary">
               {t('common:actions.retry')}
             </Button>
           </Card.Content>

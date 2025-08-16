@@ -427,7 +427,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {report.equipmentId}
+                        {report.equipmentNumber}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -442,7 +442,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {report.reportedBy}
+                        {report.reporterName}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -517,7 +517,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('breakdown:list.equipmentId')}
               </label>
-              <p className="text-gray-900 dark:text-white">{selectedReport.equipmentId}</p>
+              <p className="text-gray-900 dark:text-white">{selectedReport.equipmentNumber}</p>
             </div>
             
             <div>
@@ -563,7 +563,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('breakdown:list.reporter')}
               </label>
-              <p className="text-gray-900 dark:text-white">{selectedReport.reportedBy}</p>
+              <p className="text-gray-900 dark:text-white">{selectedReport.reporterName}</p>
             </div>
             
             <div>
@@ -742,7 +742,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                 {t('breakdown:list.breakdownTitle')}: <span className="font-medium text-gray-900 dark:text-white">{selectedReport.breakdownTitle}</span>
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t('breakdown:list.equipmentId')}: <span className="font-medium text-gray-900 dark:text-white">{selectedReport.equipmentId}</span>
+                {t('breakdown:list.equipmentId')}: <span className="font-medium text-gray-900 dark:text-white">{selectedReport.equipmentNumber}</span>
               </p>
             </div>
             

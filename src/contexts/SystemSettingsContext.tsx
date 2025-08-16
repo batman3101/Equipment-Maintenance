@@ -112,13 +112,13 @@ export const defaultSettings: SystemSettings = {
       { value: 'BUILD_B', label: 'BUILD B' }
     ],
     statuses: [
-      { value: 'operational', label: '정상', color: 'green' },
-      { value: 'maintenance', label: '점검중', color: 'yellow' },
-      { value: 'broken', label: '고장', color: 'red' },
-      { value: 'test', label: '수리중', color: 'blue' },
-      { value: 'idle', label: '폐기', color: 'gray' }
+      { value: 'running', label: '가동중', color: 'green' },
+      { value: 'breakdown', label: '고장중', color: 'red' },
+      { value: 'standby', label: '대기중', color: 'yellow' },
+      { value: 'maintenance', label: '정비중', color: 'blue' },
+      { value: 'stopped', label: '정지', color: 'gray' }
     ],
-    defaultStatus: 'operational'
+    defaultStatus: 'running'
   },
 
   breakdown: {

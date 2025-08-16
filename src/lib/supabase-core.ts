@@ -267,7 +267,6 @@ export interface Database {
         Row: {
           id: string
           breakdown_report_id: string
-          equipment_id: string
           repair_title: string
           repair_description: string
           repair_method: string | null
@@ -291,16 +290,13 @@ export interface Database {
           repair_category: string | null
           complexity_level: 'simple' | 'medium' | 'complex' | 'critical'
           required_skills: string[] | null
-          certification_required: boolean
-          safety_requirements: string[] | null
-          environmental_impact: string | null
+          completion_percentage: number
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           breakdown_report_id: string
-          equipment_id: string
           repair_title: string
           repair_description: string
           repair_method?: string | null
@@ -324,16 +320,13 @@ export interface Database {
           repair_category?: string | null
           complexity_level?: 'simple' | 'medium' | 'complex' | 'critical'
           required_skills?: string[] | null
-          certification_required?: boolean
-          safety_requirements?: string[] | null
-          environmental_impact?: string | null
+          completion_percentage?: number
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           breakdown_report_id?: string
-          equipment_id?: string
           repair_title?: string
           repair_description?: string
           repair_method?: string | null
@@ -357,9 +350,7 @@ export interface Database {
           repair_category?: string | null
           complexity_level?: 'simple' | 'medium' | 'complex' | 'critical'
           required_skills?: string[] | null
-          certification_required?: boolean
-          safety_requirements?: string[] | null
-          environmental_impact?: string | null
+          completion_percentage?: number
           created_at?: string
           updated_at?: string
         }
@@ -561,151 +552,9 @@ export interface Database {
           updated_at?: string
         }
       }
-      parts_inventory: {
-        Row: {
-          id: string
-          part_number: string
-          part_name: string
-          category: string
-          subcategory: string | null
-          specifications: Json
-          manufacturer: string | null
-          model: string | null
-          unit: string
-          current_stock: number
-          min_stock_level: number
-          max_stock_level: number | null
-          reorder_point: number
-          unit_cost: number | null
-          last_purchase_price: number | null
-          supplier: string | null
-          supplier_contact: string | null
-          storage_location: string | null
-          warehouse_section: string | null
-          shelf_position: string | null
-          is_active: boolean
-          is_critical: boolean
-          last_stock_check_date: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          part_number: string
-          part_name: string
-          category: string
-          subcategory?: string | null
-          specifications?: Json
-          manufacturer?: string | null
-          model?: string | null
-          unit?: string
-          current_stock?: number
-          min_stock_level?: number
-          max_stock_level?: number | null
-          reorder_point?: number
-          unit_cost?: number | null
-          last_purchase_price?: number | null
-          supplier?: string | null
-          supplier_contact?: string | null
-          storage_location?: string | null
-          warehouse_section?: string | null
-          shelf_position?: string | null
-          is_active?: boolean
-          is_critical?: boolean
-          last_stock_check_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          part_number?: string
-          part_name?: string
-          category?: string
-          subcategory?: string | null
-          specifications?: Json
-          manufacturer?: string | null
-          model?: string | null
-          unit?: string
-          current_stock?: number
-          min_stock_level?: number
-          max_stock_level?: number | null
-          reorder_point?: number
-          unit_cost?: number | null
-          last_purchase_price?: number | null
-          supplier?: string | null
-          supplier_contact?: string | null
-          storage_location?: string | null
-          warehouse_section?: string | null
-          shelf_position?: string | null
-          is_active?: boolean
-          is_critical?: boolean
-          last_stock_check_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      parts_transactions: {
-        Row: {
-          id: string
-          part_id: string
-          transaction_type: 'in' | 'out' | 'adjust' | 'transfer'
-          quantity: number
-          unit_price: number | null
-          total_amount: number | null
-          related_repair_id: string | null
-          related_maintenance_id: string | null
-          reason: string | null
-          reference_number: string | null
-          supplier: string | null
-          handled_by: string | null
-          approved_by: string | null
-          approved_at: string | null
-          from_location: string | null
-          to_location: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          part_id: string
-          transaction_type: 'in' | 'out' | 'adjust' | 'transfer'
-          quantity: number
-          unit_price?: number | null
-          total_amount?: number | null
-          related_repair_id?: string | null
-          related_maintenance_id?: string | null
-          reason?: string | null
-          reference_number?: string | null
-          supplier?: string | null
-          handled_by?: string | null
-          approved_by?: string | null
-          approved_at?: string | null
-          from_location?: string | null
-          to_location?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          part_id?: string
-          transaction_type?: 'in' | 'out' | 'adjust' | 'transfer'
-          quantity?: number
-          unit_price?: number | null
-          total_amount?: number | null
-          related_repair_id?: string | null
-          related_maintenance_id?: string | null
-          reason?: string | null
-          reference_number?: string | null
-          supplier?: string | null
-          handled_by?: string | null
-          approved_by?: string | null
-          approved_at?: string | null
-          from_location?: string | null
-          to_location?: string | null
-          created_at?: string
-        }
-      }
     }
     Views: {
-      v_unified_equipment_status: {
+      v_equipment_status_summary: {
         Row: {
           id: string
           equipment_number: string
@@ -714,9 +563,8 @@ export interface Database {
           location: string | null
           manufacturer: string | null
           model: string | null
-          qr_code: string | null
-          iot_device_id: string | null
-          iot_last_signal: string | null
+          asset_tag: string | null
+          serial_number: string | null
           current_equipment_status: string | null
           status_last_updated: string | null
           status_reason: string | null
@@ -728,21 +576,17 @@ export interface Database {
           breakdown_priority: string | null
           breakdown_occurred_at: string | null
           breakdown_status: string | null
+          is_emergency: boolean | null
           active_repair_id: string | null
           repair_title: string | null
           repair_status: string | null
           completion_percentage: number | null
-          total_breakdown_count: number | null
-          total_repair_count: number | null
-          total_downtime_hours: number | null
-          total_repair_cost: number | null
-          maintenance_score: number | null
           next_maintenance_date: string | null
           created_at: string
           updated_at: string
         }
       }
-      v_realtime_dashboard: {
+      v_dashboard_summary: {
         Row: {
           total_equipment: number
           running_equipment: number
@@ -752,11 +596,57 @@ export interface Database {
           stopped_equipment: number
           active_breakdowns: number
           urgent_breakdowns: number
+          emergency_breakdowns: number
           pending_repairs: number
           in_progress_repairs: number
-          avg_maintenance_score: number
-          avg_downtime_hours: number
           last_updated: string
+        }
+      }
+      v_repair_with_equipment: {
+        Row: {
+          id: string
+          breakdown_report_id: string
+          repair_title: string
+          repair_description: string
+          repair_method: string | null
+          technician_id: string
+          repair_started_at: string
+          repair_completed_at: string
+          actual_repair_time: number | null
+          parts_used: string | null
+          parts_cost: number | null
+          labor_cost: number | null
+          total_cost: number | null
+          repair_result: string
+          test_result: string | null
+          quality_check: boolean
+          root_cause: string | null
+          prevention_measures: string | null
+          before_images_urls: string[] | null
+          after_images_urls: string[] | null
+          notes: string | null
+          unified_status: string
+          repair_category: string | null
+          complexity_level: 'simple' | 'medium' | 'complex' | 'critical'
+          required_skills: string[] | null
+          completion_percentage: number
+          created_at: string
+          updated_at: string
+          equipment_id: string
+          equipment_name: string
+          equipment_number: string
+          equipment_category: string
+        }
+      }
+      v_system_health_metrics: {
+        Row: {
+          total_equipment_count: number
+          equipment_utilization_rate: number | null
+          avg_breakdown_resolution_hours: number | null
+          monthly_breakdown_count: number
+          emergency_breakdown_rate: number | null
+          data_inconsistency_count: number
+          last_calculated: string
         }
       }
     }
@@ -772,13 +662,21 @@ export interface Database {
         }
         Returns: boolean
       }
+      validate_equipment_status_consistency: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          equipment_id: string
+          equipment_name: string
+          inconsistency_type: string
+          details: string
+        }[]
+      }
     }
     Enums: {
       entity_type: 'equipment' | 'breakdown' | 'repair'
       status_group: 'equipment' | 'breakdown' | 'repair' | 'general'
       notification_type: 'breakdown' | 'repair' | 'maintenance' | 'system' | 'user'
       severity_level: 'low' | 'medium' | 'high' | 'critical'
-      transaction_type: 'in' | 'out' | 'adjust' | 'transfer'
       complexity_level: 'simple' | 'medium' | 'complex' | 'critical'
       impact_level: 'low' | 'medium' | 'high' | 'critical'
       setting_type: 'string' | 'number' | 'boolean' | 'json'
