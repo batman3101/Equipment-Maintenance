@@ -1,10 +1,13 @@
+/**
+ * 통합 Supabase 클라이언트 - 중복 제거 및 최적화
+ * Unified Supabase Client - Deduplicated and Optimized
+ */
+
 import { createClient } from '@supabase/supabase-js'
 import { validateEnvironmentVariables } from '@/utils/env-validator'
 
 // 환경 변수 검증 (서버 사이드에서만 실행)
 if (typeof window === 'undefined') {
-  
-  // [DIP] Rule: 환경변수 검증 서비스에 의존하여 런타임 보안 강화
   const envValidation = validateEnvironmentVariables()
 
   if (!envValidation.isValid) {
@@ -12,7 +15,7 @@ if (typeof window === 'undefined') {
     throw new Error(`Missing required environment variables: ${envValidation.missingVars.join(', ')}`)
   }
 
-  // 프로덕션 환경에서 추가 보안 검증 (단, 빌드 시에는 경고만)
+  // 프로덕션 환경에서 추가 보안 검증
   if (envValidation.warnings.length > 0) {
     if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
       console.error('❌ Production security warnings:', envValidation.warnings)
@@ -26,26 +29,42 @@ if (typeof window === 'undefined') {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// URL 형식 추가 검증
+// URL 형식 검증
 if (!supabaseUrl.startsWith('https://') && process.env.NODE_ENV === 'production') {
   throw new Error('Supabase URL must use HTTPS in production')
 }
 
-// 키 길이 검증 (최소 보안 기준)
+// 키 길이 검증
 if (supabaseAnonKey.length < 100) {
   throw new Error('Invalid Supabase anon key format')
 }
 
+// 최적화된 Supabase 클라이언트 생성
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    // 브라우저에서는 세션 지속/자동 갱신을 명시적으로 활성화
     autoRefreshToken: typeof window !== 'undefined',
     persistSession: typeof window !== 'undefined',
     detectSessionInUrl: typeof window !== 'undefined',
     flowType: 'pkce'
+  },
+  // 연결 풀 및 타임아웃 최적화
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'x-client-info': 'cnc-maintenance-system@1.0.0'
+    }
+  },
+  // realtime 설정 최적화
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
   }
 })
 
+// JSON 타입 정의
 export type Json =
   | string
   | number
@@ -54,44 +73,10 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// 통합 데이터베이스 스키마 정의 (최신 버전)
 export interface Database {
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string
-          email: string
-          role: 'system_admin' | 'manager' | 'user'
-          full_name: string | null
-          phone: string | null
-          department: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          email: string
-          role?: 'system_admin' | 'manager' | 'user'
-          full_name?: string | null
-          phone?: string | null
-          department?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          role?: 'system_admin' | 'manager' | 'user'
-          full_name?: string | null
-          phone?: string | null
-          department?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
       equipment_info: {
         Row: {
           id: string
@@ -107,6 +92,16 @@ export interface Database {
           serial_number: string | null
           custom_fields: Json
           equipment_tags: string[] | null
+          qr_code: string | null
+          iot_device_id: string | null
+          iot_last_signal: string | null
+          energy_rating: string | null
+          environmental_requirements: Json
+          total_breakdown_count: number
+          total_repair_count: number
+          total_downtime_hours: number
+          total_repair_cost: number
+          maintenance_score: number
           created_at: string
           updated_at: string
         }
@@ -124,6 +119,16 @@ export interface Database {
           serial_number?: string | null
           custom_fields?: Json
           equipment_tags?: string[] | null
+          qr_code?: string | null
+          iot_device_id?: string | null
+          iot_last_signal?: string | null
+          energy_rating?: string | null
+          environmental_requirements?: Json
+          total_breakdown_count?: number
+          total_repair_count?: number
+          total_downtime_hours?: number
+          total_repair_cost?: number
+          maintenance_score?: number
           created_at?: string
           updated_at?: string
         }
@@ -141,6 +146,16 @@ export interface Database {
           serial_number?: string | null
           custom_fields?: Json
           equipment_tags?: string[] | null
+          qr_code?: string | null
+          iot_device_id?: string | null
+          iot_last_signal?: string | null
+          energy_rating?: string | null
+          environmental_requirements?: Json
+          total_breakdown_count?: number
+          total_repair_count?: number
+          total_downtime_hours?: number
+          total_repair_cost?: number
+          maintenance_score?: number
           created_at?: string
           updated_at?: string
         }
@@ -203,13 +218,14 @@ export interface Database {
           symptoms: string | null
           images_urls: string[] | null
           estimated_repair_time: number | null
+          resolution_date: string | null
           unified_status: string
           parent_breakdown_id: string | null
           is_emergency: boolean
           impact_level: 'low' | 'medium' | 'high' | 'critical'
           affected_operations: string[] | null
           external_contractor_required: boolean
-          resolution_date: string | null
+          warranty_claim_possible: boolean
           created_at: string
           updated_at: string
         }
@@ -226,13 +242,14 @@ export interface Database {
           symptoms?: string | null
           images_urls?: string[] | null
           estimated_repair_time?: number | null
+          resolution_date?: string | null
           unified_status?: string
           parent_breakdown_id?: string | null
           is_emergency?: boolean
           impact_level?: 'low' | 'medium' | 'high' | 'critical'
           affected_operations?: string[] | null
           external_contractor_required?: boolean
-          resolution_date?: string | null
+          warranty_claim_possible?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -249,13 +266,14 @@ export interface Database {
           symptoms?: string | null
           images_urls?: string[] | null
           estimated_repair_time?: number | null
+          resolution_date?: string | null
           unified_status?: string
           parent_breakdown_id?: string | null
           is_emergency?: boolean
           impact_level?: 'low' | 'medium' | 'high' | 'critical'
           affected_operations?: string[] | null
           external_contractor_required?: boolean
-          resolution_date?: string | null
+          warranty_claim_possible?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -270,7 +288,7 @@ export interface Database {
           repair_method: string | null
           technician_id: string
           repair_started_at: string
-          repair_completed_at: string
+          repair_completed_at: string | null
           actual_repair_time: number | null
           parts_used: string | null
           parts_cost: number | null
@@ -291,6 +309,7 @@ export interface Database {
           certification_required: boolean
           safety_requirements: string[] | null
           environmental_impact: string | null
+          completion_percentage: number
           created_at: string
           updated_at: string
         }
@@ -302,8 +321,8 @@ export interface Database {
           repair_description: string
           repair_method?: string | null
           technician_id: string
-          repair_started_at: string
-          repair_completed_at?: string
+          repair_started_at?: string
+          repair_completed_at?: string | null
           actual_repair_time?: number | null
           parts_used?: string | null
           parts_cost?: number | null
@@ -324,6 +343,7 @@ export interface Database {
           certification_required?: boolean
           safety_requirements?: string[] | null
           environmental_impact?: string | null
+          completion_percentage?: number
           created_at?: string
           updated_at?: string
         }
@@ -336,7 +356,7 @@ export interface Database {
           repair_method?: string | null
           technician_id?: string
           repair_started_at?: string
-          repair_completed_at?: string
+          repair_completed_at?: string | null
           actual_repair_time?: number | null
           parts_used?: string | null
           parts_cost?: number | null
@@ -357,6 +377,42 @@ export interface Database {
           certification_required?: boolean
           safety_requirements?: string[] | null
           environmental_impact?: string | null
+          completion_percentage?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          role: 'system_admin' | 'manager' | 'user'
+          full_name: string | null
+          phone: string | null
+          department: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          role?: 'system_admin' | 'manager' | 'user'
+          full_name?: string | null
+          phone?: string | null
+          department?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          role?: 'system_admin' | 'manager' | 'user'
+          full_name?: string | null
+          phone?: string | null
+          department?: string | null
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -397,50 +453,6 @@ export interface Database {
           updated_by?: string | null
           created_at?: string
           updated_at?: string
-        }
-      }
-      status_transition_log: {
-        Row: {
-          id: string
-          entity_type: 'equipment' | 'breakdown' | 'repair'
-          entity_id: string
-          from_status: string | null
-          to_status: string
-          transition_reason: string | null
-          transition_metadata: Json
-          triggered_by: string | null
-          triggered_at: string
-          is_automated: boolean
-          automation_rule: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          entity_type: 'equipment' | 'breakdown' | 'repair'
-          entity_id: string
-          from_status?: string | null
-          to_status: string
-          transition_reason?: string | null
-          transition_metadata?: Json
-          triggered_by?: string | null
-          triggered_at?: string
-          is_automated?: boolean
-          automation_rule?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          entity_type?: 'equipment' | 'breakdown' | 'repair'
-          entity_id?: string
-          from_status?: string | null
-          to_status?: string
-          transition_reason?: string | null
-          transition_metadata?: Json
-          triggered_by?: string | null
-          triggered_at?: string
-          is_automated?: boolean
-          automation_rule?: string | null
-          created_at?: string
         }
       }
       system_status_definitions: {
@@ -493,210 +505,47 @@ export interface Database {
           updated_at?: string
         }
       }
-      system_notifications: {
+      status_transition_log: {
         Row: {
           id: string
-          notification_type: 'breakdown' | 'repair' | 'maintenance' | 'system' | 'user'
-          title: string
-          message: string
-          severity: 'low' | 'medium' | 'high' | 'critical'
-          related_entity_type: 'equipment' | 'breakdown' | 'repair' | 'user' | null
-          related_entity_id: string | null
-          target_user_id: string | null
-          target_role: string | null
-          is_broadcast: boolean
-          is_read: boolean
-          read_at: string | null
-          is_dismissed: boolean
-          dismissed_at: string | null
-          requires_action: boolean
-          action_url: string | null
-          auto_expire_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          notification_type: 'breakdown' | 'repair' | 'maintenance' | 'system' | 'user'
-          title: string
-          message: string
-          severity?: 'low' | 'medium' | 'high' | 'critical'
-          related_entity_type?: 'equipment' | 'breakdown' | 'repair' | 'user' | null
-          related_entity_id?: string | null
-          target_user_id?: string | null
-          target_role?: string | null
-          is_broadcast?: boolean
-          is_read?: boolean
-          read_at?: string | null
-          is_dismissed?: boolean
-          dismissed_at?: string | null
-          requires_action?: boolean
-          action_url?: string | null
-          auto_expire_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          notification_type?: 'breakdown' | 'repair' | 'maintenance' | 'system' | 'user'
-          title?: string
-          message?: string
-          severity?: 'low' | 'medium' | 'high' | 'critical'
-          related_entity_type?: 'equipment' | 'breakdown' | 'repair' | 'user' | null
-          related_entity_id?: string | null
-          target_user_id?: string | null
-          target_role?: string | null
-          is_broadcast?: boolean
-          is_read?: boolean
-          read_at?: string | null
-          is_dismissed?: boolean
-          dismissed_at?: string | null
-          requires_action?: boolean
-          action_url?: string | null
-          auto_expire_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      parts_inventory: {
-        Row: {
-          id: string
-          part_number: string
-          part_name: string
-          category: string
-          subcategory: string | null
-          specifications: Json
-          manufacturer: string | null
-          model: string | null
-          unit: string
-          current_stock: number
-          min_stock_level: number
-          max_stock_level: number | null
-          reorder_point: number
-          unit_cost: number | null
-          last_purchase_price: number | null
-          supplier: string | null
-          supplier_contact: string | null
-          storage_location: string | null
-          warehouse_section: string | null
-          shelf_position: string | null
-          is_active: boolean
-          is_critical: boolean
-          last_stock_check_date: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          part_number: string
-          part_name: string
-          category: string
-          subcategory?: string | null
-          specifications?: Json
-          manufacturer?: string | null
-          model?: string | null
-          unit?: string
-          current_stock?: number
-          min_stock_level?: number
-          max_stock_level?: number | null
-          reorder_point?: number
-          unit_cost?: number | null
-          last_purchase_price?: number | null
-          supplier?: string | null
-          supplier_contact?: string | null
-          storage_location?: string | null
-          warehouse_section?: string | null
-          shelf_position?: string | null
-          is_active?: boolean
-          is_critical?: boolean
-          last_stock_check_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          part_number?: string
-          part_name?: string
-          category?: string
-          subcategory?: string | null
-          specifications?: Json
-          manufacturer?: string | null
-          model?: string | null
-          unit?: string
-          current_stock?: number
-          min_stock_level?: number
-          max_stock_level?: number | null
-          reorder_point?: number
-          unit_cost?: number | null
-          last_purchase_price?: number | null
-          supplier?: string | null
-          supplier_contact?: string | null
-          storage_location?: string | null
-          warehouse_section?: string | null
-          shelf_position?: string | null
-          is_active?: boolean
-          is_critical?: boolean
-          last_stock_check_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      parts_transactions: {
-        Row: {
-          id: string
-          part_id: string
-          transaction_type: 'in' | 'out' | 'adjust' | 'transfer'
-          quantity: number
-          unit_price: number | null
-          total_amount: number | null
-          related_repair_id: string | null
-          related_maintenance_id: string | null
-          reason: string | null
-          reference_number: string | null
-          supplier: string | null
-          handled_by: string | null
-          approved_by: string | null
-          approved_at: string | null
-          from_location: string | null
-          to_location: string | null
+          entity_type: 'equipment' | 'breakdown' | 'repair'
+          entity_id: string
+          from_status: string | null
+          to_status: string
+          transition_reason: string | null
+          transition_metadata: Json
+          triggered_by: string | null
+          triggered_at: string
+          is_automated: boolean
+          automation_rule: string | null
           created_at: string
         }
         Insert: {
           id?: string
-          part_id: string
-          transaction_type: 'in' | 'out' | 'adjust' | 'transfer'
-          quantity: number
-          unit_price?: number | null
-          total_amount?: number | null
-          related_repair_id?: string | null
-          related_maintenance_id?: string | null
-          reason?: string | null
-          reference_number?: string | null
-          supplier?: string | null
-          handled_by?: string | null
-          approved_by?: string | null
-          approved_at?: string | null
-          from_location?: string | null
-          to_location?: string | null
+          entity_type: 'equipment' | 'breakdown' | 'repair'
+          entity_id: string
+          from_status?: string | null
+          to_status: string
+          transition_reason?: string | null
+          transition_metadata?: Json
+          triggered_by?: string | null
+          triggered_at?: string
+          is_automated?: boolean
+          automation_rule?: string | null
           created_at?: string
         }
         Update: {
           id?: string
-          part_id?: string
-          transaction_type?: 'in' | 'out' | 'adjust' | 'transfer'
-          quantity?: number
-          unit_price?: number | null
-          total_amount?: number | null
-          related_repair_id?: string | null
-          related_maintenance_id?: string | null
-          reason?: string | null
-          reference_number?: string | null
-          supplier?: string | null
-          handled_by?: string | null
-          approved_by?: string | null
-          approved_at?: string | null
-          from_location?: string | null
-          to_location?: string | null
+          entity_type?: 'equipment' | 'breakdown' | 'repair'
+          entity_id?: string
+          from_status?: string | null
+          to_status?: string
+          transition_reason?: string | null
+          transition_metadata?: Json
+          triggered_by?: string | null
+          triggered_at?: string
+          is_automated?: boolean
+          automation_rule?: string | null
           created_at?: string
         }
       }
@@ -773,19 +622,42 @@ export interface Database {
     Enums: {
       entity_type: 'equipment' | 'breakdown' | 'repair'
       status_group: 'equipment' | 'breakdown' | 'repair' | 'general'
-      notification_type: 'breakdown' | 'repair' | 'maintenance' | 'system' | 'user'
-      severity_level: 'low' | 'medium' | 'high' | 'critical'
-      transaction_type: 'in' | 'out' | 'adjust' | 'transfer'
-      complexity_level: 'simple' | 'medium' | 'complex' | 'critical'
-      impact_level: 'low' | 'medium' | 'high' | 'critical'
-      setting_type: 'string' | 'number' | 'boolean' | 'json'
       equipment_status: 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped'
-      breakdown_status: 'breakdown_reported' | 'breakdown_in_progress' | 'breakdown_completed'
+      breakdown_status: 'reported' | 'assigned' | 'in_progress' | 'completed'
       repair_status: 'repair_pending' | 'repair_in_progress' | 'repair_completed' | 'repair_failed'
-      general_status: 'active' | 'inactive' | 'pending'
       user_role: 'system_admin' | 'manager' | 'user'
       breakdown_priority: 'low' | 'medium' | 'high' | 'urgent'
-      legacy_breakdown_status: 'reported' | 'assigned' | 'in_progress' | 'completed'
+      impact_level: 'low' | 'medium' | 'high' | 'critical'
+      complexity_level: 'simple' | 'medium' | 'complex' | 'critical'
+      setting_type: 'string' | 'number' | 'boolean' | 'json'
     }
   }
 }
+
+// 연결 상태 확인 함수
+export async function checkSupabaseConnection(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('id')
+      .limit(1)
+    
+    if (error) {
+      console.error('Supabase connection error:', error.message)
+      return false
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Supabase connection failed:', error)
+    return false
+  }
+}
+
+// 타입 안전성을 위한 타입 가드
+export function isSupabaseError(error: unknown): error is { message: string; code?: string } {
+  return typeof error === 'object' && error !== null && 'message' in error
+}
+
+// 기본 내보내기
+export default supabase

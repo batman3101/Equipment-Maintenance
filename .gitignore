@@ -49,3 +49,8 @@ next-env.d.ts
 
 # problematic files
 nul
+
+# MCP configuration (contains tokens)
+.mcp.json
+.claude/
+.env.local

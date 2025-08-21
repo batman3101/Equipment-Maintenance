@@ -198,9 +198,8 @@ export interface Database {
           breakdown_type: string | null
           priority: 'low' | 'medium' | 'high' | 'urgent'
           occurred_at: string
-          reported_by: string
           status: 'reported' | 'assigned' | 'in_progress' | 'completed'
-          assigned_to: string | null
+          assigned_to: string
           symptoms: string | null
           images_urls: string[] | null
           estimated_repair_time: number | null
@@ -222,9 +221,8 @@ export interface Database {
           breakdown_type?: string | null
           priority?: 'low' | 'medium' | 'high' | 'urgent'
           occurred_at?: string
-          reported_by: string
           status?: 'reported' | 'assigned' | 'in_progress' | 'completed'
-          assigned_to?: string | null
+          assigned_to: string
           symptoms?: string | null
           images_urls?: string[] | null
           estimated_repair_time?: number | null
@@ -246,9 +244,8 @@ export interface Database {
           breakdown_type?: string | null
           priority?: 'low' | 'medium' | 'high' | 'urgent'
           occurred_at?: string
-          reported_by?: string
           status?: 'reported' | 'assigned' | 'in_progress' | 'completed'
-          assigned_to?: string | null
+          assigned_to?: string
           symptoms?: string | null
           images_urls?: string[] | null
           estimated_repair_time?: number | null

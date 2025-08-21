@@ -115,7 +115,7 @@ export class FetchHttpClient implements HttpClient {
     options?: ApiRequestOptions
   ): Promise<T> {
     const controller = new AbortController()
-    const timeout = options?.timeout || 30000
+    const timeout = options?.timeout || 15000 // 15초로 단축하여 더 빠른 응답
 
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 
@@ -220,7 +220,9 @@ export class UnifiedApiService implements
 
   // [SRP] Rule: 설비 상태 관련 API만 담당
   async getEquipmentStatuses(): Promise<ApiResponse<EquipmentStatusInfo[]>> {
-    return this.httpClient.get<ApiResponse<EquipmentStatusInfo[]>>('/api/equipment/bulk-status')
+    // 캐시 무시하고 강제 새로고침
+    const timestamp = Date.now()
+    return this.httpClient.get<ApiResponse<EquipmentStatusInfo[]>>(`/api/equipment/bulk-status?_t=${timestamp}`)
   }
 
   async updateEquipmentStatus(

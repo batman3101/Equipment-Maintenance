@@ -14,7 +14,7 @@ interface RecentActivity {
   description: string
   status: string
   priority: string
-  reporter_name?: string
+  assignee_name?: string  // reporter_name을 assignee_name으로 변경
   technician_name?: string
   location: string
   occurred_at: string
@@ -64,7 +64,7 @@ export function RecentActivitiesWidget() {
           description: item.breakdown_description?.substring(0, 100) + '...',
           status: item.breakdown_status,
           priority: item.priority,
-          reporter_name: item.breakdown_reporter_name,
+          assignee_name: item.breakdown_assignee_name, // 담당자 이름으로 변경
           location: item.equipment_category, // 카테고리를 위치로 사용
           occurred_at: item.breakdown_occurred_at,
         })
@@ -110,7 +110,7 @@ export function RecentActivitiesWidget() {
           description: '스핀들 회전 중 이상 진동과 함께 센서 오류 알람이 발생...',
           status: 'reported',
           priority: 'high',
-          reporter_name: '김기사',
+          assignee_name: '김기사',
           location: '스텝 세정기',
           occurred_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2시간 전
         }
@@ -266,9 +266,9 @@ export function RecentActivitiesWidget() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                      {activity.type === 'breakdown' && activity.reporter_name && (
+                      {activity.type === 'breakdown' && activity.assignee_name && (
                         <>
-                          {t('dashboard:activities.labels.reporter', { name: activity.reporter_name, team: '생산팀' })} · {activity.description}
+                          담당자: {activity.assignee_name} · {activity.description}
                         </>
                       )}
                       {activity.type === 'repair' && activity.technician_name && (
@@ -276,7 +276,7 @@ export function RecentActivitiesWidget() {
                           {t('dashboard:activities.labels.manager', { name: activity.technician_name, team: '정비팀' })} · {activity.description}
                         </>
                       )}
-                      {!activity.reporter_name && !activity.technician_name && activity.description}
+                      {!activity.assignee_name && !activity.technician_name && activity.description}
                     </p>
                     <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                       <span>📍 {activity.location}</span>

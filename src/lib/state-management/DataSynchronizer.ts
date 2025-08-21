@@ -205,7 +205,8 @@ export class BreakdownSynchronizer extends BaseSynchronizer {
         .from('breakdown_reports')
         .select(`
           *,
-          equipment_info (
+          equipment_info:equipment_id (
+            id,
             equipment_number,
             equipment_name,
             category
@@ -216,31 +217,37 @@ export class BreakdownSynchronizer extends BaseSynchronizer {
       if (error) throw error
 
       // 데이터 변환 (DB -> TypeScript 타입)
-      const transformedBreakdowns: BreakdownReport[] = breakdowns.map(breakdown => ({
-        id: breakdown.id,
-        equipmentId: breakdown.equipment_id,
-        equipmentCategory: breakdown.equipment_info?.category || '',
-        equipmentNumber: breakdown.equipment_info?.equipment_number || '',
-        breakdownTitle: breakdown.breakdown_title,
-        breakdownDescription: breakdown.breakdown_description,
-        breakdownType: breakdown.breakdown_type,
-        priority: breakdown.priority,
-        reporterName: '', // 추가 조회 필요
-        reportedBy: breakdown.reported_by,
-        assignee: breakdown.assigned_to,
-        assignedTo: breakdown.assigned_to,
-        assignedToId: breakdown.assigned_to,
-        urgencyLevel: breakdown.priority,
-        issueType: breakdown.breakdown_type,
-        description: breakdown.breakdown_description,
-        symptoms: breakdown.symptoms,
-        status: breakdown.status,
-        occurredAt: breakdown.occurred_at,
-        createdAt: breakdown.created_at,
-        updatedAt: breakdown.updated_at
-      }))
+      const transformedBreakdowns: BreakdownReport[] = (breakdowns || []).map(breakdown => {
+        // equipment_info가 객체인지 배열인지 확인하고 안전하게 접근
+        const equipmentInfo = Array.isArray(breakdown.equipment_info) 
+          ? breakdown.equipment_info[0] 
+          : breakdown.equipment_info
+        
+        return {
+          id: breakdown.id,
+          equipmentId: breakdown.equipment_id,
+          equipmentCategory: breakdown.equipment_category || equipmentInfo?.category || '',
+          equipmentNumber: breakdown.equipment_number || equipmentInfo?.equipment_number || 'N/A',
+          reporterName: breakdown.reporter_name || breakdown.breakdown_title || '',
+          reportedBy: '', // 제거된 필드
+          assignedTo: breakdown.assigned_to,
+          assignedToId: breakdown.assigned_to,
+          urgencyLevel: (breakdown.urgency_level || breakdown.priority || 'medium') as 'low' | 'medium' | 'high' | 'critical',
+          issueType: breakdown.issue_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
+          description: breakdown.description || '',
+          symptoms: breakdown.symptoms || '',
+          status: breakdown.status as 'reported' | 'assigned' | 'in_progress' | 'resolved' | 'completed' | 'rejected' | 'cancelled',
+          occurredAt: breakdown.occurred_at || breakdown.created_at,
+          resolutionDate: breakdown.resolution_date,
+          notes: breakdown.notes,
+          breakdownTitle: breakdown.breakdown_title || '',
+          createdAt: breakdown.created_at,
+          updatedAt: breakdown.updated_at
+        }
+      })
 
       globalStateManager.setBreakdownReports(transformedBreakdowns)
+      console.log('Breakdown reports synchronized:', transformedBreakdowns.length)
     } catch (error) {
       console.error('Breakdown sync error:', error)
     }

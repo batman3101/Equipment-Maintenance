@@ -81,10 +81,12 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
             )
           `)
           .in('status', [BreakdownStatus.REPORTED, BreakdownStatus.IN_PROGRESS]) // '신고 접수' 또는 '수리중' 상태만
-          .order('equipment_info.equipment_number')
+          .order('created_at', { ascending: false })
 
         if (error) {
           console.error('Error fetching broken equipment:', error)
+          console.error('Error details:', JSON.stringify(error, null, 2))
+          showError('고장 설비 조회 실패', `고장 설비 목록을 불러오는데 실패했습니다: ${error.message || 'Unknown error'}`)
           return
         }
 
@@ -109,6 +111,8 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
         setAvailableEquipment(uniqueEquipment)
       } catch (err) {
         console.error('Unexpected error fetching broken equipment:', err)
+        console.error('Error details:', JSON.stringify(err, null, 2))
+        showError('고장 설비 조회 실패', `예상치 못한 오류가 발생했습니다: ${err instanceof Error ? err.message : 'Unknown error'}`)
       }
     }
 

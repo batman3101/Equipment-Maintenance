@@ -42,8 +42,6 @@ export abstract class BaseStateManager extends EventEmitter {
   constructor() {
     super()
     this.state = this.initializeState()
-    // 이벤트 리스너 제한 설정 (메모리 누수 방지)
-    this.setMaxListeners(50)
   }
 
   protected initializeState(): GlobalState {
@@ -71,14 +69,6 @@ export abstract class BaseStateManager extends EventEmitter {
 
   // 상태 변경 이벤트 발행
   protected emitStateChange(event: StateChangeEvent): void {
-    // 디버깅을 위한 로그
-    console.log(`[StateManager] Emitting state change:`, {
-      type: event.type,
-      action: event.action,
-      hasData: !!event.data,
-      listeners: this.listenerCount('stateChange')
-    })
-    
     this.emit('stateChange', event)
     this.emit(`${event.type}Change`, event)
   }
@@ -89,26 +79,17 @@ export abstract class BaseStateManager extends EventEmitter {
  */
 export class StateManager extends BaseStateManager {
   private static instance: StateManager
-  private initialized: boolean = false
   
   // 싱글톤 패턴으로 단일 상태 소스 보장
   public static getInstance(): StateManager {
     if (!StateManager.instance) {
       StateManager.instance = new StateManager()
-      console.log('[StateManager] New instance created')
     }
     return StateManager.instance
   }
 
-  private constructor() {
-    super()
-    this.initialized = true
-    console.log('[StateManager] Instance initialized')
-  }
-
   // [SRP] Rule: 설비 정보 관리만 담당
   public setEquipments(equipments: Equipment[]): void {
-    console.log(`[StateManager] Setting ${equipments.length} equipments`)
     this.state.equipments.clear()
     equipments.forEach(equipment => {
       this.state.equipments.set(equipment.id, equipment)
@@ -124,7 +105,6 @@ export class StateManager extends BaseStateManager {
   }
 
   public updateEquipment(equipment: Equipment): void {
-    console.log(`[StateManager] Updating equipment: ${equipment.id}`)
     this.state.equipments.set(equipment.id, equipment)
     this.state.lastUpdated.equipments = Date.now()
     
@@ -138,7 +118,6 @@ export class StateManager extends BaseStateManager {
 
   // [SRP] Rule: 설비 상태 관리만 담당
   public setEquipmentStatuses(statuses: EquipmentStatusInfo[]): void {
-    console.log(`[StateManager] Setting ${statuses.length} equipment statuses`)
     this.state.equipmentStatuses.clear()
     statuses.forEach(status => {
       this.state.equipmentStatuses.set(status.equipmentId, status)
@@ -154,24 +133,23 @@ export class StateManager extends BaseStateManager {
   }
 
   public updateEquipmentStatus(status: EquipmentStatusInfo): void {
-    console.log(`[StateManager] Updating equipment status for: ${status.equipmentId}`)
     this.state.equipmentStatuses.set(status.equipmentId, status)
     this.state.lastUpdated.statuses = Date.now()
     
     // 관련 설비 정보와 함께 동기화
     const equipment = this.state.equipments.get(status.equipmentId)
-    
-    this.emitStateChange({
-      type: 'status',
-      action: 'update',
-      data: { status, equipment },
-      timestamp: Date.now()
-    })
+    if (equipment) {
+      this.emitStateChange({
+        type: 'status',
+        action: 'update',
+        data: { status, equipment },
+        timestamp: Date.now()
+      })
+    }
   }
 
   // [SRP] Rule: 고장 보고 관리만 담당
   public setBreakdownReports(reports: BreakdownReport[]): void {
-    console.log(`[StateManager] Setting ${reports.length} breakdown reports`)
     this.state.breakdownReports.clear()
     reports.forEach(report => {
       this.state.breakdownReports.set(report.id, report)
@@ -187,12 +165,11 @@ export class StateManager extends BaseStateManager {
   }
 
   public addBreakdownReport(report: BreakdownReport): void {
-    console.log(`[StateManager] Adding breakdown report: ${report.id} for equipment ${report.equipmentId}`)
     this.state.breakdownReports.set(report.id, report)
     this.state.lastUpdated.breakdowns = Date.now()
     
     // 관련 설비 상태 자동 업데이트
-    const statusUpdated = this.updateEquipmentStatusFromBreakdown(report)
+    this.updateEquipmentStatusFromBreakdown(report)
     
     this.emitStateChange({
       type: 'breakdown',
@@ -200,13 +177,10 @@ export class StateManager extends BaseStateManager {
       data: report,
       timestamp: Date.now()
     })
-    
-    console.log(`[StateManager] Breakdown added, status updated: ${statusUpdated}`)
   }
 
   // [SRP] Rule: 대시보드 캐시 관리만 담당
   public setDashboardData(data: DashboardData): void {
-    console.log('[StateManager] Setting dashboard data')
     this.state.dashboardCache = data
     this.state.lastUpdated.dashboard = Date.now()
     
@@ -249,55 +223,19 @@ export class StateManager extends BaseStateManager {
       .filter(report => report.equipmentId === equipmentId)
   }
 
-  // 워크플로우 기반 상태 전환 - 강화된 동기화 로직
-  private updateEquipmentStatusFromBreakdown(report: BreakdownReport): boolean {
+  // 워크플로우 기반 상태 전환
+  private updateEquipmentStatusFromBreakdown(report: BreakdownReport): void {
     const currentStatus = this.state.equipmentStatuses.get(report.equipmentId)
-    
-    if (!currentStatus) {
-      console.warn(`[StateManager] No status found for equipment ${report.equipmentId}`)
-      // 상태가 없으면 새로 생성
-      const newStatus: EquipmentStatusInfo = {
-        id: `status-${report.equipmentId}`,
-        equipmentId: report.equipmentId,
-        status: 'breakdown',
-        statusReason: `고장 신고: ${report.breakdownTitle || report.description}`,
-        statusChangedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      }
-      this.updateEquipmentStatus(newStatus)
-      return true
-    }
-    
-    // 고장 신고 상태이고 현재 상태가 breakdown이 아닌 경우에만 업데이트
-    if ((report.status === 'reported' || report.status === 'in_progress') && 
-        currentStatus.status !== 'breakdown') {
+    if (currentStatus && currentStatus.status !== 'breakdown') {
       const updatedStatus: EquipmentStatusInfo = {
         ...currentStatus,
         status: 'breakdown',
-        statusReason: `고장 신고: ${report.breakdownTitle || report.description}`,
+        statusReason: `고장 신고: ${report.breakdownTitle}`,
         statusChangedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
       this.updateEquipmentStatus(updatedStatus)
-      return true
     }
-    
-    // 고장이 해결된 경우 상태를 running으로 변경
-    if ((report.status === 'completed' || report.status === 'resolved') && 
-        currentStatus.status === 'breakdown') {
-      const updatedStatus: EquipmentStatusInfo = {
-        ...currentStatus,
-        status: 'running',
-        statusReason: '고장 수리 완료',
-        statusChangedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      this.updateEquipmentStatus(updatedStatus)
-      return true
-    }
-    
-    return false
   }
 
   // 상태 동기화 상태 확인
@@ -307,7 +245,6 @@ export class StateManager extends BaseStateManager {
 
   // 전체 상태 리셋 (테스트 및 초기화용)
   public reset(): void {
-    console.log('[StateManager] Resetting all state')
     this.state = this.initializeState()
     this.emitStateChange({
       type: 'dashboard',
@@ -315,25 +252,6 @@ export class StateManager extends BaseStateManager {
       data: null,
       timestamp: Date.now()
     })
-  }
-  
-  // 디버깅 메서드
-  public getDebugInfo(): any {
-    return {
-      initialized: this.initialized,
-      equipments: this.state.equipments.size,
-      statuses: this.state.equipmentStatuses.size,
-      breakdowns: this.state.breakdownReports.size,
-      repairs: this.state.repairReports.size,
-      hasDashboard: !!this.state.dashboardCache,
-      lastUpdated: this.state.lastUpdated,
-      listeners: {
-        stateChange: this.listenerCount('stateChange'),
-        equipmentChange: this.listenerCount('equipmentChange'),
-        statusChange: this.listenerCount('statusChange'),
-        breakdownChange: this.listenerCount('breakdownChange')
-      }
-    }
   }
 }
 

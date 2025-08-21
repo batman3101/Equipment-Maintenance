@@ -4,7 +4,7 @@
 export enum BreakdownStatus {
   REPORTED = 'reported',        // 신고 접수
   IN_PROGRESS = 'in_progress',  // 수리중 
-  COMPLETED = 'completed'       // 수리완료
+  COMPLETED = 'completed',      // 수리완료
 }
 
 // 상태값 레이블 매핑
@@ -20,21 +20,17 @@ export interface BreakdownReport {
   equipmentId: string
   equipmentCategory: string
   equipmentNumber: string
-  breakdownTitle: string
-  breakdownDescription: string
-  breakdownType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  reporterName: string
-  reportedBy: string
-  assignee?: string
-  assignedTo?: string
-  assignedToId?: string
+  assignedTo: string
+  assignedToId: string
   urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
   issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
   description: string
   symptoms: string
-  status: BreakdownStatus
-  occurredAt: string
+  status: 'reported' | 'in_progress' | 'completed'
+  occurredAt?: string
+  resolutionDate?: string
+  notes?: string
+  breakdownTitle?: string
   createdAt: string
   updatedAt: string
 }
@@ -43,8 +39,7 @@ export interface BreakdownReport {
 export interface BreakdownReportForm {
   equipmentCategory: string
   equipmentNumber: string
-  reporterName: string
-  assignee?: string
+  assignee: string
   urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
   issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
   description: string
@@ -55,8 +50,7 @@ export interface BreakdownReportForm {
 // 데이터베이스 저장용 인터페이스
 export interface BreakdownReportDB {
   equipment_id: string
-  reported_by: string
-  assigned_to?: string
+  assigned_to: string
   breakdown_title: string
   description: string
   symptoms: string

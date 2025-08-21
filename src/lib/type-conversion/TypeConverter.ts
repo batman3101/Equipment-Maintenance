@@ -45,9 +45,8 @@ export interface BreakdownReportDB {
   breakdown_type: string | null
   priority: 'low' | 'medium' | 'high' | 'urgent'
   occurred_at: string
-  reported_by: string
   status: 'reported' | 'assigned' | 'in_progress' | 'completed'
-  assigned_to: string | null
+  assigned_to: string
   symptoms: string | null
   images_urls: string[] | null
   estimated_repair_time: number | null
@@ -228,8 +227,8 @@ export class BreakdownReportConverter extends BaseTypeConverter<BreakdownReportD
       breakdownType: dbRecord.breakdown_type as any || 'other',
       priority: dbRecord.priority === 'urgent' ? 'critical' : dbRecord.priority as 'low' | 'medium' | 'high' | 'critical',
       reporterName: '', // 별도 조회 필요
-      reportedBy: dbRecord.reported_by,
-      assignee: dbRecord.assigned_to || undefined,
+      reportedBy: '', // 제거된 필드
+      assignee: dbRecord.assigned_to,
       assignedTo: dbRecord.assigned_to || undefined,
       assignedToId: dbRecord.assigned_to || undefined,
       urgencyLevel: dbRecord.priority === 'urgent' ? 'critical' : dbRecord.priority as 'low' | 'medium' | 'high' | 'critical',
@@ -253,7 +252,7 @@ export class BreakdownReportConverter extends BaseTypeConverter<BreakdownReportD
     if (appRecord.breakdownType) dbRecord.breakdown_type = appRecord.breakdownType
     if (appRecord.priority) dbRecord.priority = appRecord.priority === 'critical' ? 'urgent' : appRecord.priority as 'low' | 'medium' | 'high' | 'urgent'
     if (appRecord.occurredAt) dbRecord.occurred_at = appRecord.occurredAt
-    if (appRecord.reportedBy) dbRecord.reported_by = appRecord.reportedBy
+    // reported_by 필드는 더 이상 존재하지 않음
     if (appRecord.status) dbRecord.status = this.convertAppBreakdownStatus(appRecord.status)
     if (appRecord.assignedToId !== undefined) dbRecord.assigned_to = appRecord.assignedToId
     if (appRecord.symptoms !== undefined) dbRecord.symptoms = appRecord.symptoms
@@ -299,7 +298,7 @@ export class BreakdownReportConverter extends BaseTypeConverter<BreakdownReportD
       typeof record.breakdown_description === 'string' &&
       ['low', 'medium', 'high', 'urgent'].includes(record.priority) &&
       typeof record.occurred_at === 'string' &&
-      typeof record.reported_by === 'string' &&
+      typeof record.assigned_to === 'string' &&
       ['reported', 'assigned', 'in_progress', 'completed'].includes(record.status) &&
       typeof record.created_at === 'string' &&
       typeof record.updated_at === 'string'
@@ -315,7 +314,7 @@ export class BreakdownReportConverter extends BaseTypeConverter<BreakdownReportD
       typeof record.breakdownDescription === 'string' &&
       ['low', 'medium', 'high', 'critical'].includes(record.priority) &&
       typeof record.occurredAt === 'string' &&
-      typeof record.reportedBy === 'string' &&
+      typeof record.assignedToId === 'string' &&
       ['reported', 'in_progress', 'completed'].includes(record.status) &&
       typeof record.createdAt === 'string' &&
       typeof record.updatedAt === 'string'

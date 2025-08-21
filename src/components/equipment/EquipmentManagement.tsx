@@ -707,6 +707,7 @@ export function EquipmentManagement() {
     }
 
     try {
+      // 1. 설비 정보 업데이트
       const { error } = await supabase
         .from('equipment_info')
         .update({
@@ -730,62 +731,56 @@ export function EquipmentManagement() {
         return
       }
 
-      // 설비 상태 업데이트
+      // 2. 설비 상태 업데이트 (상태가 변경된 경우에만)
       const currentStatus = equipmentStatuses.find(s => s.equipmentId === selectedEquipment.id)
-      if (currentStatus && currentStatus.status !== editEquipmentStatus) {
-        const { error: statusError } = await supabase
-          .from('equipment_status')
-          .update({
-            status: editEquipmentStatus,
-            status_changed_at: new Date().toISOString()
-          })
-          .eq('equipment_id', selectedEquipment.id)
+      let statusUpdated = false
+      
+      if (editEquipmentStatus && (!currentStatus || currentStatus.status !== editEquipmentStatus)) {
+        console.log(`🔄 설비 상태 업데이트: ${currentStatus?.status || '없음'} → ${editEquipmentStatus}`)
         
-        if (statusError) {
-          console.error('Error updating equipment status:', statusError)
-        } else {
-          // [SRP] Rule: 통합 상태 관리 액션을 통한 업데이트
-          const currentStatus = equipmentStatuses.find(s => s.equipmentId === selectedEquipment.id)
-          if (currentStatus) {
-            await actions.updateEquipmentStatus(selectedEquipment.id, {
-              ...currentStatus,
-              status: editEquipmentStatus as EquipmentStatus['status'],
-              statusChangedAt: new Date().toISOString()
+        if (currentStatus) {
+          // 기존 상태 업데이트
+          const { error: statusError } = await supabase
+            .from('equipment_status')
+            .update({
+              status: editEquipmentStatus,
+              status_changed_at: new Date().toISOString()
             })
+            .eq('equipment_id', selectedEquipment.id)
+          
+          if (statusError) {
+            console.error('Error updating equipment status:', statusError)
+          } else {
+            statusUpdated = true
+            console.log(`✅ 설비 상태 업데이트 완료: ${editEquipmentStatus}`)
           }
-        }
-      } else if (!currentStatus) {
-        // 상태가 없으면 새로 생성
-        const { error: statusError } = await supabase
-          .from('equipment_status')
-          .insert({
-            equipment_id: selectedEquipment.id,
-            status: editEquipmentStatus,
-            status_changed_at: new Date().toISOString()
-          })
-        
-        if (statusError) {
-          console.error('Error creating equipment status:', statusError)
         } else {
-          const newStatus: EquipmentStatus = {
-            id: crypto.randomUUID(),
-            equipmentId: selectedEquipment.id,
-            status: editEquipmentStatus as EquipmentStatus['status'],
-            statusReason: null,
-            updatedBy: null,
-            statusChangedAt: new Date().toISOString(),
-            lastMaintenanceDate: null,
-            nextMaintenanceDate: null,
-            operatingHours: null,
-            notes: null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+          // 새 상태 생성
+          const { error: statusError } = await supabase
+            .from('equipment_status')
+            .insert({
+              equipment_id: selectedEquipment.id,
+              status: editEquipmentStatus,
+              status_changed_at: new Date().toISOString()
+            })
+          
+          if (statusError) {
+            console.error('Error creating equipment status:', statusError)
+          } else {
+            statusUpdated = true
+            console.log(`✅ 새 설비 상태 생성 완료: ${editEquipmentStatus}`)
           }
-          // [SRP] Rule: 상태는 통합 상태 관리에서 자동으로 처리됨
         }
       }
 
-      // [SRP] Rule: 설비 정보는 통합 상태 관리에서 자동으로 처리됨
+      // 3. 데이터 새로고침 (설비 정보 또는 상태 변경 시 항상 실행)
+      console.log('🔄 설비 편집 완료 후 데이터 새로고침 시작...')
+      await actions.refreshEquipments()
+      if (statusUpdated) {
+        await actions.refreshStatuses()
+        console.log('✅ 상태 변경으로 인한 추가 새로고침 완료')
+      }
+      console.log('✅ 전체 데이터 새로고침 완료')
 
       showSuccess(
         t('common:messages.updateSuccess'),
@@ -1230,6 +1225,21 @@ export function EquipmentManagement() {
       )}
 
       {/* 설비 현황 통계 */}
+      <div className="mb-4 flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">설비 현황</h3>
+        <Button
+          onClick={() => {
+            console.log('강제 새로고침 실행...')
+            actions.refreshAll()
+            actions.refreshStatuses()
+            showSuccess('데이터 새로고침', '최신 데이터로 업데이트되었습니다.')
+          }}
+          variant="secondary"
+          className="text-sm px-3 py-1"
+        >
+          🔄 새로고침
+        </Button>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
           <Card.Content className="text-center py-6">
@@ -1264,6 +1274,10 @@ export function EquipmentManagement() {
               {statusCounts.breakdown}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">{t('equipment:status.breakdown')}</div>
+            {/* 임시 디버깅 정보 */}
+            <div className="text-xs text-gray-500 mt-1">
+              디버그: {equipmentStatuses.length}개 상태 로드됨
+            </div>
           </Card.Content>
         </Card>
       </div>
@@ -1587,6 +1601,7 @@ export function EquipmentManagement() {
             setShowEditModal(false)
             setSelectedEquipment(null)
             setEditFormData({})
+            setEditEquipmentStatus('')
           }}
           title={t('equipment:modals.editTitle')}
         >

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Card, Button, StatusBadge, Modal } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
+import { useUnifiedState } from '@/hooks/useUnifiedState'
 
 // [SRP] Rule: 수리 보고서 인터페이스 정의 - 타입 정의만 담당
 interface RepairReport {
@@ -28,6 +29,7 @@ interface RepairListProps {
 export function RepairList({ onRepairClick: _onRepairClick }: RepairListProps) {
   const { t } = useTranslation(['repair', 'common'])
   const { showSuccess, showError } = useToast()
+  const { actions } = useUnifiedState()
   const [repairs, setRepairs] = useState<RepairReport[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -200,6 +202,10 @@ export function RepairList({ onRepairClick: _onRepairClick }: RepairListProps) {
           : repair
       ))
 
+      // 통합 상태 관리를 통한 데이터 새로고침
+      await actions.refreshBreakdowns()
+      await actions.refreshEquipments()
+      
       showSuccess(
         t('common:messages.updateSuccess'),
         `${editFormData.technicianName} - ${editFormData.workDescription}`

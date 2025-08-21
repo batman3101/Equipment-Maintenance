@@ -8,6 +8,7 @@ import { apiService } from '@/lib/api/unified-api-service'
 import { Equipment, EquipmentStatusInfo } from '@/types/equipment'
 import { BreakdownReport } from '@/types/breakdown'
 import { DashboardData } from '@/types/dashboard'
+import { statusSynchronizer, StatusChangeEvent as SyncEvent } from '@/utils/status-synchronizer'
 
 /**
  * 통합 상태 관리 Hook의 반환 타입
@@ -47,6 +48,9 @@ export interface UnifiedStateReturn {
     createEquipment: (equipment: Partial<Equipment>) => Promise<Equipment | null>
     updateEquipmentStatus: (equipmentId: string, status: Partial<EquipmentStatusInfo>) => Promise<void>
     createBreakdownReport: (report: Partial<BreakdownReport>) => Promise<BreakdownReport | null>
+    // 새로운 상태 동기화 액션들
+    changeEquipmentStatus: (equipmentId: string, newStatus: string, reason: SyncEvent['reason'], relatedId?: string) => Promise<boolean>
+    syncAllStatuses: () => Promise<{ synchronized: number; errors: string[] }>
   }
 
   // 관계형 데이터 접근자
@@ -156,28 +160,41 @@ export function useUnifiedState(): UnifiedStateReturn {
         // 글로벌 상태 관리자 이벤트 구독
         globalStateManager.on('stateChange', handleStateChange)
         
-        // 실시간 데이터 동기화 시작
-        await dataSynchronizer.startSynchronization()
-        setIsRealTimeActive(true)
+        // 오프라인 모드 확인
+        const isOfflineMode = process.env.NEXT_PUBLIC_OFFLINE_MODE === 'true'
+        
+        if (!isOfflineMode) {
+          // 온라인 모드: 실시간 데이터 동기화 시작
+          await dataSynchronizer.startSynchronization()
+          setIsRealTimeActive(true)
+        } else {
+          // 오프라인 모드: 목 데이터 사용
+          console.log('Running in offline mode with mock data')
+          setIsRealTimeActive(false)
+        }
         
         // 초기 상태 동기화
         syncStateFromGlobal()
         
-        setLoading({
-          equipments: false,
-          statuses: false,
-          breakdowns: false,
-          dashboard: false,
-          global: false
-        })
+        // 로딩 완료 지연 처리 (데이터 안정화 대기)
+        setTimeout(() => {
+          setLoading({
+            equipments: false,
+            statuses: false,
+            breakdowns: false,
+            dashboard: false,
+            global: false
+          })
+        }, 1000)
+        
       } catch (error) {
         console.error('Failed to start synchronization:', error)
         setErrors(prev => ({
           ...prev,
-          equipments: 'Failed to load equipments',
-          statuses: 'Failed to load statuses',
-          breakdowns: 'Failed to load breakdowns',
-          dashboard: 'Failed to load dashboard'
+          equipments: error instanceof Error ? error.message : 'Failed to load equipments',
+          statuses: error instanceof Error ? error.message : 'Failed to load statuses',
+          breakdowns: error instanceof Error ? error.message : 'Failed to load breakdowns',
+          dashboard: error instanceof Error ? error.message : 'Failed to load dashboard'
         }))
         setLoading({
           equipments: false,
@@ -194,7 +211,9 @@ export function useUnifiedState(): UnifiedStateReturn {
     // 클린업
     return () => {
       globalStateManager.off('stateChange', handleStateChange)
-      dataSynchronizer.stopSynchronization()
+      if (process.env.NEXT_PUBLIC_OFFLINE_MODE !== 'true') {
+        dataSynchronizer.stopSynchronization()
+      }
       setIsRealTimeActive(false)
     }
   }, [handleStateChange, syncStateFromGlobal])
@@ -223,13 +242,25 @@ export function useUnifiedState(): UnifiedStateReturn {
       setLoading(prev => ({ ...prev, statuses: true }))
       setErrors(prev => ({ ...prev, statuses: null }))
       
+      console.log('🔄 강제로 설비 상태 새로고침 중...')
+      
+      // 캐시 무시하고 직접 데이터베이스에서 가져오기
       const response = await apiService.getEquipmentStatuses()
       if (response.success && response.data) {
+        console.log(`✅ ${response.data.length}개 설비 상태 로드됨`)
         globalStateManager.setEquipmentStatuses(response.data)
+        
+        // 상태별 카운트 로깅
+        const statusCounts = response.data.reduce((acc, status) => {
+          acc[status.status] = (acc[status.status] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
+        console.log('📊 로드된 상태 분포:', statusCounts)
       } else {
         throw new Error(response.error || 'Failed to fetch statuses')
       }
     } catch (error) {
+      console.error('❌ 상태 새로고침 실패:', error)
       setErrors(prev => ({ ...prev, statuses: error instanceof Error ? error.message : 'Unknown error' }))
     } finally {
       setLoading(prev => ({ ...prev, statuses: false }))
@@ -342,6 +373,78 @@ export function useUnifiedState(): UnifiedStateReturn {
     }
   }, [])
 
+  // [SRP] Rule: 상태 동기화 액션들 - 일관성 보장
+  const changeEquipmentStatus = useCallback(async (
+    equipmentId: string,
+    newStatus: string,
+    reason: SyncEvent['reason'],
+    relatedId?: string
+  ): Promise<boolean> => {
+    try {
+      const result = await statusSynchronizer.changeEquipmentStatus(
+        equipmentId,
+        newStatus,
+        reason,
+        relatedId
+      )
+      
+      if (result.success) {
+        // 성공적으로 동기화된 경우 관련 데이터 새로고침
+        if (result.updatedEntities.status) {
+          await refreshStatuses()
+        }
+        if (result.updatedEntities.breakdown) {
+          await refreshBreakdowns()
+        }
+        
+        // 성공 로그
+        console.log(`Status changed successfully:`, {
+          equipmentId,
+          newStatus,
+          reason,
+          updatedEntities: result.updatedEntities
+        })
+      } else {
+        // 실패 로그
+        console.error(`Status change failed:`, {
+          equipmentId,
+          newStatus,
+          reason,
+          errors: result.errors
+        })
+      }
+      
+      return result.success
+    } catch (error) {
+      console.error('Failed to change equipment status:', error)
+      return false
+    }
+  }, [refreshStatuses, refreshBreakdowns])
+
+  const syncAllStatuses = useCallback(async (): Promise<{ synchronized: number; errors: string[] }> => {
+    try {
+      const result = await statusSynchronizer.syncAllStatuses()
+      
+      if (result.synchronized > 0) {
+        // 동기화된 데이터가 있으면 새로고침
+        await refreshStatuses()
+        await refreshBreakdowns()
+        
+        console.log(`Synchronized ${result.synchronized} equipment statuses`)
+      }
+      
+      if (result.errors.length > 0) {
+        console.warn('Status synchronization errors:', result.errors)
+      }
+      
+      return result
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+      console.error('Failed to sync all statuses:', error)
+      return { synchronized: 0, errors: [errorMessage] }
+    }
+  }, [refreshStatuses, refreshBreakdowns])
+
   // [SRP] Rule: 관계형 데이터 접근만 담당하는 파생 상태들
   const derived = useMemo(() => ({
     getEquipmentWithStatus: (equipmentId: string) => {
@@ -414,7 +517,10 @@ export function useUnifiedState(): UnifiedStateReturn {
       refreshDashboard,
       createEquipment,
       updateEquipmentStatus,
-      createBreakdownReport
+      createBreakdownReport,
+      // 새로운 상태 동기화 액션들
+      changeEquipmentStatus,
+      syncAllStatuses
     },
 
     // 관계형 데이터 접근자

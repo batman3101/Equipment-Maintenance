@@ -14,7 +14,8 @@ import { SystemSettingsPage } from '@/components/settings'
 import { TrendChart, DailyStatusCards } from '@/components/dashboard-widgets'
 import { RecentActivitiesWidget } from '@/components/dashboard-widgets/RecentActivitiesWidget'
 import { useTranslation } from 'react-i18next'
-import { useUnifiedState } from '@/hooks/useUnifiedState'
+import { useGlobalState } from '@/contexts/GlobalStateContext'
+import { calculateDashboardMetrics } from '@/utils/metrics-calculator'
 
 /**
  * [OCP] Rule: 메모이제이션을 통한 성능 최적화 확장
@@ -36,14 +37,15 @@ function DashboardComponent() {
     actions,
     derived,
     meta
-  } = useUnifiedState()
+  } = useGlobalState()
   
   // 오프라인 모드 체크
   const isOfflineMode = process.env.NEXT_PUBLIC_OFFLINE_MODE === 'true'
 
-  // 통합 상태에서 성능 메트릭 추출
+  // 통합 상태에서 성능 메트릭 추출 - 실제 계산 로직 사용
   const performanceMetrics = React.useMemo(() => {
-    if (!dashboardData) {
+    // 실제 데이터가 없으면 기본값 반환
+    if (!equipments || equipments.length === 0) {
       return {
         mtbf: { value: 168, unit: 'h', change: 12, target: 150, bestEquipment: 'CNC-LT-001', bestValue: 245 },
         mttr: { value: 2.4, unit: 'h', change: -0.3, target: 3.0, bestEquipment: 'CNC-LT-001', bestValue: 1.8 },
@@ -51,35 +53,21 @@ function DashboardComponent() {
       }
     }
 
-    // 대시보드 데이터에서 성능 메트릭 계산
+    // 통계 데이터 가져오기
     const statistics = derived.getStatistics()
-    return {
-      mtbf: { 
-        value: 168, 
-        unit: 'h', 
-        change: 12, 
-        target: 150, 
-        bestEquipment: 'CNC-LT-001', 
-        bestValue: 245 
-      },
-      mttr: { 
-        value: 2.4, 
-        unit: 'h', 
-        change: -0.3, 
-        target: 3.0, 
-        bestEquipment: 'CNC-LT-001', 
-        bestValue: 1.8 
-      },
-      completionRate: { 
-        value: statistics.total > 0 ? Math.round((statistics.running / statistics.total) * 100) : 0, 
-        unit: '%', 
-        change: 3.2, 
-        completed: breakdownReports.filter(r => r.status === 'completed').length, 
-        planned: breakdownReports.length, 
-        preventiveRatio: 75 
-      }
-    }
-  }, [dashboardData, breakdownReports, derived])
+    
+    // 수리 보고서 가져오기 (useUnifiedState에서 제공하는 경우)
+    const repairReports = [] // TODO: useUnifiedState에 repairReports 추가 필요
+    
+    // 실제 메트릭 계산
+    return calculateDashboardMetrics(
+      equipments,
+      statistics.running,
+      breakdownReports,
+      repairReports,
+      30 // 30일 기준
+    )
+  }, [equipments, breakdownReports, derived])
 
   const metricsLoading = loading.dashboard || loading.global
 

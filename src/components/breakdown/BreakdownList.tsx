@@ -51,7 +51,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
     refreshData: fetchReports
   }))
 
-  // Supabase에서 고장 데이터 가져오기
+  // 초기 로드
   useEffect(() => {
     fetchReports()
     fetchUsers()
@@ -76,6 +76,69 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
     }
   }
 
+  // 🔥 설비 상태 자동 동기화 함수
+  const updateEquipmentStatus = async (equipmentId: string, breakdownStatus: string, breakdownId: string) => {
+    try {
+      console.log('updateEquipmentStatus 호출됨:', { equipmentId, breakdownStatus, breakdownId })
+      let equipmentStatus = 'running' // 기본값
+      let statusReason = ''
+
+      // 고장 신고 상태에 따라 설비 상태 결정
+      switch (breakdownStatus) {
+        case 'reported':
+        case 'in_progress':
+          equipmentStatus = 'breakdown'
+          statusReason = `고장 신고 진행중 (ID: ${breakdownId})`
+          break
+        case 'completed':
+          // 해당 설비의 다른 활성 고장 신고가 있는지 확인
+          const { data: otherActiveBreakdowns } = await supabase
+            .from('breakdown_reports')
+            .select('id')
+            .eq('equipment_id', equipmentId)
+            .in('status', ['reported', 'in_progress'])
+            .neq('id', breakdownId)
+
+          if (otherActiveBreakdowns && otherActiveBreakdowns.length > 0) {
+            equipmentStatus = 'breakdown'
+            statusReason = `기타 고장 신고 진행중`
+          } else {
+            equipmentStatus = 'running'
+            statusReason = `고장 수리 완료 (ID: ${breakdownId})`
+          }
+          break
+      }
+
+      // 설비 상태 업데이트
+      console.log('설비 상태 업데이트 시도:', {
+        equipment_id: equipmentId,
+        status: equipmentStatus,
+        status_reason: statusReason,
+        breakdown_status: breakdownStatus
+      })
+      
+      const { data: updateResult, error: statusError } = await supabase
+        .from('equipment_status')
+        .upsert({
+          equipment_id: equipmentId,
+          status: equipmentStatus,
+          status_reason: statusReason,
+          status_changed_at: new Date().toISOString(),
+          notes: `고장 신고 상태 동기화: ${breakdownStatus}`
+        })
+        .select()
+
+      if (statusError) {
+        console.error('설비 상태 업데이트 실패:', statusError)
+      } else {
+        console.log('설비 상태 업데이트 성공:', updateResult)
+        console.log(`설비 ${equipmentId} 상태가 ${equipmentStatus}로 업데이트됨`)
+      }
+    } catch (err) {
+      console.error('설비 상태 동기화 오류:', err)
+    }
+  }
+
   const fetchReports = async () => {
     try {
       setLoading(true)
@@ -88,9 +151,6 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
           equipment_info!inner(
             equipment_number,
             equipment_name
-          ),
-          profiles_reported:profiles!breakdown_reports_reported_by_fkey(
-            full_name
           ),
           profiles_assigned:profiles!breakdown_reports_assigned_to_fkey(
             full_name
@@ -106,9 +166,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
 
       // Supabase 데이터를 컴포넌트 인터페이스에 맞게 변환
       const formattedReports: BreakdownReport[] = (data || []).map(report => {
-        // 신고자 정보는 이제 reported_by로 처리하므로 description에서 추출할 필요 없음
-        const reporterName = report.profiles_reported?.full_name || '알 수 없는 사용자'
-        const assigneeName = report.profiles_assigned?.full_name || ''
+        const assigneeName = report.profiles_assigned?.full_name || '담당자 미지정'
         
         // 실제 설명에서 신고자 정보 제거
         const cleanDescription = report.breakdown_description?.replace(/\[신고자:\s*.+?\]\n\n/, '') || ''
@@ -122,9 +180,6 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
           breakdownDescription: cleanDescription,
           breakdownType: report.breakdown_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
           priority: report.priority as 'low' | 'medium' | 'high' | 'critical',
-          reporterName: reporterName,
-          reportedBy: report.reported_by,
-          assignee: assigneeName,
           assignedTo: assigneeName,
           assignedToId: report.assigned_to,
           urgencyLevel: report.priority as 'low' | 'medium' | 'high' | 'critical',
@@ -221,13 +276,29 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
         return
       }
 
-      // 로컬 상태 업데이트
+      // 🔥 고장 신고 상태 변경 시 설비 상태도 자동 동기화
+      if (editFormData.status && editFormData.status !== selectedReport.status) {
+        console.log('상태 변경 감지:', {
+          이전상태: selectedReport.status,
+          새상태: editFormData.status,
+          설비ID: selectedReport.equipmentId,
+          신고ID: selectedReport.id
+        })
+        await updateEquipmentStatus(selectedReport.equipmentId, editFormData.status, selectedReport.id)
+      }
+
+      // 로컬 상태 업데이트 - 명시적으로 필드별로 업데이트
       const assigneeName = availableUsers.find(u => u.id === editAssigneeId)?.full_name || ''
       setReports(prev => prev.map(report => 
         report.id === selectedReport.id 
           ? { 
               ...report, 
-              ...editFormData as BreakdownReport, 
+              breakdownTitle: editFormData.breakdownTitle || report.breakdownTitle,
+              breakdownDescription: editFormData.breakdownDescription || report.breakdownDescription,
+              breakdownType: editFormData.breakdownType || report.breakdownType,
+              priority: editFormData.priority || report.priority,
+              status: editFormData.status || report.status,
+              symptoms: editFormData.symptoms || report.symptoms,
               assignedTo: assigneeName,
               assignedToId: editAssigneeId,
               updatedAt: new Date().toISOString() 
@@ -235,6 +306,9 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
           : report
       ))
 
+      // 데이터 새로고침
+      await fetchReports()
+      
       showSuccess(
         t('common:messages.updateSuccess'),
         `${editFormData.breakdownTitle}`
@@ -329,7 +403,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
             <div className="text-2xl font-bold text-red-600">
               {statusCounts[BreakdownStatus.REPORTED] || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{BREAKDOWN_STATUS_LABELS[BreakdownStatus.REPORTED]}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:status.reported')}</div>
           </Card.Content>
         </Card>
         
@@ -338,7 +412,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
             <div className="text-2xl font-bold text-yellow-600">
               {statusCounts[BreakdownStatus.IN_PROGRESS] || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{BREAKDOWN_STATUS_LABELS[BreakdownStatus.IN_PROGRESS]}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:status.in_progress')}</div>
           </Card.Content>
         </Card>
         
@@ -347,7 +421,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
             <div className="text-2xl font-bold text-green-600">
               {statusCounts[BreakdownStatus.COMPLETED] || 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{BREAKDOWN_STATUS_LABELS[BreakdownStatus.COMPLETED]}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t('breakdown:status.completed')}</div>
           </Card.Content>
         </Card>
       </div>
@@ -369,9 +443,9 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                 className="block w-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="all">{t('breakdown:list.filters.allStatus')}</option>
-                <option value={BreakdownStatus.REPORTED}>{BREAKDOWN_STATUS_LABELS[BreakdownStatus.REPORTED]}</option>
-                <option value={BreakdownStatus.IN_PROGRESS}>{BREAKDOWN_STATUS_LABELS[BreakdownStatus.IN_PROGRESS]}</option>
-                <option value={BreakdownStatus.COMPLETED}>{BREAKDOWN_STATUS_LABELS[BreakdownStatus.COMPLETED]}</option>
+                <option value={BreakdownStatus.REPORTED}>{t('breakdown:status.reported')}</option>
+                <option value={BreakdownStatus.IN_PROGRESS}>{t('breakdown:status.in_progress')}</option>
+                <option value={BreakdownStatus.COMPLETED}>{t('breakdown:status.completed')}</option>
               </select>
               
               <select
@@ -407,7 +481,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                     {t('breakdown:list.status')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {t('breakdown:list.reporter')}
+                    담당자
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     {t('breakdown:list.reportedAt')}
@@ -442,7 +516,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {report.reporterName}
+                        {report.assignedTo}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -561,16 +635,9 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
             
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('breakdown:list.reporter')}
+                담당자
               </label>
-              <p className="text-gray-900 dark:text-white">{selectedReport.reporterName}</p>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('breakdown:list.assignee')}
-              </label>
-              <p className="text-gray-900 dark:text-white">{selectedReport.assignedTo || '-'}</p>
+              <p className="text-gray-900 dark:text-white">{selectedReport.assignedTo}</p>
             </div>
             
             <div>
@@ -677,10 +744,9 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                 onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value as BreakdownReport['status'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
-                <option value="reported">{t('breakdown:status.reported')}</option>
-                <option value="assigned">{t('breakdown:status.assigned')}</option>
-                <option value="in_progress">{t('breakdown:status.in_progress')}</option>
-                <option value="completed">{t('breakdown:status.completed')}</option>
+                <option value="reported">신고 접수</option>
+                <option value="in_progress">수리 중</option>
+                <option value="completed">수리 완료</option>
               </select>
             </div>
             

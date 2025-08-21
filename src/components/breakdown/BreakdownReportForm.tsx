@@ -24,7 +24,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
   const [formData, setFormData] = useState<Partial<BreakdownReportFormType>>({
     equipmentCategory: '',
     equipmentNumber: '',
-    reporterName: '',
+    assignee: '',
     urgencyLevel: settings.breakdown.defaultUrgency as 'low' | 'medium' | 'high' | 'critical',
     issueType: 'mechanical',
     description: '',
@@ -35,7 +35,6 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [availableEquipment, setAvailableEquipment] = useState<Array<{id: string, equipment_number: string, equipment_name: string}>>([])
   const [availableUsers, setAvailableUsers] = useState<Array<{id: string, full_name: string, email: string}>>([])
-  const [selectedReporter, setSelectedReporter] = useState<string>('')
   const [selectedAssignee, setSelectedAssignee] = useState<string>('')
 
   // 컴포넌트 로드 시 사용 가능한 설비 목록과 사용자 목록 가져오기
@@ -92,8 +91,8 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     if (!formData.equipmentNumber?.trim()) {
       newErrors.equipmentNumber = t('breakdown:validation.equipmentNumberRequired')
     }
-    if (!selectedReporter) {
-      newErrors.reporterName = t('breakdown:validation.reporterNameRequired')
+    if (!selectedAssignee) {
+      newErrors.assignee = t('breakdown:validation.assigneeRequired')
     }
     if (!formData.description?.trim()) {
       newErrors.description = t('breakdown:validation.descriptionRequired')
@@ -114,7 +113,10 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
     setLoading(true)
     
     try {
-      const reportData: BreakdownReportFormType = formData as BreakdownReportFormType
+      const reportData: BreakdownReportFormType = {
+        ...formData,
+        assignee: selectedAssignee
+      } as BreakdownReportFormType
 
       console.log('Submitting breakdown report:', reportData)
 
@@ -138,11 +140,11 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
         return
       }
 
-      // 선택된 사용자 ID 사용
-      if (!selectedReporter) {
+      // 담당자 ID 검증
+      if (!selectedAssignee) {
         showError(
           t('breakdown:messages.reportError'),
-          '신고자를 선택해주세요.'
+          '담당자를 선택해주세요.'
         )
         return
       }
@@ -157,8 +159,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
           breakdown_type: reportData.issueType,
           priority: reportData.urgencyLevel === 'critical' ? 'urgent' : reportData.urgencyLevel, // critical -> urgent 매핑
           occurred_at: new Date().toISOString(),
-          reported_by: selectedReporter, // 선택된 사용자의 UUID
-          assigned_to: selectedAssignee || null, // 선택된 담당자 UUID
+          assigned_to: selectedAssignee, // 선택된 담당자 UUID
           status: formData.status || BreakdownStatus.REPORTED,
           symptoms: reportData.symptoms,
           created_at: new Date().toISOString(),
@@ -179,6 +180,27 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
 
       console.log('고장 신고 저장 성공:', data)
       
+      // 🔥 고장 신고 생성 시 설비 상태를 자동으로 'breakdown'으로 변경
+      try {
+        const { error: statusError } = await supabase
+          .from('equipment_status')
+          .upsert({
+            equipment_id: equipmentData.id,
+            status: 'breakdown',
+            status_reason: `고장 신고 접수 (ID: ${data.id})`,
+            status_changed_at: new Date().toISOString(),
+            notes: `고장 신고 자동 생성: ${reportData.description}`
+          })
+
+        if (statusError) {
+          console.warn('설비 상태 업데이트 실패:', statusError)
+        } else {
+          console.log(`설비 ${equipmentData.id} 상태가 breakdown으로 변경됨`)
+        }
+      } catch (statusErr) {
+        console.error('설비 상태 동기화 오류:', statusErr)
+      }
+      
       onSubmit?.(reportData)
       
       showSuccess(
@@ -190,14 +212,13 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
       setFormData({
         equipmentCategory: '',
         equipmentNumber: '',
-        reporterName: '',
+        assignee: '',
         urgencyLevel: settings.breakdown.defaultUrgency as 'low' | 'medium' | 'high' | 'critical',
         issueType: 'mechanical',
         description: '',
         symptoms: '',
         status: BreakdownStatus.REPORTED
       })
-      setSelectedReporter('')
       setSelectedAssignee('')
       
     } catch (error) {
@@ -283,59 +304,28 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
             </div>
 
-            {/* 3. 신고자 선택 */}
+            {/* 3. 담당자 선택 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('breakdown:form.reporterName')} <span className="text-red-500">{t('breakdown:form.required')}</span>
-              </label>
-              <select
-                value={selectedReporter}
-                onChange={(e) => setSelectedReporter(e.target.value)}
-                className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
-                  errors.reporterName 
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                    : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
-                } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
-              >
-                <option value="">신고자를 선택해주세요</option>
-                {availableUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name} ({user.email})
-                  </option>
-                ))}
-              </select>
-              {errors.reporterName && <p className="mt-1 text-sm text-red-600">{errors.reporterName}</p>}
-              
-              {/* 사용자 목록 디버깅 정보 */}
-              {availableUsers.length === 0 && (
-                <p className="mt-1 text-sm text-yellow-600">
-                  사용자 목록을 불러오는 중입니다...
-                </p>
-              )}
-              {availableUsers.length > 0 && (
-                <p className="mt-1 text-sm text-green-600">
-                  {t('breakdown:messages.availableUsers', { count: availableUsers.length })}
-                </p>
-              )}
-            </div>
-
-            {/* 4. 담당자 선택 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('breakdown:form.assignee')}
+                담당자 <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedAssignee}
                 onChange={(e) => setSelectedAssignee(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={`block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                  errors.assignee 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
+                } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
               >
-                <option value="">{t('breakdown:form.assigneePlaceholder')}</option>
+                <option value="">담당자를 선택하세요</option>
                 {availableUsers.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.full_name} ({user.email})
                   </option>
                 ))}
               </select>
+              {errors.assignee && <p className="mt-1 text-sm text-red-600">{errors.assignee}</p>}
               
               {/* 담당자 목록 디버깅 정보 */}
               {availableUsers.length === 0 && (
@@ -345,7 +335,7 @@ export function BreakdownReportForm({ onSubmit, onCancel }: BreakdownReportFormP
               )}
               {availableUsers.length > 0 && (
                 <p className="mt-1 text-sm text-green-600">
-                  {t('breakdown:messages.availableAssignees', { count: availableUsers.length })}
+                  {availableUsers.length}명의 담당자 중에서 선택할 수 있습니다.
                 </p>
               )}
             </div>

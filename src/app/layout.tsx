@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SystemSettingsProvider } from "@/contexts/SystemSettingsContext";
 import { I18nProvider } from "@/contexts/I18nContext";
+import { GlobalStateProvider } from "@/contexts/GlobalStateContext";
 
 // 영어와 베트남어용 Inter 폰트
 const inter = Inter({
@@ -73,7 +74,9 @@ export default function RootLayout({
             <ToastProvider>
               <SystemSettingsProvider>
                 <AuthProvider>
-                  {children}
+                  <GlobalStateProvider>
+                    {children}
+                  </GlobalStateProvider>
                 </AuthProvider>
               </SystemSettingsProvider>
             </ToastProvider>
