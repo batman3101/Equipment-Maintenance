@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useToast } from '@/contexts/ToastContext'
 
 interface MaintenanceAnalysisProps {
   subOption: string
@@ -12,23 +14,22 @@ interface MaintenanceAnalysisProps {
 
 export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisProps) {
   const { t } = useTranslation('statistics')
+  const { showError } = useToast()
+  
   type Equipment = { id: string; equipment_number: string; equipment_name?: string; category?: string }
   type Maintenance = { id: string; equipment_id: string; status: 'planned' | 'completed' | 'in_progress' | 'delayed' | 'overdue' }
   type Repair = { id: string; equipment_id: string; repair_completed_at?: string }
-  const [equipmentData, setEquipmentData] = useState<Equipment[]>([])
-  const [maintenanceData, setMaintenanceData] = useState<Maintenance[]>([])
-  const [_repairData, setRepairData] = useState<Repair[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  
+  type MaintenanceAnalysisData = {
+    equipmentData: Equipment[]
+    maintenanceData: Maintenance[]
+    repairData: Repair[]
+  }
 
-  useEffect(() => {
-    fetchData()
-  }, [period])
-
-  const fetchData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  // 비동기 작업 및 에러 처리
+  const asyncFetchData = useAsyncOperation(
+    async (): Promise<MaintenanceAnalysisData> => {
+      console.log('[MaintenanceAnalysis] 정비 분석 데이터 로드 시작...')
 
       // 설비 정보, 정비 계획, 수리 내역을 동시에 가져오기
       const [equipmentResult, maintenanceResult, repairResult] = await Promise.all([
@@ -41,19 +42,44 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
       if (maintenanceResult.error) throw maintenanceResult.error  
       if (repairResult.error) throw repairResult.error
 
-      setEquipmentData(equipmentResult.data || [])
-      setMaintenanceData(maintenanceResult.data || [])
-      setRepairData(repairResult.data || [])
-    } catch (err) {
-      console.error('Error fetching maintenance data:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
+      const result = {
+        equipmentData: equipmentResult.data || [],
+        maintenanceData: maintenanceResult.data || [],
+        repairData: repairResult.data || []
+      }
+
+      console.log('[MaintenanceAnalysis] 데이터 로드 완료:', {
+        equipment: result.equipmentData.length,
+        maintenance: result.maintenanceData.length,
+        repair: result.repairData.length
+      })
+
+      return result
+    },
+    {
+      maxRetries: 3,
+      retryDelay: 1000,
+      componentId: 'maintenance-analysis',
+      onSuccess: () => {
+        console.log('[MaintenanceAnalysis] 정비 분석 데이터 로드 성공')
+      },
+      onError: (error) => {
+        console.error('[MaintenanceAnalysis] 정비 분석 데이터 로드 실패:', error)
+        showError('정비 분석 데이터를 불러오는데 실패했습니다.')
+      }
     }
-  }
+  )
+
+  const data = asyncFetchData.data || { equipmentData: [], maintenanceData: [], repairData: [] }
+  const loading = asyncFetchData.loading
+  const error = asyncFetchData.error
+
+  useEffect(() => {
+    asyncFetchData.execute()
+  }, [period])
 
   const maintenanceMetrics = useMemo(() => {
-    if (!maintenanceData.length) {
+    if (!data.maintenanceData.length) {
       return {
         planned: 0,
         completed: 0,
@@ -63,14 +89,14 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
       }
     }
 
-    const planned = maintenanceData.length
-    const completed = maintenanceData.filter(m => m.status === 'completed').length
-    const inProgress = maintenanceData.filter(m => m.status === 'in_progress').length
-    const delayed = maintenanceData.filter(m => m.status === 'delayed' || m.status === 'overdue').length
+    const planned = data.maintenanceData.length
+    const completed = data.maintenanceData.filter(m => m.status === 'completed').length
+    const inProgress = data.maintenanceData.filter(m => m.status === 'in_progress').length
+    const delayed = data.maintenanceData.filter(m => m.status === 'delayed' || m.status === 'overdue').length
     const overallRate = planned > 0 ? Math.round((completed / planned) * 100 * 10) / 10 : 0
 
     return { planned, completed, inProgress, delayed, overallRate }
-  }, [maintenanceData])
+  }, [data.maintenanceData])
   
   const getPeriodLabel = (period: string) => {
     const labels: { [key: string]: string } = {
@@ -101,7 +127,7 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
           <Card.Content className="text-center py-8">
             <div className="text-red-500 mb-4">{error}</div>
             <button 
-              onClick={fetchData}
+              onClick={() => asyncFetchData.execute()}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               {t('common:actions.retry')}
@@ -160,13 +186,13 @@ export function MaintenanceAnalysis({ subOption, period }: MaintenanceAnalysisPr
                 </div>
 
                 <div className="space-y-4">
-                  {equipmentData.length === 0 ? (
+                  {data.equipmentData.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-gray-600 dark:text-gray-400">{t('common.noData')}</p>
                     </div>
                   ) : (
-                    equipmentData.map((equipment) => {
-                      const equipmentMaintenance = maintenanceData.filter(m => m.equipment_id === equipment.id)
+                    data.equipmentData.map((equipment) => {
+                      const equipmentMaintenance = data.maintenanceData.filter(m => m.equipment_id === equipment.id)
                       const planned = equipmentMaintenance.length
                       const completed = equipmentMaintenance.filter(m => m.status === 'completed').length
                       const rate = planned > 0 ? Math.round((completed / planned) * 100 * 10) / 10 : 0

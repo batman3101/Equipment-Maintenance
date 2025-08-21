@@ -57,7 +57,7 @@ function DashboardComponent() {
     const statistics = derived.getStatistics()
     
     // 수리 보고서 가져오기 (useUnifiedState에서 제공하는 경우)
-    const repairReports = [] // TODO: useUnifiedState에 repairReports 추가 필요
+    const repairReports: any[] = [] // TODO: useUnifiedState에 repairReports 추가 필요
     
     // 실제 메트릭 계산
     return calculateDashboardMetrics(

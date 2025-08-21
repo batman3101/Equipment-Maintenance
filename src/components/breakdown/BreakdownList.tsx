@@ -5,6 +5,9 @@ import { Card, StatusBadge, Modal, Button } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
+import { apiService } from '@/lib/api/unified-api-service'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useComponentError } from '@/contexts/ErrorContext'
 import { BreakdownReport, BreakdownListProps, BreakdownListRef, BreakdownStatus, BREAKDOWN_STATUS_LABELS } from '@/types/breakdown'
 
 
@@ -31,11 +34,71 @@ const getStatusColor = (status: string): 'secondary' | 'info' | 'warning' | 'suc
 export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({ onReportClick: _onReportClick }, ref) => {
   const { t } = useTranslation(['breakdown', 'common'])
   const { showSuccess, showError } = useToast()
-  const [reports, setReports] = useState<BreakdownReport[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
+  
+  // 비동기 작업 및 에러 처리
+  const asyncFetchReports = useAsyncOperation(
+    async () => {
+      console.log('[BreakdownList] 고장 신고 데이터 로드 시작...')
+      const apiResponse = await apiService.getBreakdownReports()
+      
+      if (!apiResponse.success) {
+        throw new Error(apiResponse.error || '고장 신고 데이터를 가져오는데 실패했습니다.')
+      }
+      
+      const data = apiResponse.data || []
+      console.log('[BreakdownList] 로드된 고장 신고 데이터:', data.length, '건')
+
+      // API 데이터를 컴포넌트 인터페이스에 맞게 변환
+      const formattedReports: BreakdownReport[] = (data || []).map((report: any) => {
+        const assigneeName = report.profiles_assigned?.full_name || 
+                             (Array.isArray(report.profiles_assigned) && report.profiles_assigned[0]?.full_name) ||
+                             '담당자 미지정'
+        
+        const cleanDescription = report.breakdown_description?.replace(/\[신고자:\s*.+?\]\n\n/, '') || ''
+        
+        return {
+          id: report.id,
+          equipmentId: report.equipment_id,
+          equipmentCategory: report.equipment_info?.category || '',
+          equipmentNumber: report.equipment_info?.equipment_number || '',
+          breakdownTitle: report.breakdown_title,
+          breakdownDescription: cleanDescription,
+          breakdownType: report.breakdown_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
+          priority: report.priority as 'low' | 'medium' | 'high' | 'critical',
+          assignedTo: assigneeName,
+          assignedToId: report.assigned_to,
+          urgencyLevel: report.priority as 'low' | 'medium' | 'high' | 'critical',
+          issueType: report.breakdown_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
+          description: cleanDescription,
+          symptoms: report.symptoms,
+          status: report.status,
+          occurredAt: report.occurred_at,
+          createdAt: report.created_at,
+          updatedAt: report.updated_at
+        }
+      })
+
+      return formattedReports
+    },
+    {
+      maxRetries: 3,
+      retryDelay: 1000,
+      componentId: 'breakdown-list',
+      onSuccess: () => {
+        console.log('[BreakdownList] 데이터 로드 성공')
+      },
+      onError: (error) => {
+        console.error('[BreakdownList] 데이터 로드 실패:', error)
+        showError('고장 신고 목록을 불러오는데 실패했습니다.')
+      }
+    }
+  )
+  
+  const reports = asyncFetchReports.data || []
+  const loading = asyncFetchReports.loading
+  const error = asyncFetchReports.error
   
   // 모달 상태
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -48,12 +111,14 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
 
   // ref를 통해 외부에서 refreshData 호출 가능
   useImperativeHandle(ref, () => ({
-    refreshData: fetchReports
+    refreshData: async () => {
+      await asyncFetchReports.execute()
+    }
   }))
 
   // 초기 로드
   useEffect(() => {
-    fetchReports()
+    asyncFetchReports.execute()
     fetchUsers()
   }, [])
 
@@ -139,73 +204,11 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
     }
   }
 
-  const fetchReports = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const { data, error: fetchError } = await supabase
-        .from('breakdown_reports')
-        .select(`
-          *,
-          equipment_info!inner(
-            equipment_number,
-            equipment_name
-          ),
-          profiles_assigned:profiles!breakdown_reports_assigned_to_fkey(
-            full_name
-          )
-        `)
-        .order('created_at', { ascending: false })
-
-      if (fetchError) {
-        console.error('Error fetching breakdown reports:', fetchError)
-        setError('고장 신고 목록을 불러오는데 실패했습니다.')
-        return
-      }
-
-      // Supabase 데이터를 컴포넌트 인터페이스에 맞게 변환
-      const formattedReports: BreakdownReport[] = (data || []).map(report => {
-        const assigneeName = report.profiles_assigned?.full_name || '담당자 미지정'
-        
-        // 실제 설명에서 신고자 정보 제거
-        const cleanDescription = report.breakdown_description?.replace(/\[신고자:\s*.+?\]\n\n/, '') || ''
-        
-        return {
-          id: report.id,
-          equipmentId: report.equipment_id,
-          equipmentCategory: report.equipment_info?.category || '',
-          equipmentNumber: report.equipment_info?.equipment_number || '',
-          breakdownTitle: report.breakdown_title,
-          breakdownDescription: cleanDescription,
-          breakdownType: report.breakdown_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
-          priority: report.priority as 'low' | 'medium' | 'high' | 'critical',
-          assignedTo: assigneeName,
-          assignedToId: report.assigned_to,
-          urgencyLevel: report.priority as 'low' | 'medium' | 'high' | 'critical',
-          issueType: report.breakdown_type as 'mechanical' | 'electrical' | 'software' | 'safety' | 'other',
-          description: cleanDescription,
-          symptoms: report.symptoms,
-          status: report.status,
-          occurredAt: report.occurred_at,
-          createdAt: report.created_at,
-          updatedAt: report.updated_at
-        }
-      })
-
-      setReports(formattedReports)
-    } catch (err) {
-      console.error('Unexpected error fetching breakdown reports:', err)
-      setError('예상치 못한 오류가 발생했습니다.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filteredReports = useMemo(() => {
     return reports.filter(report => {
       if (statusFilter !== 'all' && report.status !== statusFilter) return false
-      if (priorityFilter !== 'all' && report.priority !== priorityFilter) return false
+      if (priorityFilter !== 'all' && report.urgencyLevel !== priorityFilter) return false
       return true
     })
   }, [reports, statusFilter, priorityFilter])
@@ -287,27 +290,8 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
         await updateEquipmentStatus(selectedReport.equipmentId, editFormData.status, selectedReport.id)
       }
 
-      // 로컬 상태 업데이트 - 명시적으로 필드별로 업데이트
-      const assigneeName = availableUsers.find(u => u.id === editAssigneeId)?.full_name || ''
-      setReports(prev => prev.map(report => 
-        report.id === selectedReport.id 
-          ? { 
-              ...report, 
-              breakdownTitle: editFormData.breakdownTitle || report.breakdownTitle,
-              breakdownDescription: editFormData.breakdownDescription || report.breakdownDescription,
-              breakdownType: editFormData.breakdownType || report.breakdownType,
-              priority: editFormData.priority || report.priority,
-              status: editFormData.status || report.status,
-              symptoms: editFormData.symptoms || report.symptoms,
-              assignedTo: assigneeName,
-              assignedToId: editAssigneeId,
-              updatedAt: new Date().toISOString() 
-            }
-          : report
-      ))
-
       // 데이터 새로고침
-      await fetchReports()
+      await asyncFetchReports.execute()
       
       showSuccess(
         t('common:messages.updateSuccess'),
@@ -345,8 +329,8 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
         return
       }
 
-      // 로컬 상태에서 제거
-      setReports(prev => prev.filter(report => report.id !== selectedReport.id))
+      // 데이터 새로고침
+      await asyncFetchReports.execute()
       
       showSuccess(
         t('common:messages.deleteSuccess'),
@@ -383,7 +367,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
           <Card.Content className="text-center py-8">
             <div className="text-red-500 mb-4">{error}</div>
             <button 
-              onClick={fetchReports}
+              onClick={() => asyncFetchReports.execute()}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               다시 시도
@@ -505,8 +489,8 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge variant={getPriorityColor(report.priority)}>
-                        {t(`breakdown:urgency.${report.priority}`, report.priority)}
+                      <StatusBadge variant={getPriorityColor(report.priority || report.urgencyLevel)}>
+                        {t(`breakdown:urgency.${report.priority || report.urgencyLevel}`, report.priority || report.urgencyLevel)}
                       </StatusBadge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -521,7 +505,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {new Date(report.occurredAt).toLocaleDateString()}
+                        {report.occurredAt ? new Date(report.occurredAt).toLocaleDateString() : '정보 없음'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -619,8 +603,8 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('breakdown:list.priority')}
               </label>
-              <StatusBadge variant={getPriorityColor(selectedReport.priority)}>
-                {t(`breakdown:urgency.${selectedReport.priority}`, selectedReport.priority)}
+              <StatusBadge variant={getPriorityColor(selectedReport.priority || selectedReport.urgencyLevel)}>
+                {t(`breakdown:urgency.${selectedReport.priority || selectedReport.urgencyLevel}`, selectedReport.priority || selectedReport.urgencyLevel)}
               </StatusBadge>
             </div>
             
@@ -645,7 +629,7 @@ export const BreakdownList = forwardRef<BreakdownListRef, BreakdownListProps>(({
                 {t('breakdown:list.reportedAt')}
               </label>
               <p className="text-gray-900 dark:text-white">
-                {new Date(selectedReport.occurredAt).toLocaleString()}
+                {selectedReport.occurredAt ? new Date(selectedReport.occurredAt).toLocaleString() : '정보 없음'}
               </p>
             </div>
           </div>

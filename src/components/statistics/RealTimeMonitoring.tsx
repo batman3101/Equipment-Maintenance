@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
+import { apiService } from '@/lib/api/unified-api-service'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useToast } from '@/contexts/ToastContext'
 
 interface RealTimeMonitoringProps {
   subOption: string
@@ -11,47 +14,113 @@ interface RealTimeMonitoringProps {
 
 export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
   const { t } = useTranslation('statistics')
+  const { showError } = useToast()
+  
   type Equipment = { id: string; equipment_number: string; equipment_name?: string; location?: string; category?: string; manufacturer?: string; model?: string }
   type EquipmentStatus = { id: string; equipment_id: string; status: 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped'; updated_at?: string }
   type Breakdown = { id: string; equipment_id: string; breakdown_title: string; breakdown_description: string; priority: 'low' | 'medium' | 'high' | 'urgent'; occurred_at: string }
-  const [equipmentData, setEquipmentData] = useState<Equipment[]>([])
-  const [statusData, setStatusData] = useState<EquipmentStatus[]>([])
-  const [breakdownData, setBreakdownData] = useState<Breakdown[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  
+  type RealTimeData = {
+    equipmentData: Equipment[]
+    statusData: EquipmentStatus[]
+    breakdownData: Breakdown[]
+  }
 
-  useEffect(() => {
-    fetchData()
-    // 실시간 모니터링을 위한 주기적 데이터 가져오기
-    const interval = setInterval(fetchData, 30000) // 30초마다 업데이트
-    return () => clearInterval(interval)
-  }, [])
+  // 비동기 작업 및 에러 처리
+  const asyncFetchData = useAsyncOperation(
+    async (): Promise<RealTimeData> => {
+      console.log('[RealTimeMonitoring] 실시간 데이터 로드 시작...')
 
-  const fetchData = async () => {
-    try {
-      setError(null)
-
-      // 설비 정보, 상태 정보, 고장 신고 정보를 동시에 가져오기
-      const [equipmentResult, statusResult, breakdownResult] = await Promise.all([
-        supabase.from('equipment_info').select('*'),
-        supabase.from('equipment_status').select('*'),
-        supabase.from('breakdown_reports').select('*').order('occurred_at', { ascending: false }).limit(10)
+      // 통합 API 서비스를 사용하여 데이터 수집
+      const [equipmentResponse, statusResponse, breakdownResponse] = await Promise.all([
+        apiService.getEquipments(),
+        apiService.getEquipmentStatuses(),
+        apiService.getBreakdownReports()
       ])
 
-      if (equipmentResult.error) throw equipmentResult.error
-      if (statusResult.error) throw statusResult.error
-      if (breakdownResult.error) throw breakdownResult.error
+      console.log('[RealTimeMonitoring] API 응답 상태:', {
+        equipment: equipmentResponse.success,
+        status: statusResponse.success,
+        breakdown: breakdownResponse.success
+      })
 
-      setEquipmentData(equipmentResult.data || [])
-      setStatusData(statusResult.data || [])
-      setBreakdownData(breakdownResult.data || [])
-    } catch (err) {
-      console.error('Error fetching real-time data:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
+      // 각 API 응답 검증 및 에러 처리
+      if (!equipmentResponse.success) {
+        throw new Error(`설비 데이터 로드 실패: ${equipmentResponse.error}`)
+      }
+      if (!statusResponse.success) {
+        throw new Error(`상태 데이터 로드 실패: ${statusResponse.error}`)
+      }
+      if (!breakdownResponse.success) {
+        throw new Error(`고장 신고 데이터 로드 실패: ${breakdownResponse.error}`)
+      }
+
+      // 데이터 변환
+      const equipments = (equipmentResponse.data || []).map(eq => ({
+        id: eq.id,
+        equipment_number: eq.equipmentNumber,
+        equipment_name: eq.equipmentName,
+        location: eq.location || undefined,
+        category: eq.category,
+        manufacturer: eq.manufacturer || undefined,
+        model: eq.model || undefined
+      }))
+
+      const statuses = (statusResponse.data || []).map(status => ({
+        id: status.id,
+        equipment_id: status.equipmentId,
+        status: status.status as 'running' | 'breakdown' | 'standby' | 'maintenance' | 'stopped',
+        updated_at: status.statusChangedAt
+      }))
+
+      // 최근 10건만 가져오기 (고장 신고)
+      const breakdowns = (breakdownResponse.data || []).slice(0, 10).map(breakdown => ({
+        id: breakdown.id,
+        equipment_id: breakdown.equipmentId,
+        breakdown_title: breakdown.breakdownTitle,
+        breakdown_description: breakdown.breakdownDescription,
+        priority: breakdown.priority as 'low' | 'medium' | 'high' | 'urgent',
+        occurred_at: breakdown.occurredAt
+      }))
+
+      console.log('[RealTimeMonitoring] 데이터 로드 완료:', {
+        equipmentCount: equipments.length,
+        statusCount: statuses.length,
+        breakdownCount: breakdowns.length
+      })
+
+      return {
+        equipmentData: equipments,
+        statusData: statuses,
+        breakdownData: breakdowns
+      }
+    },
+    {
+      maxRetries: 2,
+      retryDelay: 2000,
+      componentId: 'real-time-monitoring',
+      onSuccess: () => {
+        console.log('[RealTimeMonitoring] 실시간 데이터 로드 성공')
+      },
+      onError: (error) => {
+        console.error('[RealTimeMonitoring] 실시간 데이터 로드 실패:', error)
+        showError('실시간 모니터링 데이터를 불러오는데 실패했습니다.')
+      }
     }
-  }
+  )
+
+  const data = asyncFetchData.data || { equipmentData: [], statusData: [], breakdownData: [] }
+  const loading = asyncFetchData.loading
+  const error = asyncFetchData.error
+
+  useEffect(() => {
+    asyncFetchData.execute()
+    // 실시간 모니터링을 위한 주기적 데이터 가져오기
+    const interval = setInterval(() => {
+      asyncFetchData.execute()
+    }, 30000) // 30초마다 업데이트
+    return () => clearInterval(interval)
+  }, [])
 
   if (loading) {
     return (
@@ -72,7 +141,7 @@ export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
           <Card.Content className="text-center py-8">
             <div className="text-red-500 mb-4">{error}</div>
             <button 
-              onClick={fetchData}
+              onClick={() => asyncFetchData.execute()}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               {t('common:actions.retry')}
@@ -88,7 +157,7 @@ export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
       case 'current-status':
         return (
           <>
-            {equipmentData.length === 0 ? (
+            {data.equipmentData.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">🏭</div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -100,8 +169,8 @@ export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {equipmentData.map((equipment) => {
-                  const status = statusData.find(s => s.equipment_id === equipment.id)
+                {data.equipmentData.map((equipment) => {
+                  const status = data.statusData.find(s => s.equipment_id === equipment.id)
                   const getStatusStyle = (statusValue: string) => {
                     switch (statusValue) {
                       case 'running':
@@ -196,7 +265,7 @@ export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('realtime.alarms.title')}</h3>
             </Card.Header>
             <Card.Content>
-              {breakdownData.length === 0 ? (
+              {data.breakdownData.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-4">🔔</div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -208,7 +277,7 @@ export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {breakdownData.map((breakdown) => {
+                  {data.breakdownData.map((breakdown) => {
                     const getSeverityStyle = (priority: string) => {
                       switch (priority) {
                         case 'urgent':
@@ -258,7 +327,7 @@ export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
         )
 
       case 'urgent-equipment':
-        const urgentEquipment = statusData.filter(s => s.status === 'breakdown' || s.status === 'maintenance')
+        const urgentEquipment = data.statusData.filter(s => s.status === 'breakdown' || s.status === 'maintenance')
         
         return (
           <Card>
@@ -279,7 +348,7 @@ export function RealTimeMonitoring({ subOption }: RealTimeMonitoringProps) {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {urgentEquipment.map((status) => {
-                    const equipment = equipmentData.find(e => e.id === status.equipment_id)
+                    const equipment = data.equipmentData.find(e => e.id === status.equipment_id)
                     if (!equipment) return null
                     
                     return (

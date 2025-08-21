@@ -168,16 +168,25 @@ export function useUnifiedState(): UnifiedStateReturn {
           await dataSynchronizer.startSynchronization()
           setIsRealTimeActive(true)
         } else {
-          // 오프라인 모드: 목 데이터 사용
-          console.log('Running in offline mode with mock data')
+          // 오프라인 모드: 실제 데이터 로드 (실시간 동기화는 비활성화)
+          console.log('Running in offline mode with real data')
           setIsRealTimeActive(false)
+          
+          // 오프라인 모드에서도 실제 데이터 로드
+          await Promise.all([
+            refreshEquipments(),
+            refreshStatuses(), 
+            refreshBreakdowns(),
+            refreshDashboard()
+          ])
         }
         
         // 초기 상태 동기화
         syncStateFromGlobal()
         
-        // 로딩 완료 지연 처리 (데이터 안정화 대기)
-        setTimeout(() => {
+        // 오프라인 모드에서는 데이터 로딩 후 로딩 상태 해제
+        if (isOfflineMode) {
+          // 데이터 로딩이 완료되면 로딩 상태를 해제
           setLoading({
             equipments: false,
             statuses: false,
@@ -185,7 +194,18 @@ export function useUnifiedState(): UnifiedStateReturn {
             dashboard: false,
             global: false
           })
-        }, 1000)
+        } else {
+          // 온라인 모드에서는 기존처럼 지연 처리
+          setTimeout(() => {
+            setLoading({
+              equipments: false,
+              statuses: false,
+              breakdowns: false,
+              dashboard: false,
+              global: false
+            })
+          }, 1000)
+        }
         
       } catch (error) {
         console.error('Failed to start synchronization:', error)

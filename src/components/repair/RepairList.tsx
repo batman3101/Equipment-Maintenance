@@ -6,6 +6,8 @@ import { Card, Button, StatusBadge, Modal } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { useUnifiedState } from '@/hooks/useUnifiedState'
+import { apiService, RepairReport as ApiRepairReport } from '@/lib/api/unified-api-service'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 
 // [SRP] Rule: 수리 보고서 인터페이스 정의 - 타입 정의만 담당
 interface RepairReport {
@@ -30,9 +32,6 @@ export function RepairList({ onRepairClick: _onRepairClick }: RepairListProps) {
   const { t } = useTranslation(['repair', 'common'])
   const { showSuccess, showError } = useToast()
   const { actions } = useUnifiedState()
-  const [repairs, setRepairs] = useState<RepairReport[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
@@ -44,51 +43,81 @@ export function RepairList({ onRepairClick: _onRepairClick }: RepairListProps) {
   const [selectedRepair, setSelectedRepair] = useState<RepairReport | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<RepairReport>>({})
 
+  // 비동기 작업 및 에러 처리
+  const asyncFetchRepairs = useAsyncOperation(
+    async (): Promise<RepairReport[]> => {
+      console.log('[RepairList] 수리 보고서 데이터 로드 시작...')
+      
+      // 통합 API 서비스 사용으로 변경
+      const apiResponse = await apiService.getRepairReports()
+      
+      console.log('[RepairList] API 응답:', {
+        success: apiResponse.success,
+        hasData: !!apiResponse.data,
+        dataLength: apiResponse.data?.length || 0,
+        error: apiResponse.error
+      })
+      
+      if (!apiResponse.success) {
+        const errorMsg = apiResponse.error || '수리 보고서 데이터를 가져오는데 실패했습니다.'
+        console.error('[RepairList] API 오류:', errorMsg)
+        throw new Error(errorMsg)
+      }
+      
+      const data = apiResponse.data || []
+      console.log('[RepairList] 로드된 수리 보고서 데이터:', data.length, '건')
+
+      // API 데이터를 컴포넌트 인터페이스에 맞게 변환
+      const formattedRepairs: RepairReport[] = (data || []).map((repair: any) => {
+        // 데이터 구조 확인
+        console.log('[RepairList] 변환 중인 리페어:', {
+          id: repair.id,
+          hasTechnician: !!repair.technician,
+          hasEquipment: !!repair.equipment,
+          status: repair.status
+        })
+        
+        return {
+          id: repair.id,
+          equipmentId: repair.equipment_id || `EQUIP-${repair.id}`,
+          technicianName: repair.technician?.full_name || '미지정',
+          repairType: repair.repair_title || '일반수리',
+          completionStatus: repair.status === 'repair_completed' ? 'completed' : 
+                           repair.status === 'repair_in_progress' ? 'in_progress' : 
+                           repair.status === 'repair_failed' ? 'failed' : 'in_progress',
+          workDescription: repair.repair_description || '수리 작업',
+          timeSpent: repair.duration_hours || 0,
+          testResults: repair.repair_result || '테스트 완료',
+          notes: repair.notes || '',
+          completedAt: repair.repair_completed_at || repair.created_at || new Date().toISOString()
+        }
+      })
+
+      console.log('[RepairList] 변환된 수리 데이터:', formattedRepairs.length, '건')
+      return formattedRepairs
+    },
+    {
+      maxRetries: 3,
+      retryDelay: 1000,
+      componentId: 'repair-list',
+      onSuccess: () => {
+        console.log('[RepairList] 수리 보고서 데이터 로드 성공')
+      },
+      onError: (error) => {
+        console.error('[RepairList] 수리 보고서 데이터 로드 실패:', error)
+        showError('수리 보고서 목록을 불러오는데 실패했습니다.')
+      }
+    }
+  )
+
+  const repairs = asyncFetchRepairs.data || []
+  const loading = asyncFetchRepairs.loading
+  const error = asyncFetchRepairs.error
+
   // Supabase에서 수리 데이터 가져오기
   useEffect(() => {
-    fetchRepairs()
+    asyncFetchRepairs.execute()
   }, [])
-
-  const fetchRepairs = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const { data, error: fetchError } = await supabase
-        .from('repair_reports')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (fetchError) {
-        console.error('Error fetching repairs:', fetchError)
-        setError('수리 목록을 불러오는데 실패했습니다.')
-        setRepairs([]) // 빈 배열로 설정하여 UI가 깨지지 않도록
-        return
-      }
-
-      // Supabase 데이터를 컴포넌트 인터페이스에 맞게 변환
-      const formattedRepairs: RepairReport[] = (data || []).map(repair => ({
-        id: repair.id,
-        equipmentId: repair.equipment_id || `EQUIP-${repair.id}`,
-        technicianName: repair.technician_name || '미지정',
-        repairType: repair.repair_type || '일반수리',
-        completionStatus: repair.completion_status || repair.status || 'pending',
-        workDescription: repair.work_description || repair.description || '수리 작업',
-        timeSpent: repair.time_spent || repair.repair_time_hours || 0,
-        testResults: repair.test_results || '테스트 완료',
-        notes: repair.notes || repair.comment || '',
-        completedAt: repair.completed_at || repair.created_at || new Date().toISOString()
-      }))
-
-      setRepairs(formattedRepairs)
-    } catch (err) {
-      console.error('Unexpected error fetching repairs:', err)
-      setError('예상치 못한 오류가 발생했습니다.')
-      setRepairs([]) // 에러 시에도 빈 배열로 설정
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // [SRP] Rule: 필터링된 수리 목록 계산 - 데이터 필터링만 담당
   const filteredRepairs = useMemo(() => {

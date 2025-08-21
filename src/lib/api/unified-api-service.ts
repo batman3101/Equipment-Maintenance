@@ -4,6 +4,40 @@
 import { Equipment, EquipmentStatusInfo } from '@/types/equipment'
 import { BreakdownReport } from '@/types/breakdown'
 import { DashboardData } from '@/types/dashboard'
+import { 
+  validator, 
+  EquipmentSchema, 
+  EquipmentStatusSchema, 
+  BreakdownReportSchema, 
+  RepairReportSchema,
+  DashboardDataSchema,
+  BaseApiResponseSchema,
+  ValidationResult 
+} from '@/lib/validation/api-schemas'
+
+// 수리 보고서 타입 정의
+export interface RepairReport {
+  id: string
+  breakdown_report_id: string
+  equipment_id: string
+  repair_title: string
+  repair_description: string
+  technician_id: string
+  technician?: { id: string; full_name: string; email?: string }
+  equipment?: { id: string; equipment_name: string; equipment_number: string }
+  breakdown?: { id: string; breakdown_title: string; priority: string }
+  repair_started_at: string
+  repair_completed_at?: string
+  status: string
+  repair_result: string
+  parts_used?: string
+  total_cost?: number
+  quality_check: boolean
+  notes?: string
+  duration_hours: number
+  created_at: string
+  updated_at: string
+}
 
 /**
  * [ISP] Rule: 각 도메인별로 인터페이스 분리
@@ -30,6 +64,14 @@ export interface BreakdownApiService {
 export interface DashboardApiService {
   getDashboardData(): Promise<ApiResponse<DashboardData>>
   refreshDashboardData(): Promise<ApiResponse<DashboardData>>
+}
+
+export interface RepairApiService {
+  getRepairReports(): Promise<ApiResponse<RepairReport[]>>
+  getRepairReportById(id: string): Promise<ApiResponse<RepairReport>>
+  createRepairReport(report: Partial<RepairReport>): Promise<ApiResponse<RepairReport>>
+  updateRepairReport(id: string, report: Partial<RepairReport>): Promise<ApiResponse<RepairReport>>
+  deleteRepairReport(id: string): Promise<ApiResponse<void>>
 }
 
 /**
@@ -120,6 +162,7 @@ export class FetchHttpClient implements HttpClient {
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 
     try {
+      const startTime = Date.now()
       const response = await fetch(`${this.baseUrl}${url}`, {
         method,
         headers: {
@@ -131,14 +174,53 @@ export class FetchHttpClient implements HttpClient {
       })
 
       clearTimeout(timeoutId)
+      const executionTime = Date.now() - startTime
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      return await response.json()
+      const rawData = await response.json()
+      
+      // 기본 API 응답 스키마 검증
+      const baseValidation = validator.validate(rawData, BaseApiResponseSchema)
+      if (!baseValidation.valid) {
+        console.warn('[HttpClient] API 응답 스키마 검증 실패:', {
+          url: `${this.baseUrl}${url}`,
+          method,
+          errors: baseValidation.errors,
+          executionTime
+        })
+        
+        // 개발 모드에서만 에러 발생
+        if (process.env.NODE_ENV === 'development') {
+          throw new Error(`API 스키마 검증 실패: ${baseValidation.errors.join(', ')}`)
+        }
+      }
+
+      // 성공적인 응답 메타데이터 추가
+      if (baseValidation.valid && baseValidation.data.success) {
+        baseValidation.data.metadata = {
+          ...baseValidation.data.metadata,
+          executionTime,
+          validationPassed: true
+        }
+      }
+
+      return baseValidation.valid ? baseValidation.data : rawData
     } catch (error) {
       clearTimeout(timeoutId)
+      
+      // 네트워크 오류 및 타임아웃 처리
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('요청 시간이 초과되었습니다')
+        }
+        if (error.message.includes('Failed to fetch')) {
+          throw new Error('네트워크 연결에 실패했습니다')
+        }
+      }
+      
       throw error
     }
   }
@@ -152,13 +234,46 @@ export class UnifiedApiService implements
   EquipmentApiService, 
   StatusApiService, 
   BreakdownApiService, 
-  DashboardApiService {
+  DashboardApiService,
+  RepairApiService {
   
   private httpClient: HttpClient
   private cache: Map<string, { data: any; expiry: number }> = new Map()
 
   constructor(httpClient: HttpClient) {
     this.httpClient = httpClient
+  }
+
+  /**
+   * [SRP] Rule: 데이터 스키마 검증만 담당
+   */
+  private validateData<T>(data: any, schema: any, dataType: string): T {
+    if (!data) {
+      console.warn(`[UnifiedApiService] ${dataType} 데이터가 비어있습니다`)
+      return data
+    }
+
+    if (Array.isArray(data)) {
+      const validatedArray = data.map((item, index) => {
+        const validation = validator.validate(item, schema)
+        if (!validation.valid) {
+          console.warn(`[UnifiedApiService] ${dataType}[${index}] 스키마 검증 실패:`, validation.errors)
+          return item // 개발 모드가 아니면 원본 데이터 반환
+        }
+        return validation.data
+      })
+      return validatedArray as T
+    } else {
+      const validation = validator.validate(data, schema)
+      if (!validation.valid) {
+        console.warn(`[UnifiedApiService] ${dataType} 스키마 검증 실패:`, validation.errors)
+        if (process.env.NODE_ENV === 'development') {
+          throw new Error(`${dataType} 스키마 검증 실패: ${validation.errors.join(', ')}`)
+        }
+        return data // 프로덕션에서는 원본 데이터 반환
+      }
+      return validation.data as T
+    }
   }
 
   // [SRP] Rule: 설비 관련 API만 담당
@@ -178,13 +293,41 @@ export class UnifiedApiService implements
       }
     }
 
-    const response = await this.httpClient.get<ApiResponse<Equipment[]>>('/api/equipment/paginated')
-    
-    if (response.success && response.data) {
-      this.setCache(cacheKey, response.data, 5 * 60 * 1000) // 5분 캐시
+    try {
+      const response = await this.httpClient.get<any>('/api/equipment/paginated')
+      
+      // API 응답을 통일된 형식으로 변환 및 스키마 검증
+      if (response.success && response.data) {
+        const rawEquipmentData = response.data.equipment || []
+        
+        // 스키마 검증 적용
+        const validatedEquipmentData = this.validateData<Equipment[]>(rawEquipmentData, EquipmentSchema, 'Equipment')
+        
+        this.setCache(cacheKey, validatedEquipmentData, 5 * 60 * 1000) // 5분 캐시
+        
+        return {
+          success: true,
+          data: validatedEquipmentData,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: response.performance?.queryTime || 0,
+            cacheHit: false,
+            validationPassed: true
+          },
+          pagination: response.data.pagination
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to fetch equipment data')
+    } catch (error) {
+      console.error('Equipment API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
     }
-
-    return response
   }
 
   async getEquipmentById(id: string): Promise<ApiResponse<Equipment>> {
@@ -220,9 +363,37 @@ export class UnifiedApiService implements
 
   // [SRP] Rule: 설비 상태 관련 API만 담당
   async getEquipmentStatuses(): Promise<ApiResponse<EquipmentStatusInfo[]>> {
-    // 캐시 무시하고 강제 새로고침
-    const timestamp = Date.now()
-    return this.httpClient.get<ApiResponse<EquipmentStatusInfo[]>>(`/api/equipment/bulk-status?_t=${timestamp}`)
+    try {
+      // 캐시 무시하고 강제 새로고침
+      const timestamp = Date.now()
+      const response = await this.httpClient.get<any>(`/api/equipment/bulk-status?_t=${timestamp}`)
+      
+      if (response.success && response.data) {
+        // 스키마 검증 적용
+        const validatedStatusData = this.validateData<EquipmentStatusInfo[]>(response.data, EquipmentStatusSchema, 'EquipmentStatus')
+        
+        return {
+          success: true,
+          data: validatedStatusData,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false,
+            validationPassed: true
+          }
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to fetch equipment statuses')
+    } catch (error) {
+      console.error('Equipment status API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
+    }
   }
 
   async updateEquipmentStatus(
@@ -237,7 +408,35 @@ export class UnifiedApiService implements
 
   // [SRP] Rule: 고장 보고 관련 API만 담당
   async getBreakdownReports(): Promise<ApiResponse<BreakdownReport[]>> {
-    return this.httpClient.get<ApiResponse<BreakdownReport[]>>('/api/breakdown-reports')
+    try {
+      const response = await this.httpClient.get<any>('/api/breakdown-reports')
+      
+      if (response.success && response.data) {
+        // 스키마 검증 적용
+        const validatedBreakdownData = this.validateData<BreakdownReport[]>(response.data, BreakdownReportSchema, 'BreakdownReport')
+        
+        return {
+          success: true,
+          data: validatedBreakdownData,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false,
+            validationPassed: true
+          }
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to fetch breakdown reports')
+    } catch (error) {
+      console.error('Breakdown reports API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
+    }
   }
 
   async createBreakdownReport(report: Partial<BreakdownReport>): Promise<ApiResponse<BreakdownReport>> {
@@ -268,14 +467,38 @@ export class UnifiedApiService implements
       }
     }
 
-    // 통합된 대시보드 API 사용 (중복 제거)
-    const response = await this.httpClient.get<ApiResponse<DashboardData>>('/api/analytics/dashboard')
-    
-    if (response.success && response.data) {
-      this.setCache(cacheKey, response.data, 4 * 60 * 1000) // 4분 캐시
+    try {
+      // 통합된 대시보드 API 사용 (중복 제거)
+      const response = await this.httpClient.get<any>('/api/analytics/dashboard')
+      
+      if (response.success && response.data) {
+        // 스키마 검증 적용
+        const validatedDashboardData = this.validateData<DashboardData>(response.data, DashboardDataSchema, 'DashboardData')
+        
+        this.setCache(cacheKey, validatedDashboardData, 4 * 60 * 1000) // 4분 캐시
+        
+        return {
+          success: true,
+          data: validatedDashboardData,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false,
+            validationPassed: true
+          }
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to fetch dashboard data')
+    } catch (error) {
+      console.error('Dashboard API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
     }
-
-    return response
   }
 
   async refreshDashboardData(): Promise<ApiResponse<DashboardData>> {
@@ -284,6 +507,151 @@ export class UnifiedApiService implements
     
     // POST 요청으로 강제 새로고침
     return this.httpClient.post<ApiResponse<DashboardData>>('/api/analytics/dashboard', {})
+  }
+
+  // [SRP] Rule: 수리 보고서 관련 API만 담당
+  async getRepairReports(): Promise<ApiResponse<RepairReport[]>> {
+    try {
+      const response = await this.httpClient.get<any>('/api/repair-reports')
+      
+      if (response.success && response.data) {
+        // 스키마 검증 적용
+        const validatedRepairData = this.validateData<RepairReport[]>(response.data, RepairReportSchema, 'RepairReport')
+        
+        return {
+          success: true,
+          data: validatedRepairData,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false,
+            validationPassed: true
+          },
+          pagination: response.pagination
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to fetch repair reports')
+    } catch (error) {
+      console.error('Repair reports API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
+    }
+  }
+
+  async getRepairReportById(id: string): Promise<ApiResponse<RepairReport>> {
+    try {
+      const response = await this.httpClient.get<any>(`/api/repair-reports/${id}`)
+      
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false
+          }
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to fetch repair report')
+    } catch (error) {
+      console.error('Repair report API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
+    }
+  }
+
+  async createRepairReport(report: Partial<RepairReport>): Promise<ApiResponse<RepairReport>> {
+    try {
+      const response = await this.httpClient.post<any>('/api/repair-reports', report)
+      
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false
+          }
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to create repair report')
+    } catch (error) {
+      console.error('Create repair report API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
+    }
+  }
+
+  async updateRepairReport(id: string, report: Partial<RepairReport>): Promise<ApiResponse<RepairReport>> {
+    try {
+      const response = await this.httpClient.put<any>(`/api/repair-reports/${id}`, report)
+      
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false
+          }
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to update repair report')
+    } catch (error) {
+      console.error('Update repair report API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
+    }
+  }
+
+  async deleteRepairReport(id: string): Promise<ApiResponse<void>> {
+    try {
+      const response = await this.httpClient.delete<any>(`/api/repair-reports/${id}`)
+      
+      if (response.success) {
+        return {
+          success: true,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            version: '1.0',
+            executionTime: 0,
+            cacheHit: false
+          }
+        }
+      }
+      
+      throw new Error(response.error || 'Failed to delete repair report')
+    } catch (error) {
+      console.error('Delete repair report API error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }
+    }
   }
 
   // [SRP] Rule: 캐시 관리만 담당하는 private 메서드들

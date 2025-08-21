@@ -22,6 +22,7 @@ export interface BreakdownReport {
   equipmentNumber: string
   assignedTo: string
   assignedToId: string
+  reporterName?: string
   urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
   issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
   description: string
@@ -31,6 +32,9 @@ export interface BreakdownReport {
   resolutionDate?: string
   notes?: string
   breakdownTitle?: string
+  breakdownDescription?: string
+  breakdownType?: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
+  priority?: 'low' | 'medium' | 'high' | 'critical'
   createdAt: string
   updatedAt: string
 }
@@ -39,12 +43,13 @@ export interface BreakdownReport {
 export interface BreakdownReportForm {
   equipmentCategory: string
   equipmentNumber: string
-  assignee: string
+  assignee?: string
+  reporterName?: string
   urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
   issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
   description: string
   symptoms: string
-  status: BreakdownStatus
+  status?: BreakdownStatus
 }
 
 // 데이터베이스 저장용 인터페이스

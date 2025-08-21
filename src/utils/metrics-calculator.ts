@@ -28,7 +28,7 @@ export function calculateMTBF(
   cutoffDate.setDate(cutoffDate.getDate() - periodDays)
   
   const recentBreakdowns = breakdownReports.filter(
-    br => new Date(br.breakdown_time) >= cutoffDate
+    br => new Date(br.occurred_at || br.breakdown_time) >= cutoffDate
   )
 
   // 전체 MTBF 계산
@@ -41,8 +41,8 @@ export function calculateMTBF(
   previousCutoffDate.setDate(previousCutoffDate.getDate() - periodDays * 2)
   
   const previousBreakdowns = breakdownReports.filter(
-    br => new Date(br.breakdown_time) >= previousCutoffDate && 
-          new Date(br.breakdown_time) < cutoffDate
+    br => new Date(br.occurred_at || br.breakdown_time) >= previousCutoffDate && 
+          new Date(br.occurred_at || br.breakdown_time) < cutoffDate
   )
   
   const previousMTBF = previousBreakdowns.length > 0 
@@ -202,7 +202,7 @@ function estimateMTTRFromBreakdowns(
   completedBreakdowns.forEach(br => {
     if (br.resolution_date) {
       const hours = (new Date(br.resolution_date).getTime() - 
-                    new Date(br.breakdown_time).getTime()) / (1000 * 60 * 60)
+                    new Date(br.occurred_at || br.breakdown_time).getTime()) / (1000 * 60 * 60)
       totalHours += hours
       repairTimes.push({
         equipment: br.equipment_name || 'Unknown',
@@ -252,7 +252,7 @@ export function calculateCompletionRate(
   cutoffDate.setDate(cutoffDate.getDate() - periodDays)
   
   const recentBreakdowns = breakdownReports.filter(
-    br => new Date(br.breakdown_time) >= cutoffDate
+    br => new Date(br.occurred_at || br.breakdown_time) >= cutoffDate
   )
 
   // 완료된 건수

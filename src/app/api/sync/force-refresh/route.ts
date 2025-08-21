@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
     ])
 
     const result = {
-      equipments: [],
-      statuses: [],
-      breakdowns: [],
+      equipments: [] as any[],
+      statuses: [] as any[],
+      breakdowns: [] as any[],
       errors: [] as string[],
       stats: {
         total_equipments: 0,

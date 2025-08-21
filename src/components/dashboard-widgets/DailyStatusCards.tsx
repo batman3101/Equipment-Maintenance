@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { Card } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { useUnifiedState } from '@/hooks/useUnifiedState'
@@ -21,6 +21,33 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
     derived
   } = useUnifiedState()
 
+  // 카드 통계를 별도로 가져오기
+  const [cardStats, setCardStats] = useState({
+    breakdowns: { total: 0, urgent: 0, pending: 0 },
+    repairs: { completed: 0, inProgress: 0 },
+    equipment: { total: 0, needsRepair: 0 }
+  })
+  const [statsLoading, setStatsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchCardStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard/card-stats')
+        const data = await response.json()
+        
+        if (data.success) {
+          setCardStats(data.data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch card stats:', error)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    fetchCardStats()
+  }, [])
+
   // [DIP] Rule: 추상화에 의존 - derived 메서드 사용
   const dashboardStats = useMemo(() => {
     if (!breakdownReports || breakdownReports.length === 0) {
@@ -35,20 +62,20 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
     const breakdownStats = {
       total: breakdownReports.length,
       urgent: breakdownReports.filter(br => 
-        br.priority === 'critical' || br.priority === 'high'
+        br.urgencyLevel === 'critical' || br.urgencyLevel === 'high'
       ).length,
       pending: breakdownReports.filter(br => 
         br.status === 'reported' || br.status === 'in_progress'
       ).length,
       critical: breakdownReports.filter(br => 
-        br.priority === 'critical'
+        br.urgencyLevel === 'critical'
       ).length
     }
 
     // 수리 통계 계산 (고장 신고 기반)
     const repairStats = {
       completed: breakdownReports.filter(br => 
-        br.status === 'completed' || br.status === 'resolved'
+        br.status === 'completed'
       ).length,
       inProgress: breakdownReports.filter(br => 
         br.status === 'in_progress'
@@ -62,10 +89,10 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
     const equipmentStats = {
       totalReported: breakdownReports.length,
       completed: breakdownReports.filter(br => 
-        br.status === 'completed' || br.status === 'resolved'
+        br.status === 'completed'
       ).length,
       needsRepair: breakdownReports.filter(br => 
-        br.status !== 'completed' && br.status !== 'resolved'
+        br.status !== 'completed'
       ).length
     }
 
@@ -107,7 +134,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 </h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-red-600 dark:text-red-400">
-                    {dashboardStats.breakdowns.total}
+                    {statsLoading ? '...' : cardStats.breakdowns.total}
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">건</span>
                 </div>
@@ -122,7 +149,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 {t('dashboard:cards.breakdowns.urgent', '긴급/높음')}
               </span>
               <span className="font-semibold text-red-600 dark:text-red-400">
-                {dashboardStats.breakdowns.urgent}건
+                {statsLoading ? '...' : cardStats.breakdowns.urgent}건
               </span>
             </div>
             <div className="flex justify-between text-sm">
@@ -131,7 +158,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 {t('dashboard:cards.breakdowns.pending', '처리 대기중')}
               </span>
               <span className="font-semibold text-orange-600 dark:text-orange-400">
-                {dashboardStats.breakdowns.pending}건
+                {statsLoading ? '...' : cardStats.breakdowns.pending}건
               </span>
             </div>
           </div>
@@ -158,7 +185,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 </h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {dashboardStats.repairs.completed + dashboardStats.repairs.inProgress}
+                    {statsLoading ? '...' : (cardStats.repairs.completed + cardStats.repairs.inProgress)}
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">건</span>
                 </div>
@@ -173,7 +200,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 {t('dashboard:cards.repairs.completed', '완료')}
               </span>
               <span className="font-semibold text-green-600 dark:text-green-400">
-                {dashboardStats.repairs.completed}건
+                {statsLoading ? '...' : cardStats.repairs.completed}건
               </span>
             </div>
             <div className="flex justify-between text-sm">
@@ -182,7 +209,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 {t('dashboard:cards.repairs.inProgress', '진행중')}
               </span>
               <span className="font-semibold text-blue-600 dark:text-blue-400">
-                {dashboardStats.repairs.inProgress}건
+                {statsLoading ? '...' : cardStats.repairs.inProgress}건
               </span>
             </div>
           </div>
@@ -209,7 +236,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 </h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-green-600 dark:text-green-400">
-                    {equipments ? equipments.length : 0}
+                    {statsLoading ? '...' : (cardStats.equipment.total || (equipmentStatuses ? equipmentStatuses.length : 0))}
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">대</span>
                 </div>
@@ -233,7 +260,7 @@ export function DailyStatusCards({ className = '' }: DailyStatusCardsProps) {
                 {t('dashboard:cards.equipment.needsRepair', '수리 필요')}
               </span>
               <span className="font-semibold text-red-600 dark:text-red-400">
-                {dashboardStats.equipment.needsRepair}대
+                {statsLoading ? '...' : cardStats.equipment.needsRepair}대
               </span>
             </div>
           </div>

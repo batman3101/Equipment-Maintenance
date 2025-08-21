@@ -7,6 +7,7 @@ import { Button, Card } from '@/components/ui'
 import { CreateUserForm } from './CreateUserForm'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 
 interface User {
   id: string
@@ -23,18 +24,15 @@ export function UserManagement() {
   const { t } = useTranslation(['admin', 'common'])
   const { profile } = useAuth()
   const { showSuccess, showError } = useToast()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [error, setError] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserDetail, setShowUserDetail] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError('')
+  // 비동기 작업 및 에러 처리
+  const asyncFetchUsers = useAsyncOperation(
+    async (): Promise<User[]> => {
+      console.log('[UserManagement] 사용자 목록 로드 시작...')
 
       // Supabase에서 사용자 목록 조회
       const { data, error } = await supabase
@@ -46,20 +44,36 @@ export function UserManagement() {
         throw error
       }
 
-      setUsers(data || [])
-    } catch (err) {
-      console.error('Fetch users error:', err)
-      setError(err instanceof Error ? err.message : t('messages.fetchError'))
-    } finally {
-      setLoading(false)
+      console.log('[UserManagement] 사용자 목록 로드 완료:', (data || []).length, '명')
+      return data || []
+    },
+    {
+      maxRetries: 2,
+      retryDelay: 1000,
+      componentId: 'user-management',
+      onSuccess: () => {
+        console.log('[UserManagement] 사용자 목록 로드 성공')
+      },
+      onError: (error) => {
+        console.error('[UserManagement] 사용자 목록 로드 실패:', error)
+        showError('사용자 목록을 불러오는데 실패했습니다.')
+      }
     }
-  }, [t])
+  )
+
+  const users = asyncFetchUsers.data || []
+  const loading = asyncFetchUsers.loading
+  const error = asyncFetchUsers.error
+
+  const fetchUsers = useCallback(() => {
+    asyncFetchUsers.execute()
+  }, [asyncFetchUsers])
 
   useEffect(() => {
     if (profile && ['system_admin', 'manager'].includes(profile.role)) {
-      fetchUsers()
+      asyncFetchUsers.execute()
     }
-  }, [profile, fetchUsers])
+  }, [profile])
 
   const handleUserCreated = () => {
     // 새 사용자가 생성되면 목록 새로고침

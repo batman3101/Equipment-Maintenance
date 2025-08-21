@@ -5,10 +5,9 @@ import { Button, Input, Card } from '@/components/ui'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
-import { BreakdownStatus, BREAKDOWN_STATUS_LABELS } from '@/types/breakdown'
 
-// [SRP] Rule: 수리 보고서 타입 정의 - 데이터 구조만 담당
-interface RepairReport {
+// [SRP] Rule: 수리 완료 보고서 타입 정의 - 데이터 구조만 담당
+interface RepairCompletionReport {
   equipmentId: string
   technicianName: string
   technicianId?: string
@@ -20,37 +19,40 @@ interface RepairReport {
   notes?: string
 }
 
-// [SRP] Rule: 수리 대상 설비 타입 정의 - 데이터 구조만 담당
-interface Equipment {
+// [SRP] Rule: API 응답 타입 정의 - 데이터 구조만 담당
+interface BreakdownEquipment {
   id: string
-  equipment_number: string
   equipment_name: string
+  equipment_number: string
   category: string
   location: string
-  breakdown_id: string // 고장 신고 ID 추가
-  breakdown_title: string // 고장 제목 추가
-  status: BreakdownStatus // 상태 정보 추가
+  breakdown_report_id: string
+  breakdown_title: string
+  breakdown_status: string
+  urgency_level: string
+  occurred_at: string
+  display_text: string
 }
 
-interface RepairReportFormProps {
-  onSubmit?: (report: RepairReport) => void
+interface RepairCompletionFormProps {
+  onSubmit?: (report: RepairCompletionReport) => void
   onCancel?: () => void
+  onSuccess?: () => void
 }
-
 
 // [SRP] Rule: 수리 완료 폼 컴포넌트 - 폼 렌더링과 검증만 담당
-export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) {
+export function RepairCompletionForm({ onSubmit, onCancel, onSuccess }: RepairCompletionFormProps) {
   const { showSuccess, showError } = useToast()
   const { t } = useTranslation(['repair', 'common'])
-  // SystemSettings context available but not needed for current implementation
+  
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [availableEquipment, setAvailableEquipment] = useState<Equipment[]>([])
+  const [availableEquipment, setAvailableEquipment] = useState<BreakdownEquipment[]>([])
   const [availableUsers, setAvailableUsers] = useState<Array<{id: string, full_name: string}>>([])
   const [selectedTechnicianId, setSelectedTechnicianId] = useState<string>('')
 
   // [OCP] Rule: 기본 폼 데이터를 초기화하되, 새로운 필드 추가에 열려있음
-  const [formData, setFormData] = useState<Partial<RepairReport>>({
+  const [formData, setFormData] = useState<Partial<RepairCompletionReport>>({
     equipmentId: '',
     technicianName: '',
     repairType: 'corrective',
@@ -62,7 +64,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
   })
 
   // [DIP] Rule: API 서비스를 추상화하여 의존성 역전
-  const fetchBreakdownEquipment = async (): Promise<Equipment[]> => {
+  const fetchBreakdownEquipment = async (): Promise<BreakdownEquipment[]> => {
     try {
       const response = await fetch('/api/equipment/breakdown', {
         method: 'GET',
@@ -81,26 +83,14 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
         throw new Error(result.error || 'API 응답 오류')
       }
 
-      // API 응답을 Equipment 타입으로 변환
-      const equipmentList: Equipment[] = (result.data || []).map((item: any) => ({
-        id: item.id,
-        equipment_number: item.equipment_number,
-        equipment_name: item.equipment_name,
-        category: item.category,
-        location: item.location,
-        breakdown_id: item.breakdown_report_id,
-        breakdown_title: item.breakdown_title || '고장 신고',
-        status: item.breakdown_status as BreakdownStatus
-      }))
-
-      return equipmentList
+      return result.data || []
     } catch (error) {
       console.error('Error fetching breakdown equipment:', error)
       throw error
     }
   }
 
-  // 컴포넌트 로드 시 수리 완료 상태가 아닌 고장 설비 목록 가져오기
+  // 컴포넌트 로드 시 고장 설비 목록 및 사용자 목록 가져오기
   useEffect(() => {
     const initializeData = async () => {
       try {
@@ -212,12 +202,12 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
     setLoading(true)
     
     try {
-      const reportData: RepairReport = formData as RepairReport
+      const reportData: RepairCompletionReport = formData as RepairCompletionReport
       const selectedUser = availableUsers.find(u => u.id === selectedTechnicianId)
 
-      // 1. 수리 완료 정보를 repair_reports 테이블에 저장
+      // 1. 수리 완료 정보를 repair_history 테이블에 저장
       const { data: repairData, error: repairError } = await supabase
-        .from('repair_reports')
+        .from('repair_history')
         .insert({
           equipment_id: formData.equipmentId,
           technician_id: selectedTechnicianId,
@@ -225,10 +215,10 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
           repair_type: formData.repairType,
           completion_status: formData.completionStatus,
           work_description: formData.workDescription,
-          time_spent: formData.timeSpent,
+          time_spent_hours: formData.timeSpent,
           test_results: formData.testResults,
           notes: formData.notes || '',
-          completed_at: new Date().toISOString(),
+          repaired_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -248,7 +238,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
             status: 'completed',
             updated_at: new Date().toISOString()
           })
-          .eq('id', selectedEquipment.breakdown_id)
+          .eq('id', selectedEquipment.breakdown_report_id)
 
         if (updateError) {
           console.error('Error updating breakdown status:', updateError)
@@ -296,6 +286,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
       }
       
       onSubmit?.(reportData)
+      onSuccess?.()
       
       showSuccess(
         t('repair:messages.repairSuccess'),
@@ -329,7 +320,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
         
         <Card.Content>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 1. 설비 ID */}
+            {/* 1. 설비 선택 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('repair:form.equipmentId')} <span className="text-red-500">{t('repair:form.required')}</span>
@@ -347,7 +338,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
                 {availableEquipment.length > 0 ? (
                   availableEquipment.map(equipment => (
                     <option key={equipment.id} value={equipment.id}>
-                      {equipment.equipment_number} - {equipment.equipment_name} ({equipment.status})
+                      {equipment.equipment_number} - {equipment.equipment_name} ({equipment.breakdown_status})
                     </option>
                   ))
                 ) : (
@@ -362,7 +353,7 @@ export function RepairReportForm({ onSubmit, onCancel }: RepairReportFormProps) 
               )}
             </div>
 
-            {/* 2. 담당자 */}
+            {/* 2. 담당자 선택 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('repair:form.technicianName')} <span className="text-red-500">{t('repair:form.required')}</span>

@@ -5,6 +5,8 @@ import { Card, StatusBadge } from '@/components/ui'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { BreakdownStatus } from '@/types/breakdown'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useToast } from '@/contexts/ToastContext'
 
 interface Equipment {
   id: string
@@ -49,81 +51,105 @@ interface EquipmentStatusMonitorProps {
 
 export function EquipmentStatusMonitor({ onEquipmentClick }: EquipmentStatusMonitorProps) {
   const { t } = useTranslation(['equipment', 'common', 'breakdown'])
+  const { showError } = useToast()
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [equipment, setEquipment] = useState<Equipment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string>('')
+
+  // 비동기 작업 및 에러 처리
+  const asyncFetchEquipment = useAsyncOperation(
+    async (): Promise<Equipment[]> => {
+      console.log('[EquipmentStatusMonitor] 고장 설비 데이터 로드 시작...')
+      
+      const { data, error } = await supabase
+        .from('breakdown_reports')
+        .select(`
+          id,
+          breakdown_title,
+          status,
+          priority,
+          occurred_at,
+          updated_at,
+          equipment_info!inner(
+            id,
+            equipment_number,
+            equipment_name,
+            category,
+            location
+          ),
+          profiles_assigned:profiles!breakdown_reports_assigned_to_fkey(full_name)
+        `)
+        .neq('status', BreakdownStatus.COMPLETED) // 수리 완료가 아닌 것들만
+        .order('occurred_at', { ascending: false })
+
+      if (error) {
+        // [DIP] Rule: 권한 오류 시 우아한 처리
+        if (error.code === '42501' || error.code === 'PGRST301') {
+          console.warn('Permission denied for breakdown_reports, using empty dataset')
+          return [] // 권한 오류 시 빈 데이터셋 반환
+        }
+        throw error
+      }
+
+      // 설비별로 그룹화하여 최신 고장 신고만 유지
+      const equipmentMap = new Map<string, Equipment>()
+      
+      data?.forEach((item: any) => {
+        const equipment = Array.isArray(item.equipment_info) ? item.equipment_info[0] : item.equipment_info
+        const assignedProfile = Array.isArray(item.profiles_assigned) ? item.profiles_assigned[0] : item.profiles_assigned
+        
+        if (equipment && !equipmentMap.has(equipment.id)) {
+          equipmentMap.set(equipment.id, {
+            id: equipment.id,
+            equipment_number: equipment.equipment_number,
+            equipment_name: equipment.equipment_name,
+            category: equipment.category,
+            location: equipment.location || '위치 미지정',
+            status: item.status as 'breakdown' | 'in_progress' | 'reported' | 'assigned',
+            urgency: (item.priority || 'medium') as 'low' | 'medium' | 'high' | 'critical',
+            lastUpdated: item.updated_at || item.occurred_at,
+            breakdownTitle: item.breakdown_title,
+            assignedTo: assignedProfile?.full_name
+          })
+        }
+      })
+
+      const result = Array.from(equipmentMap.values())
+      console.log('[EquipmentStatusMonitor] 고장 설비 데이터 로드 완료:', result.length, '대')
+      
+      return result
+    },
+    {
+      maxRetries: 2,
+      retryDelay: 1500,
+      componentId: 'equipment-status-monitor',
+      onSuccess: () => {
+        setLastUpdated(new Date().toLocaleString())
+        console.log('[EquipmentStatusMonitor] 고장 설비 데이터 로드 성공')
+      },
+      onError: (error) => {
+        console.error('[EquipmentStatusMonitor] 고장 설비 데이터 로드 실패:', error)
+        setLastUpdated(new Date().toLocaleString())
+        // 권한 오류가 아닌 경우만 사용자에게 표시
+        if (!error.message.includes('42501') && !error.message.includes('PGRST301')) {
+          showError('설비 현황 데이터를 불러오는데 실패했습니다.')
+        }
+      }
+    }
+  )
+
+  const equipment = asyncFetchEquipment.data || []
+  const loading = asyncFetchEquipment.loading
+  const error = asyncFetchEquipment.error
 
   // 수리 완료가 아닌 고장 신고된 설비들을 가져오기
   useEffect(() => {
-    const fetchBreakdownEquipment = async () => {
-      try {
-        setLoading(true)
-        
-        const { data, error } = await supabase
-          .from('breakdown_reports')
-          .select(`
-            id,
-            breakdown_title,
-            status,
-            priority,
-            occurred_at,
-            updated_at,
-            equipment_info!inner(
-              id,
-              equipment_number,
-              equipment_name,
-              category,
-              location
-            ),
-            profiles_assigned:profiles!breakdown_reports_assigned_to_fkey(full_name)
-          `)
-          .neq('status', BreakdownStatus.COMPLETED) // 수리 완료가 아닌 것들만
-          .order('occurred_at', { ascending: false })
-
-        if (error) {
-          throw error
-        }
-
-        // 설비별로 그룹화하여 최신 고장 신고만 유지
-        const equipmentMap = new Map<string, Equipment>()
-        
-        data?.forEach((item: any) => {
-          const equipment = Array.isArray(item.equipment_info) ? item.equipment_info[0] : item.equipment_info
-          const assignedProfile = Array.isArray(item.profiles_assigned) ? item.profiles_assigned[0] : item.profiles_assigned
-          
-          if (equipment && !equipmentMap.has(equipment.id)) {
-            equipmentMap.set(equipment.id, {
-              id: equipment.id,
-              equipment_number: equipment.equipment_number,
-              equipment_name: equipment.equipment_name,
-              category: equipment.category,
-              location: equipment.location || '위치 미지정',
-              status: item.status as 'breakdown' | 'in_progress' | 'reported' | 'assigned',
-              urgency: (item.priority || 'medium') as 'low' | 'medium' | 'high' | 'critical',
-              lastUpdated: item.updated_at || item.occurred_at,
-              breakdownTitle: item.breakdown_title,
-              assignedTo: assignedProfile?.full_name
-            })
-          }
-        })
-
-        setEquipment(Array.from(equipmentMap.values()))
-        setLastUpdated(new Date().toLocaleString())
-        setError(null)
-      } catch (err) {
-        console.error('Error fetching breakdown equipment:', err)
-        setError(err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchBreakdownEquipment()
+    asyncFetchEquipment.execute()
     
     // 30초마다 데이터 새로고침
-    const interval = setInterval(fetchBreakdownEquipment, 30000)
+    const interval = setInterval(() => {
+      asyncFetchEquipment.execute()
+    }, 30000)
+    
     return () => clearInterval(interval)
   }, [])
 

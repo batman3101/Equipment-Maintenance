@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react'
 import { Button } from '@/components/ui'
 import { BreakdownReportForm } from './BreakdownReportForm'
 import { BreakdownList } from './BreakdownList'
-import { BreakdownListRef, BreakdownReport } from '@/types/breakdown'
+import { BreakdownListRef, BreakdownReport, BreakdownReportForm as BreakdownReportFormType } from '@/types/breakdown'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslation } from 'react-i18next'
 import { useUnifiedState } from '@/hooks/useUnifiedState'
@@ -27,15 +27,7 @@ export function BreakdownPage() {
   }
 
   // [SRP] Rule: 고장 신고 생성 - 통합 상태 관리 액션 사용
-  const handleReportSubmit = async (report: { 
-    equipmentCategory: string
-    equipmentNumber: string
-    reporterName: string
-    urgencyLevel: 'low' | 'medium' | 'high' | 'critical'
-    issueType: 'mechanical' | 'electrical' | 'software' | 'safety' | 'other'
-    description: string
-    symptoms: string
-  }) => {
+  const handleReportSubmit = async (report: BreakdownReportFormType) => {
     try {
       console.log('새 고장 신고 제출:', report)
       

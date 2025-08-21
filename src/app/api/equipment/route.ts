@@ -1,51 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-// [SRP] Rule: 고장 신고 API만 담당
+// [SRP] Rule: 설비 관리 API만 담당
 export async function GET(request: NextRequest) {
   try {
     // 임시로 인증 우회 (개발 중)
-    console.log('Fetching breakdown reports...')
+    console.log('Fetching equipment list...')
 
     // URL 파라미터 파싱
     const url = new URL(request.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = parseInt(url.searchParams.get('limit') || '50')
+    const category = url.searchParams.get('category')
     const status = url.searchParams.get('status')
-    const equipmentId = url.searchParams.get('equipment_id')
-    const urgencyLevel = url.searchParams.get('urgency_level')
+    const search = url.searchParams.get('search')
 
     // 쿼리 구성
     let query = supabase
-      .from('breakdown_reports')
+      .from('equipment_info')
       .select(`
         *,
-        equipment_info:equipment_id (
-          id,
-          equipment_name,
-          equipment_number,
-          category
-        ),
-        profiles:assigned_to (
-          id,
-          full_name,
-          email,
-          role
+        equipment_status (
+          status,
+          status_reason,
+          last_repair_date,
+          breakdown_start_time,
+          status_changed_at
         )
       `)
       .order('created_at', { ascending: false })
 
     // 필터 적용
-    if (status && status !== 'all') {
-      query = query.eq('status', status)
+    if (category && category !== 'all' && category !== '전체 카테고리') {
+      query = query.eq('category', category)
     }
 
-    if (equipmentId) {
-      query = query.eq('equipment_id', equipmentId)
-    }
-
-    if (urgencyLevel && urgencyLevel !== 'all') {
-      query = query.eq('urgency_level', urgencyLevel)
+    if (search) {
+      query = query.or(`equipment_name.ilike.%${search}%,equipment_number.ilike.%${search}%`)
     }
 
     // 페이지네이션 적용
@@ -69,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     // 총 개수 조회 (페이지네이션용)
     const { count: totalCount } = await supabase
-      .from('breakdown_reports')
+      .from('equipment_info')
       .select('*', { count: 'exact', head: true })
 
     const totalPages = Math.ceil((totalCount || 0) / limit)
@@ -83,7 +74,7 @@ export async function GET(request: NextRequest) {
         total: totalCount || 0,
         totalPages
       },
-      message: '고장 신고 목록을 성공적으로 조회했습니다',
+      message: '설비 목록을 성공적으로 조회했습니다',
       timestamp: new Date().toISOString(),
       metadata: {
         version: '1.0',
@@ -92,7 +83,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Breakdown reports API error:', error)
+    console.error('Equipment API error:', error)
     return NextResponse.json(
       { 
         success: false, 
@@ -104,83 +95,82 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// [SRP] Rule: 고장 신고 생성만 담당
+// [SRP] Rule: 설비 생성만 담당
 export async function POST(request: NextRequest) {
   try {
     // 임시로 인증 우회 (개발 중)
-    console.log('Creating breakdown report...')
+    console.log('Creating equipment...')
 
     const body = await request.json()
     const {
-      equipmentCategory,
+      equipment_name,
+      equipmentName,
+      category,
+      equipment_number,
       equipmentNumber,
-      reporterName,
-      urgencyLevel,
-      issueType,
-      description,
-      symptoms
+      location,
+      manufacturer,
+      model,
+      installation_date,
+      installationDate,
+      status,
+      specifications
     } = body
 
+    // 필드명 매핑 (camelCase -> snake_case)
+    const finalEquipmentName = equipment_name || equipmentName
+    const finalEquipmentNumber = equipment_number || equipmentNumber
+    const finalInstallationDate = installation_date || installationDate
+
     // 필수 필드 검증
-    if (!equipmentNumber || !reporterName || !urgencyLevel || !issueType || !description) {
+    if (!finalEquipmentName || !category || !finalEquipmentNumber) {
       return NextResponse.json(
         { 
           success: false, 
-          error: '필수 필드가 누락되었습니다', 
+          error: '필수 필드가 누락되었습니다 (설비명, 카테고리, 설비번호)', 
           timestamp: new Date().toISOString() 
         }, 
         { status: 400 }
       )
     }
 
-    // 설비 정보 조회
-    const { data: equipment, error: equipmentError } = await supabase
+    // 설비 번호 중복 확인
+    const { data: existingEquipment } = await supabase
       .from('equipment_info')
-      .select('id, equipment_name, equipment_number, category')
-      .eq('equipment_number', equipmentNumber)
+      .select('id')
+      .eq('equipment_number', finalEquipmentNumber)
       .single()
 
-    if (equipmentError || !equipment) {
+    if (existingEquipment) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `설비를 찾을 수 없습니다: ${equipmentNumber}`, 
+          error: `설비 번호 '${finalEquipmentNumber}'가 이미 존재합니다`, 
           timestamp: new Date().toISOString() 
         }, 
-        { status: 404 }
+        { status: 400 }
       )
     }
 
-    // 고장 신고 데이터 준비
-    const breakdownData = {
-      equipment_id: equipment.id,
-      equipment_category: equipmentCategory || equipment.category,
-      equipment_number: equipmentNumber,
-      reporter_name: reporterName,
-      reporter_id: null, // 임시로 null
-      urgency_level: urgencyLevel,
-      issue_type: issueType,
-      description,
-      symptoms: symptoms || '',
-      status: 'reported',
-      occurred_at: new Date().toISOString(),
+    // 설비 데이터 준비
+    const equipmentData = {
+      equipment_name: finalEquipmentName,
+      category,
+      equipment_number: finalEquipmentNumber,
+      location: location || null,
+      manufacturer: manufacturer || null,
+      model: model || null,
+      installation_date: finalInstallationDate || new Date().toISOString(),
+      specifications: specifications || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
 
-    // 고장 신고 생성
-    const { data: newBreakdown, error: insertError } = await supabase
-      .from('breakdown_reports')
-      .insert(breakdownData)
-      .select(`
-        *,
-        equipment_info:equipment_id (
-          id,
-          equipment_name,
-          equipment_number,
-          category
-        )
-      `)
+    // 설비 생성
+    const { data: newEquipment, error: insertError } = await supabase
+      .from('equipment_info')
+      .insert(equipmentData)
+      .select()
       .single()
 
     if (insertError) {
@@ -188,39 +178,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `고장 신고 등록 실패: ${insertError.message}`, 
+          error: `설비 등록 실패: ${insertError.message}`, 
           timestamp: new Date().toISOString() 
         }, 
         { status: 500 }
       )
     }
 
-    // 설비 상태를 breakdown으로 변경
+    // 설비 상태 초기화
     try {
       const { error: statusError } = await supabase
         .from('equipment_status')
-        .upsert({
-          equipment_id: equipment.id,
-          status: 'breakdown',
-          status_reason: `고장 신고: ${issueType}`,
+        .insert({
+          equipment_id: newEquipment.id,
+          status: status || 'running',
+          status_reason: '설비 등록 시 초기 상태',
           updated_by: null, // 임시로 null
           status_changed_at: new Date().toISOString(),
-          breakdown_start_time: new Date().toISOString(),
-          notes: `고장 신고 ID: ${newBreakdown.id}`
+          notes: '신규 설비 등록'
         })
 
       if (statusError) {
-        console.warn('Failed to update equipment status:', statusError)
-        // 상태 업데이트 실패는 경고로만 처리하고 고장 신고 생성은 성공으로 처리
+        console.warn('Failed to create equipment status:', statusError)
+        // 상태 생성 실패는 경고로만 처리
       }
-    } catch (statusUpdateError) {
-      console.warn('Equipment status update failed:', statusUpdateError)
+    } catch (statusCreateError) {
+      console.warn('Equipment status creation failed:', statusCreateError)
     }
 
     return NextResponse.json({
       success: true,
-      data: newBreakdown,
-      message: '고장 신고가 성공적으로 등록되었습니다',
+      data: newEquipment,
+      message: '설비가 성공적으로 등록되었습니다',
       timestamp: new Date().toISOString(),
       metadata: {
         version: '1.0',
@@ -229,7 +218,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Create breakdown report error:', error)
+    console.error('Create equipment error:', error)
     return NextResponse.json(
       { 
         success: false, 
